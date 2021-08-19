@@ -1,8 +1,11 @@
 [tool.poetry]
 name = "bookops-marc"
 version = "0.1.0"
-description = ""
+license = "MIT"
+description = "A sweetened `pymarc.Record` module for extraction of data from local Sierra records."
 authors = ["Tomek <klingaroo@gmail.com>"]
+readme = "README.md"
+keywords = ["cataloging", "bibliographic records", "MARC"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
