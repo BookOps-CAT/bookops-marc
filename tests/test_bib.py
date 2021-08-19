@@ -57,3 +57,44 @@ def test_branch_call_no(stub_marc, arg1, arg2, arg3, expectation):
     stub_marc.library = arg1
     stub_marc.add_field(Field(tag=arg2, indicators=[" ", " "], subfields=arg3))
     assert stub_marc.branch_call_no() == expectation
+
+
+def test_audience_missing_008(stub_marc):
+    stub_marc.remove_fields("008")
+    assert stub_marc.audience() is None
+
+
+@pytest.mark.parametrize(
+    "arg1,arg2,expectation",
+    [
+        ("a", "a", "j"),
+        ("a", "m", "j"),
+        ("c", "a", "j"),
+        ("c", "m", "j"),
+        ("d", "a", "j"),
+        ("d", "m", "j"),
+        ("g", "a", "j"),
+        ("g", "m", "j"),
+        ("i", "a", "j"),
+        ("i", "m", "j"),
+        ("j", "a", "j"),
+        ("k", "a", "j"),
+        ("k", "m", "j"),
+        ("m", "a", "j"),
+        ("m", "m", "j"),
+        ("t", "a", "j"),
+        ("t", "m", "j"),
+        ("e", "a", None),  # map
+        ("a", "s", None),  # serial
+    ],
+)
+def test_audience(stub_marc, arg1, arg2, expectation):
+    s = list(stub_marc.leader)
+    s[6] = arg1
+    s[7] = arg2
+    stub_marc.leader = "".join(s)
+    assert stub_marc.audience() == expectation
+
+
+def test_record_type(stub_marc):
+    assert stub_marc.record_type() == "a"

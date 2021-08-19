@@ -68,3 +68,22 @@ class Bib(Record):
                 return None
         else:
             return None
+
+    def audience(self) -> Optional[str]:
+        """
+        Retrieves audience code from the 008 MARC tag
+        """
+        try:
+            if self.leader[6] in "acdgijkmt" and self.leader[7] in "am":
+                code = self["008"].data[22]
+            else:
+                code = None
+        except AttributeError:
+            code = None
+        return code
+
+    def record_type(self) -> Optional[str]:
+        """
+        Retrieves record type code from MARC leader
+        """
+        return self.leader[6]
