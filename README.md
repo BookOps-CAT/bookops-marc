@@ -2,7 +2,7 @@
 
 # bookops-marc
 
-Sweeten [`pymarc.Record`](https://pymarc.readthedocs.io/en/latest/_modules/pymarc/record.html) module tailored for data extraction from Sierra's MARC dumps.
+A sweetened [`pymarc.Record`](https://pymarc.readthedocs.io/en/latest/_modules/pymarc/record.html) module tailored for data extraction from local Sierra's MARC dumps.
 
 Python 3.8 and up.
 
