@@ -4,8 +4,49 @@ adds some syntactic sugar.
 """
 from typing import Optional
 
-from pymarc import Record
+from pymarc import Record, Field
 from pymarc.constants import LEADER_LEN
+
+
+def normalize_dewey(class_mark: str) -> Optional[str]:
+    """
+    Normalizes Dewey classification to be used in call numbers
+
+    Args:
+        class_mark:                  Dewey classification
+
+    Returns:
+        normalized class_mark
+    """
+    if isinstance(class_mark, str):
+        class_mark = (
+            class_mark.replace("/", "")
+            .replace("j", "")
+            .replace("C", "")
+            .replace("[B]", "")
+            .replace("'", "")
+            .strip()
+        )
+        try:
+            # test if has correct format
+            float(class_mark)
+            while class_mark[-1] == "0":
+                class_mark = class_mark[:-1]
+            return class_mark
+        except ValueError:
+            return None
+    else:
+        return None
+
+
+def shorten_dewey(class_mark: str) -> str:
+    """
+    Shortens Dewey classification number to maximum 4 digits after period.
+    """
+    class_mark = class_mark[:8]
+    while len(class_mark) > 3 and class_mark[-1] in ".0":
+        class_mark = class_mark[:-1]
+    return class_mark
 
 
 class Bib(Record):
@@ -87,3 +128,51 @@ class Bib(Record):
         Retrieves record type code from MARC leader
         """
         return self.leader[6]
+
+    def physical_description(self) -> Optional[str]:
+        """
+        Returns value of the first 300 MARC tag in the bib
+        """
+        try:
+            return self.physicaldescription()[0].value()
+        except IndexError:
+            return None
+
+    def main_entry(self) -> Field:
+        """
+        Returns main entry field instance
+        """
+        entry_fields = ["100", "110", "111", "245"]
+        for field in entry_fields:
+            if bool(self[field]):
+                return self[field]
+
+    def dewey(self) -> Optional[str]:
+        """
+        Returns LC suggested Dewey classification then other agency's number.
+        Does not alter the class mark string.
+        """
+        fields = self.get_fields("082")
+
+        # check if LC full ed. present first
+        for field in fields:
+            if field.indicators == ["0", "0"]:
+                class_mark = field["a"].strip()
+                class_mark = normalize_dewey(class_mark)
+                return class_mark
+
+        # then other agency full ed.
+        for field in fields:
+            if field.indicators == ["0", "4"]:
+                class_mark = field["a"].strip()
+                class_mark = normalize_dewey(class_mark)
+                return class_mark
+
+    def dewey_normalized(self) -> Optional[str]:
+        """
+        Returns LC suggested Dewey classification then other agency's number
+        if present .
+        """
+        class_mark = self.dewey()
+        class_mark = shorten_dewey(class_mark)
+        return class_mark

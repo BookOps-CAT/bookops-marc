@@ -5,6 +5,41 @@ import pytest
 
 from pymarc import Field
 
+from bookops_marc.bib import normalize_dewey, shorten_dewey
+
+
+@pytest.mark.parametrize(
+    "arg,expectation",
+    [
+        ("[Fic]", None),
+        ("[E]", None),
+        ("909", "909"),
+        ("001.54", "001.54"),
+        ("362.84/924043809049", "362.84924043809049"),
+        ("362.84/9040", "362.84904"),
+        ("j574", "574"),
+        ("942.082 [B]", "942.082"),
+        ("364'.971", "364.971"),
+        ("C364/.971", "364.971"),
+        ("505 ", "505"),
+    ],
+)
+def test_normalize_dewey(arg, expectation):
+    assert normalize_dewey(arg) == expectation
+
+
+@pytest.mark.parametrize(
+    "arg,expectation",
+    [
+        ("505", "505"),
+        ("362.84924043809049", "362.8492"),
+        ("362.849040", "362.849"),
+        ("900", "900"),
+    ],
+)
+def test_shorten_dewey(arg, expectation):
+    assert shorten_dewey(arg) == expectation
+
 
 def test_sierra_bib_no_missing_tag(stub_marc):
     assert stub_marc.sierra_bib_no() is None
@@ -98,3 +133,50 @@ def test_audience(stub_marc, arg1, arg2, expectation):
 
 def test_record_type(stub_marc):
     assert stub_marc.record_type() == "a"
+
+
+def test_physical_description_no_300_tag(stub_marc):
+    assert stub_marc.physical_description() is None
+
+
+@pytest.mark.parametrize(
+    "tags,expectation",
+    [
+        (["100", "245"], "100"),
+        (["110", "245"], "110"),
+        (["111", "245"], "111"),
+        (["245"], "245"),
+    ],
+)
+def test_main_entry(stub_marc, tags, expectation):
+    stub_marc.remove_fields("100", "245")
+    for t in tags:
+        stub_marc.add_field(Field(tag=t, subfields=["a", "foo"]))
+    main_entry = stub_marc.main_entry()
+    assert type(main_entry) == Field
+    assert main_entry.tag == expectation
+
+
+def test_dewey_no_082(stub_marc):
+    assert stub_marc.dewey() is None
+
+
+def test_dewey_lc_selected(stub_marc):
+    stub_marc.add_field(
+        Field(tag="082", indicators=[" ", " "], subfields=["a", "900./092"])
+    )
+    stub_marc.add_field(
+        Field(tag="082", indicators=["0", "4"], subfields=["a", "909.092"])
+    )
+    stub_marc.add_field(
+        Field(tag="082", indicators=["0", "0"], subfields=["a", "909.12"])
+    )
+    assert stub_marc.dewey() == "909.12"
+
+
+def test_dewey_other_agency_selected(stub_marc):
+    stub_marc.add_field(Field(tag="082", indicators=["1", "0"], subfields=["a", "900"]))
+    stub_marc.add_field(
+        Field(tag="082", indicators=["0", "4"], subfields=["a", "909./092"])
+    )
+    assert stub_marc.dewey() == "909.092"
