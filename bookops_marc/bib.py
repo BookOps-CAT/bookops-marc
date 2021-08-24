@@ -39,11 +39,22 @@ def normalize_dewey(class_mark: str) -> Optional[str]:
         return None
 
 
-def shorten_dewey(class_mark: str) -> str:
+def shorten_dewey(class_mark: str, digits_after_period: int = 4) -> str:
     """
     Shortens Dewey classification number to maximum 4 digits after period.
+    BPL materials: default 4 digits - 505.4167
+    NYPl adult/young adult: default 4 digits
+    NYPL juvenile materials:    2 digits - 618.54
+
+    Args:
+        class_mark:                 Dewey classification
+        digits_after_period:        number of allowed digits after period
+
+    Returns:
+        shortened class_mark
+
     """
-    class_mark = class_mark[:8]
+    class_mark = class_mark[: 4 + digits_after_period]
     while len(class_mark) > 3 and class_mark[-1] in ".0":
         class_mark = class_mark[:-1]
     return class_mark

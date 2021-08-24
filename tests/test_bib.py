@@ -22,6 +22,7 @@ from bookops_marc.bib import normalize_dewey, shorten_dewey
         ("364'.971", "364.971"),
         ("C364/.971", "364.971"),
         ("505 ", "505"),
+        (None, None),
     ],
 )
 def test_normalize_dewey(arg, expectation):
@@ -29,16 +30,17 @@ def test_normalize_dewey(arg, expectation):
 
 
 @pytest.mark.parametrize(
-    "arg,expectation",
+    "arg1,arg2,expectation",
     [
-        ("505", "505"),
-        ("362.84924043809049", "362.8492"),
-        ("362.849040", "362.849"),
-        ("900", "900"),
+        ("505", 4, "505"),
+        ("362.84924043809049", 4, "362.8492"),
+        ("362.849040", 4, "362.849"),
+        ("900", 4, "900"),
+        ("512.1234", 2, "512.12"),
     ],
 )
-def test_shorten_dewey(arg, expectation):
-    assert shorten_dewey(arg) == expectation
+def test_shorten_dewey(arg1, arg2, expectation):
+    assert shorten_dewey(class_mark=arg1, digits_after_period=arg2) == expectation
 
 
 def test_sierra_bib_no_missing_tag(stub_marc):
@@ -180,3 +182,16 @@ def test_dewey_other_agency_selected(stub_marc):
         Field(tag="082", indicators=["0", "4"], subfields=["a", "909./092"])
     )
     assert stub_marc.dewey() == "909.092"
+
+
+def test_dewey_normalized(stub_marc):
+    stub_marc.add_field(
+        Field(tag="082", indicators=[" ", " "], subfields=["a", "900.092"])
+    )
+    stub_marc.add_field(
+        Field(tag="082", indicators=["0", "4"], subfields=["a", "910.092"])
+    )
+    stub_marc.add_field(
+        Field(tag="082", indicators=["0", "0"], subfields=["a", "909./09208"])
+    )
+    assert stub_marc.dewey_normalized() == "909.092"
