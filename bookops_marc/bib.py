@@ -2,7 +2,7 @@
 Module replaces pymarc's Record module. Inherits all Record class functinality and
 adds some syntactic sugar.
 """
-from typing import Optional
+from typing import List, Optional
 
 from pymarc import Record, Field
 from pymarc.constants import LEADER_LEN
@@ -187,3 +187,32 @@ class Bib(Record):
         class_mark = self.dewey()
         class_mark = shorten_dewey(class_mark)
         return class_mark
+
+    def languages(self) -> List[str]:
+        """
+        Returns list of material main languages
+        """
+        languages = []
+
+        try:
+            languages.append(self["008"].data[35:38])
+        except AttributeError:
+            pass
+
+        for field in self.get_fields("041"):
+            for sub in field.get_subfields("a"):
+                languages.append(sub)
+        return languages
+
+    def form_of_item(self) -> Optional[str]:
+        """
+        Returns form of item code from the 008 tag position 23 if applicable for
+        a given material format
+        """
+        rec_type = self.record_type()
+        if rec_type in "acdijopt":
+            return self["008"].data[23]
+        elif rec_type == "g":
+            return self["008"].data[29]
+        else:
+            return None

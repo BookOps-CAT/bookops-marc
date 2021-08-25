@@ -195,3 +195,32 @@ def test_dewey_normalized(stub_marc):
         Field(tag="082", indicators=["0", "0"], subfields=["a", "909./09208"])
     )
     assert stub_marc.dewey_normalized() == "909.092"
+
+
+def test_languages_none_008(stub_marc):
+    stub_marc.remove_fields("008")
+    assert stub_marc.languages() == []
+
+
+def test_languages_only_008_present(stub_marc):
+    assert stub_marc.languages() == ["hat"]
+
+
+def test_languages_multiple(stub_marc):
+    stub_marc.add_field(
+        Field(tag="041", subfields=["a", "eng", "a", "spa", "b", "chi", "h", "rus"])
+    )
+    assert stub_marc.languages() == ["hat", "eng", "spa"]
+
+
+@pytest.mark.parametrize("arg", ["a", "c", "d", "i", "j", "o", "p", "t"])
+def test_form_of_item_in_pos_23(arg, stub_marc):
+    stub_marc.leader = "#" * 6 + arg + "#" * 18
+    stub_marc["008"].data = "#" * 23 + "f" + "#" * 10
+    assert stub_marc.form_of_item() == "f"
+
+
+def test_form_of_item_in_pos_29(stub_marc):
+    stub_marc.leader = "#" * 6 + "g" + "#" * 18
+    stub_marc["008"].data = "#" * 29 + "o" + "#" * 14
+    assert stub_marc.form_of_item() == "o"
