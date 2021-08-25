@@ -1,11 +1,21 @@
 """
 Tests bib.py module
 """
+from datetime import datetime
+
 import pytest
 
 from pymarc import Field
 
-from bookops_marc.bib import normalize_dewey, shorten_dewey
+from bookops_marc.bib import (
+    get_branch_code,
+    get_shelf_audience_code,
+    normalize_dewey,
+    shorten_dewey,
+    normalize_date,
+    normalize_location_code,
+    normalize_order_number,
+)
 
 
 @pytest.mark.parametrize(
@@ -41,6 +51,43 @@ def test_normalize_dewey(arg, expectation):
 )
 def test_shorten_dewey(arg1, arg2, expectation):
     assert shorten_dewey(class_mark=arg1, digits_after_period=arg2) == expectation
+
+
+@pytest.mark.parametrize(
+    "arg,expectation",
+    [
+        ("(3)sn", "sn"),
+        ("(2)btj0f", "btj0f"),
+        ("41anf(5)", "41anf"),
+        ("41anf", "41anf"),
+        ("(3)snj0y", "snj0y"),
+    ],
+)
+def test_normalize_location_code(arg, expectation, stub_marc):
+    assert normalize_location_code(arg) == expectation
+
+
+@pytest.mark.parametrize(
+    "arg,expectation",
+    [("41anf", "41"), ("02jje", "02"), ("snj0f", "sn"), ("fty0n", "ft")],
+)
+def test_get_branch_code(arg, expectation):
+    assert get_branch_code(arg) == expectation
+
+
+def test_normalize_date():
+    assert normalize_date("01-07-21") == datetime(2021, 7, 1)
+
+
+@pytest.mark.parametrize(
+    "arg,expectation", [("41", None), ("41anf", "a"), ("snj0y", "j")]
+)
+def test_get_shelf_audience_code(arg, expectation):
+    assert get_shelf_audience_code(arg) == expectation
+
+
+def test_normalize_order_number():
+    assert normalize_order_number(".o28876714") == 2887671
 
 
 def test_sierra_bib_no_missing_tag(stub_marc):
@@ -224,3 +271,46 @@ def test_form_of_item_in_pos_29(stub_marc):
     stub_marc.leader = "#" * 6 + "g" + "#" * 18
     stub_marc["008"].data = "#" * 29 + "o" + "#" * 14
     assert stub_marc.form_of_item() == "o"
+
+
+def test_orders(stub_marc):
+    # fmt: off
+    stub_marc.add_field(Field(tag="960", indicators=[" ", " "], subfields=[
+        "a", "l",  # acq type
+        "b", "-",  # ?
+        "c", "j",  # order code 1 (selector)
+        "d", "c",  # order code 2 (NYPL library; BPL audn)
+        "e", "d",  # order code 3 (NYPL source; BPL not used)
+        "f", "a",  # order code 4 (NYPL audn; BPL Opac display)
+        "g", "b",  # form
+        "h", "-",  # ?
+        "i", "l",  # order type
+        "j", "-",  # ?
+        "m", "o",  # status
+        "n", "-",  # ?
+        "p", "  -  -  ",  # ?
+        "q", "08-02-21",  # order date
+        "r", "  -  -  ",  # ?
+        "s", "{{dollar}}13.20",  # price
+        "t", "(3)snj0y",  # location
+        "t", "agj0y",
+        "t", "muj0y",
+        "t", "inj0y",
+        "o", "13",  # copies
+        "u", "lease",  # fund
+        "v", "btlea",  # vendor
+        "w", "eng",  # lang
+        "x", "xxu",  # country
+        "y", "1",  # volumes
+        "z", ".o28876714"  # order#
+    ]))
+    # fmt: on
+    orders = stub_marc.orders(library="nypl")
+    assert len(orders) == 1
+    o = orders[0]
+    assert o.oid == 2887671
+    assert o.audn == "j"
+    assert o.status == "o"
+    assert o.branches == ["sn", "ag", "mu", "in"]
+    assert o.copies == 13
+    assert o.created == datetime(2021, 2, 8)

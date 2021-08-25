@@ -2,10 +2,15 @@
 Module replaces pymarc's Record module. Inherits all Record class functinality and
 adds some syntactic sugar.
 """
+from collections import namedtuple
+from datetime import datetime
 from typing import List, Optional
 
 from pymarc import Record, Field
 from pymarc.constants import LEADER_LEN
+
+from .errors import BookopsMarcError
+from .models import Order
 
 
 def normalize_dewey(class_mark: str) -> Optional[str]:
@@ -58,6 +63,50 @@ def shorten_dewey(class_mark: str, digits_after_period: int = 4) -> str:
     while len(class_mark) > 3 and class_mark[-1] in ".0":
         class_mark = class_mark[:-1]
     return class_mark
+
+
+def normalize_location_code(code: str) -> str:
+    """
+    Removes any quantity designation from location code value
+    """
+    try:
+        s = code.index("(")
+        e = code.index(")")
+        return f"{code[:s]}{code[e + 1:]}"
+    except ValueError:
+        return code
+
+
+def get_branch_code(location_code: str) -> str:
+    """
+    Returns branch code from normalized location code
+    """
+    branch = location_code[:2]
+    return branch
+
+
+def normalize_date(order_date: str) -> datetime:
+    """
+    Returns order created date in datetime format
+    """
+    return datetime.strptime(order_date, "%d-%m-%y")
+
+
+def get_shelf_audience_code(location_code: str) -> Optional[str]:
+    """
+    Parses audience code from given normalized location_code
+    """
+    try:
+        return location_code[2]
+    except IndexError:
+        return None
+
+
+def normalize_order_number(order_number: str) -> int:
+    """
+    Normalizes Sierra order number
+    """
+    return int(order_number[2:-1])
 
 
 class Bib(Record):
@@ -216,3 +265,78 @@ class Bib(Record):
             return self["008"].data[29]
         else:
             return None
+
+    def _get_branches(self, field: Field) -> List[str]:
+        """
+        Returns isolated from location codes branches as a list
+        """
+        branches = []
+
+        for sub in field.get_subfields("t"):
+
+            # remove any qty data
+            loc_code = normalize_location_code(sub)
+
+            branch = get_branch_code(loc_code)
+            branches.append(branch)
+
+        return branches
+
+    def orders(
+        self, library: str = None, order: str = "descending"
+    ) -> List[namedtuple]:
+        """
+        Returns a list of order attached to bib. To correctly parse order field
+        a library must be specified since mapping varies in both systems.
+
+        Args:
+            library:                "bpl" or "nypl" (mandatory)
+            order:                  ascending (from most recent to oldest) or
+                                    descending (from oldest to most recent)
+        """
+        if library is None:
+            raise BookopsMarcError(
+                "Must specify 'library' argument. Order field mapping varies between "
+                " both systems."
+            )
+        elif not isinstance(library, str):
+            raise BookopsMarcError("'library' argument  must be a string.")
+        library = library.lower()
+        if library not in "nypl,bpl":
+            raise BookopsMarcError(
+                "'library' argument have only two permissable values: 'nypl' and 'bpl'."
+            )
+
+        orders = []
+
+        for field in self.get_fields("960"):
+            # shared mapping
+            oid = normalize_order_number(field["z"])
+            first_location_code = normalize_location_code(field["t"])
+            audn = get_shelf_audience_code(first_location_code)
+            status = field["m"].strip()
+            branches = self._get_branches(field)
+            copies = int(field["o"])
+            created = normalize_date(field["q"])
+
+            # variant mapping
+            if library == "nypl":
+                pass
+            elif library == "bpl":
+                pass
+
+            o = Order(
+                oid,
+                audn=audn,
+                branches=branches,
+                copies=copies,
+                created=created,
+                form=None,
+                lang=None,
+                shelves=None,
+                status=status,
+                venNotes=None,
+            )
+            orders.append(o)
+
+        return orders
