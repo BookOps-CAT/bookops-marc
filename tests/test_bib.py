@@ -16,6 +16,7 @@ from bookops_marc.bib import (
     normalize_location_code,
     normalize_order_number,
 )
+from bookops_marc.errors import BookopsMarcError
 
 
 @pytest.mark.parametrize(
@@ -260,17 +261,44 @@ def test_languages_multiple(stub_marc):
     assert stub_marc.languages() == ["hat", "eng", "spa"]
 
 
-@pytest.mark.parametrize("arg", ["a", "c", "d", "i", "j", "o", "p", "t"])
+def test_form_of_item_not_present(stub_marc):
+    stub_marc.leader = "#" * 6 + "x" + "#" * 18
+    stub_marc["008"].data = "#" * 23 + "f" + "#" * 10
+    assert stub_marc.form_of_item() is None
+
+
+@pytest.mark.parametrize("arg", ["a", "c", "d", "i", "j", "m", "o", "p", "t"])
 def test_form_of_item_in_pos_23(arg, stub_marc):
     stub_marc.leader = "#" * 6 + arg + "#" * 18
     stub_marc["008"].data = "#" * 23 + "f" + "#" * 10
     assert stub_marc.form_of_item() == "f"
 
 
-def test_form_of_item_in_pos_29(stub_marc):
-    stub_marc.leader = "#" * 6 + "g" + "#" * 18
+@pytest.mark.parametrize("arg", ["e", "f", "g", "k"])
+def test_form_of_item_in_pos_29(arg, stub_marc):
+    stub_marc.leader = "#" * 6 + arg + "#" * 18
     stub_marc["008"].data = "#" * 29 + "o" + "#" * 14
     assert stub_marc.form_of_item() == "o"
+
+
+@pytest.mark.parametrize(
+    "arg,expectation",
+    [
+        (
+            None,
+            "Must specify 'library' argument. Order field mapping varies between both systems.",
+        ),
+        (5, "The 'library' argument  must be a string."),
+        (
+            "queens",
+            "The 'library' argument have only two permissable values: 'nypl' and 'bpl'.",
+        ),
+    ],
+)
+def test_orders_exceptions(arg, expectation, stub_marc):
+    with pytest.raises(BookopsMarcError) as exc:
+        stub_marc.orders(library=arg)
+    assert expectation in str(exc)
 
 
 def test_orders(stub_marc):

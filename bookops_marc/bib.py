@@ -259,9 +259,9 @@ class Bib(Record):
         a given material format
         """
         rec_type = self.record_type()
-        if rec_type in "acdijopt":
+        if rec_type in "acdijmopt":
             return self["008"].data[23]
-        elif rec_type == "g":
+        elif rec_type in "efgk":
             return self["008"].data[29]
         else:
             return None
@@ -294,17 +294,18 @@ class Bib(Record):
             order:                  ascending (from most recent to oldest) or
                                     descending (from oldest to most recent)
         """
-        if library is None:
+        if not library:
             raise BookopsMarcError(
-                "Must specify 'library' argument. Order field mapping varies between "
-                " both systems."
+                "Must specify 'library' argument. Order field mapping varies between both systems."
             )
         elif not isinstance(library, str):
-            raise BookopsMarcError("'library' argument  must be a string.")
+            raise BookopsMarcError("The 'library' argument  must be a string.")
+
         library = library.lower()
+
         if library not in "nypl,bpl":
             raise BookopsMarcError(
-                "'library' argument have only two permissable values: 'nypl' and 'bpl'."
+                "The 'library' argument have only two permissable values: 'nypl' and 'bpl'."
             )
 
         orders = []
