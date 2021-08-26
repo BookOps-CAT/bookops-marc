@@ -13,6 +13,45 @@ from .errors import BookopsMarcError
 from .models import Order
 
 
+def get_branch_code(location_code: str) -> str:
+    """
+    Returns branch code from normalized location code
+    """
+    branch = location_code[:2]
+    return branch
+
+
+def get_shelf_audience_code(location_code: str) -> Optional[str]:
+    """
+    Parses audience code from given normalized location_code
+    """
+    try:
+        return location_code[2]
+    except IndexError:
+        return None
+
+
+def get_shelf_code(location_code: str) -> Optional[str]:
+    """
+    Parses shelf code from given normalized location_code
+    """
+    try:
+        shelf = location_code[3:5].strip()
+        if shelf:
+            return shelf
+        else:
+            return None
+    except (TypeError, IndexError):
+        return None
+
+
+def normalize_date(order_date: str) -> datetime:
+    """
+    Returns order created date in datetime format
+    """
+    return datetime.strptime(order_date, "%d-%m-%y")
+
+
 def normalize_dewey(class_mark: str) -> Optional[str]:
     """
     Normalizes Dewey classification to be used in call numbers
@@ -44,6 +83,25 @@ def normalize_dewey(class_mark: str) -> Optional[str]:
         return None
 
 
+def normalize_location_code(code: str) -> str:
+    """
+    Removes any quantity designation from location code value
+    """
+    try:
+        s = code.index("(")
+        e = code.index(")")
+        return f"{code[:s]}{code[e + 1:]}"
+    except ValueError:
+        return code
+
+
+def normalize_order_number(order_number: str) -> int:
+    """
+    Normalizes Sierra order number
+    """
+    return int(order_number[2:-1])
+
+
 def shorten_dewey(class_mark: str, digits_after_period: int = 4) -> str:
     """
     Shortens Dewey classification number to maximum 4 digits after period.
@@ -63,50 +121,6 @@ def shorten_dewey(class_mark: str, digits_after_period: int = 4) -> str:
     while len(class_mark) > 3 and class_mark[-1] in ".0":
         class_mark = class_mark[:-1]
     return class_mark
-
-
-def normalize_location_code(code: str) -> str:
-    """
-    Removes any quantity designation from location code value
-    """
-    try:
-        s = code.index("(")
-        e = code.index(")")
-        return f"{code[:s]}{code[e + 1:]}"
-    except ValueError:
-        return code
-
-
-def get_branch_code(location_code: str) -> str:
-    """
-    Returns branch code from normalized location code
-    """
-    branch = location_code[:2]
-    return branch
-
-
-def normalize_date(order_date: str) -> datetime:
-    """
-    Returns order created date in datetime format
-    """
-    return datetime.strptime(order_date, "%d-%m-%y")
-
-
-def get_shelf_audience_code(location_code: str) -> Optional[str]:
-    """
-    Parses audience code from given normalized location_code
-    """
-    try:
-        return location_code[2]
-    except IndexError:
-        return None
-
-
-def normalize_order_number(order_number: str) -> int:
-    """
-    Normalizes Sierra order number
-    """
-    return int(order_number[2:-1])
 
 
 class Bib(Record):
@@ -269,6 +283,9 @@ class Bib(Record):
     def _get_branches(self, field: Field) -> List[str]:
         """
         Returns isolated from location codes branches as a list
+
+        Args:
+            field:                  pymarc.Field instance
         """
         branches = []
 
@@ -281,6 +298,26 @@ class Bib(Record):
             branches.append(branch)
 
         return branches
+
+    def _get_shelves(self, field: Field) -> List[str]:
+        """
+        Returns list of shelf codes extracted from location code
+
+        Args:
+            field:                  pymarc.Field instance
+        """
+        shelves = []
+
+        for sub in field.get_subfields("t"):
+            # remove any qty data
+            loc_code = normalize_location_code(sub)
+
+            shelf = get_shelf_code(loc_code)
+
+            if shelf is not None:
+                shelves.append(shelf)
+
+        return shelves
 
     def orders(
         self, library: str = None, order: str = "descending"
@@ -317,6 +354,7 @@ class Bib(Record):
             audn = get_shelf_audience_code(first_location_code)
             status = field["m"].strip()
             branches = self._get_branches(field)
+            shelves = self._get_shelves(field)
             copies = int(field["o"])
             created = normalize_date(field["q"])
 
@@ -334,7 +372,7 @@ class Bib(Record):
                 created=created,
                 form=None,
                 lang=None,
-                shelves=None,
+                shelves=shelves,
                 status=status,
                 venNotes=None,
             )

@@ -10,6 +10,7 @@ from pymarc import Field
 from bookops_marc.bib import (
     get_branch_code,
     get_shelf_audience_code,
+    get_shelf_code,
     normalize_dewey,
     shorten_dewey,
     normalize_date,
@@ -85,6 +86,21 @@ def test_normalize_date():
 )
 def test_get_shelf_audience_code(arg, expectation):
     assert get_shelf_audience_code(arg) == expectation
+
+
+@pytest.mark.parametrize(
+    "arg,expectation",
+    [
+        ("41anf", "nf"),
+        ("13anb", "nb"),
+        ("snj0f", "0f"),
+        ("tb", None),
+        ("tb   ", None),
+        (None, None),
+    ],
+)
+def test_get_shelf_code(arg, expectation):
+    assert get_shelf_code(arg) == expectation
 
 
 def test_normalize_order_number():
@@ -342,3 +358,4 @@ def test_orders(stub_marc):
     assert o.branches == ["sn", "ag", "mu", "in"]
     assert o.copies == 13
     assert o.created == datetime(2021, 2, 8)
+    assert o.shelves == ["0y", "0y", "0y", "0y"]
