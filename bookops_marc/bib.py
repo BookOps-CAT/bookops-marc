@@ -131,6 +131,9 @@ def shorten_dewey(class_mark: str, digits_after_period: int = 4) -> str:
 class Bib(Record):
     """
     A class for representing local MARC record.
+    This implementation fixes pymarc.Record bug (?) which unable accessing
+    current position in the iterator (overwrites pymarc.Record's
+    __iter__ and __next__ methods).
     """
 
     def __init__(
@@ -155,6 +158,16 @@ class Bib(Record):
         )
 
         self.library = library
+
+    def __iter__(self):
+        self.pos = 0
+        return self
+
+    def __next__(self):
+        if self.pos >= len(self.fields):
+            raise StopIteration
+        self.pos += 1
+        return self.fields[self.pos - 1]
 
     def sierra_bib_no(self) -> Optional[str]:
         """
@@ -341,38 +354,46 @@ class Bib(Record):
         Returns a list of order attached to bib
 
         Args:
-            library:                "bpl" or "nypl" (mandatory)
             order:                  ascending (from most recent to oldest) or
                                     descending (from oldest to most recent)
         """
 
         orders = []
 
-        for field in self.get_fields("960"):
-            # shared mapping
-            oid = normalize_order_number(field["z"])
+        # order data coded in the 960 tag (order fixed fields) may be followed by
+        # related 961 tag (order variable field) so iterating over entire bib
+        # is needed to connect these two;
+        # it is possible 960 tag may not have related 961 (BPL)
 
-            audns = self._get_shelf_audience_codes(field)
-            branches = self._get_branches(field)
-            copies = int(field["o"])
-            form = field["g"]
-            created = normalize_date(field["q"])
-            lang = field["w"]
-            shelves = self._get_shelves(field)
-            status = field["m"].strip()
+        for field in self:
+            if field.tag == "960":
+                # shared NYPL & BPL mapping
+                oid = normalize_order_number(field["z"])
 
-            o = Order(
-                oid,
-                audn=audns,
-                branches=branches,
-                copies=copies,
-                created=created,
-                form=form,
-                lang=lang,
-                shelves=shelves,
-                status=status,
-                venNotes=None,
-            )
-            orders.append(o)
+                audns = self._get_shelf_audience_codes(field)
+                branches = self._get_branches(field)
+                copies = int(field["o"])
+                form = field["g"]
+                created = normalize_date(field["q"])
+                lang = field["w"]
+                shelves = self._get_shelves(field)
+                status = field["m"].strip()
+                following_field = self.fields[self.pos]
+                if following_field.tag == "961":
+                    venNotes = following_field["h"]
+
+                o = Order(
+                    oid,
+                    audn=audns,
+                    branches=branches,
+                    copies=copies,
+                    created=created,
+                    form=form,
+                    lang=lang,
+                    shelves=shelves,
+                    status=status,
+                    venNotes=venNotes,
+                )
+                orders.append(o)
 
         return orders

@@ -327,6 +327,10 @@ def test_orders(stub_marc):
         "y", "1",  # volumes
         "z", ".o28876714"  # order#
     ]))
+    stub_marc.add_field(
+        Field(
+            tag="961", indicators=[" ", " "],
+            subfields=["h", "e,bio", "l", "1643137123"]))
     # fmt: on
     orders = stub_marc.orders()
     assert len(orders) == 1
@@ -340,3 +344,4 @@ def test_orders(stub_marc):
     assert o.shelves == ["0y", "0y", "0y", "0y"]
     assert o.form == "b"
     assert o.lang == "eng"
+    assert o.venNotes == "e,bio"
