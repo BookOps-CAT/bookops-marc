@@ -17,7 +17,6 @@ from bookops_marc.bib import (
     normalize_location_code,
     normalize_order_number,
 )
-from bookops_marc.errors import BookopsMarcError
 
 
 @pytest.mark.parametrize(
@@ -82,7 +81,7 @@ def test_normalize_date():
 
 
 @pytest.mark.parametrize(
-    "arg,expectation", [("41", None), ("41anf", "a"), ("snj0y", "j")]
+    "arg,expectation", [("41", None), ("41anf", "a"), ("snj0y", "j"), ("sn   ", None)]
 )
 def test_get_shelf_audience_code(arg, expectation):
     assert get_shelf_audience_code(arg) == expectation
@@ -297,26 +296,6 @@ def test_form_of_item_in_pos_29(arg, stub_marc):
     assert stub_marc.form_of_item() == "o"
 
 
-@pytest.mark.parametrize(
-    "arg,expectation",
-    [
-        (
-            None,
-            "Must specify 'library' argument. Order field mapping varies between both systems.",
-        ),
-        (5, "The 'library' argument  must be a string."),
-        (
-            "queens",
-            "The 'library' argument have only two permissable values: 'nypl' and 'bpl'.",
-        ),
-    ],
-)
-def test_orders_exceptions(arg, expectation, stub_marc):
-    with pytest.raises(BookopsMarcError) as exc:
-        stub_marc.orders(library=arg)
-    assert expectation in str(exc)
-
-
 def test_orders(stub_marc):
     # fmt: off
     stub_marc.add_field(Field(tag="960", indicators=[" ", " "], subfields=[
@@ -349,13 +328,15 @@ def test_orders(stub_marc):
         "z", ".o28876714"  # order#
     ]))
     # fmt: on
-    orders = stub_marc.orders(library="nypl")
+    orders = stub_marc.orders()
     assert len(orders) == 1
     o = orders[0]
     assert o.oid == 2887671
-    assert o.audn == "j"
+    assert o.audn == ["j", "j", "j", "j"]
     assert o.status == "o"
     assert o.branches == ["sn", "ag", "mu", "in"]
     assert o.copies == 13
     assert o.created == datetime(2021, 2, 8)
     assert o.shelves == ["0y", "0y", "0y", "0y"]
+    assert o.form == "b"
+    assert o.lang == "eng"

@@ -26,7 +26,12 @@ def get_shelf_audience_code(location_code: str) -> Optional[str]:
     Parses audience code from given normalized location_code
     """
     try:
-        return location_code[2]
+        audn = location_code[2].strip()
+        if audn:
+            return audn
+        else:
+            return None
+
     except IndexError:
         return None
 
@@ -299,9 +304,23 @@ class Bib(Record):
 
         return branches
 
+    def _get_shelf_audience_codes(self, field: Field) -> List[str]:
+        """
+        Returns list of audience codes extracted from location codes
+        """
+        audns = []
+
+        for sub in field.get_subfields("t"):
+            loc_code = normalize_location_code(sub)
+
+            audn = get_shelf_audience_code(loc_code)
+            audns.append(audn)
+
+        return audns
+
     def _get_shelves(self, field: Field) -> List[str]:
         """
-        Returns list of shelf codes extracted from location code
+        Returns list of shelf codes extracted from location codes
 
         Args:
             field:                  pymarc.Field instance
@@ -313,65 +332,43 @@ class Bib(Record):
             loc_code = normalize_location_code(sub)
 
             shelf = get_shelf_code(loc_code)
-
-            if shelf is not None:
-                shelves.append(shelf)
+            shelves.append(shelf)
 
         return shelves
 
-    def orders(
-        self, library: str = None, order: str = "descending"
-    ) -> List[namedtuple]:
+    def orders(self, order: str = "descending") -> List[namedtuple]:
         """
-        Returns a list of order attached to bib. To correctly parse order field
-        a library must be specified since mapping varies in both systems.
+        Returns a list of order attached to bib
 
         Args:
             library:                "bpl" or "nypl" (mandatory)
             order:                  ascending (from most recent to oldest) or
                                     descending (from oldest to most recent)
         """
-        if not library:
-            raise BookopsMarcError(
-                "Must specify 'library' argument. Order field mapping varies between both systems."
-            )
-        elif not isinstance(library, str):
-            raise BookopsMarcError("The 'library' argument  must be a string.")
-
-        library = library.lower()
-
-        if library not in "nypl,bpl":
-            raise BookopsMarcError(
-                "The 'library' argument have only two permissable values: 'nypl' and 'bpl'."
-            )
 
         orders = []
 
         for field in self.get_fields("960"):
             # shared mapping
             oid = normalize_order_number(field["z"])
-            first_location_code = normalize_location_code(field["t"])
-            audn = get_shelf_audience_code(first_location_code)
-            status = field["m"].strip()
-            branches = self._get_branches(field)
-            shelves = self._get_shelves(field)
-            copies = int(field["o"])
-            created = normalize_date(field["q"])
 
-            # variant mapping
-            if library == "nypl":
-                pass
-            elif library == "bpl":
-                pass
+            audns = self._get_shelf_audience_codes(field)
+            branches = self._get_branches(field)
+            copies = int(field["o"])
+            form = field["g"]
+            created = normalize_date(field["q"])
+            lang = field["w"]
+            shelves = self._get_shelves(field)
+            status = field["m"].strip()
 
             o = Order(
                 oid,
-                audn=audn,
+                audn=audns,
                 branches=branches,
                 copies=copies,
                 created=created,
-                form=None,
-                lang=None,
+                form=form,
+                lang=lang,
                 shelves=shelves,
                 status=status,
                 venNotes=None,
