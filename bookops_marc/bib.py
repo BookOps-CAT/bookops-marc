@@ -413,7 +413,7 @@ class Bib(Record):
         """
         return self.leader[6]
 
-    def sierra_bib_no(self) -> Optional[str]:
+    def sierra_bib_id(self) -> Optional[str]:
         """
         Retrieves Sierra bib # from the 907 MARC tag
         """
@@ -422,9 +422,9 @@ class Bib(Record):
         except TypeError:
             return None
 
-    def sierra_bib_no_normalized(self) -> Optional[str]:
+    def sierra_bib_id_normalized(self) -> Optional[str]:
         """
         Retrieves Sierra bib # from the 907 tag and returns it
         without 'b' prefix and the check digit.
         """
-        return self.sierra_bib_no()[1:-1]
+        return self.sierra_bib_id()[1:-1]

@@ -119,11 +119,11 @@ def test_normalize_order_number():
     assert normalize_order_number(".o28876714") == 2887671
 
 
-def test_sierra_bib_no_missing_tag(stub_marc):
-    assert stub_marc.sierra_bib_no() is None
+def test_sierra_bib_id_missing_tag(stub_marc):
+    assert stub_marc.sierra_bib_id() is None
 
 
-def test_sierra_bib_no_missing_subfield(stub_marc):
+def test_sierra_bib_id_missing_subfield(stub_marc):
     stub_marc.add_field(
         Field(
             tag="907",
@@ -131,10 +131,10 @@ def test_sierra_bib_no_missing_subfield(stub_marc):
             subfields=["b", "08-17-21$c08-17-2021 7:50"],
         )
     )
-    assert stub_marc.sierra_bib_no() is None
+    assert stub_marc.sierra_bib_id() is None
 
 
-def test_sierra_bib_no(stub_marc):
+def test_sierra_bib_id(stub_marc):
     stub_marc.add_field(
         Field(
             tag="907",
@@ -142,10 +142,10 @@ def test_sierra_bib_no(stub_marc):
             subfields=["a", ".b225444884", "b", "08-17-21$c08-17-2021 7:50"],
         )
     )
-    assert stub_marc.sierra_bib_no() == "b225444884"
+    assert stub_marc.sierra_bib_id() == "b225444884"
 
 
-def test_sierra_bib_no_normalized(stub_marc):
+def test_sierra_bib_id_normalized(stub_marc):
     stub_marc.add_field(
         Field(
             tag="907",
@@ -153,7 +153,7 @@ def test_sierra_bib_no_normalized(stub_marc):
             subfields=["a", ".b225444884", "b", "08-17-21$c08-17-2021 7:50"],
         )
     )
-    assert stub_marc.sierra_bib_no_normalized() == "22544488"
+    assert stub_marc.sierra_bib_id_normalized() == "22544488"
 
 
 @pytest.mark.parametrize(
