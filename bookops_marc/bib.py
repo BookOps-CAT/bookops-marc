@@ -291,7 +291,7 @@ class Bib(Record):
                 class_mark = normalize_dewey(class_mark)
                 return class_mark
 
-    def dewey_normalized(self) -> Optional[str]:
+    def dewey_shortened(self) -> Optional[str]:
         """
         Returns LC suggested Dewey classification then other agency's number
         if present .

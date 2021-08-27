@@ -281,7 +281,7 @@ def test_dewey_other_agency_selected(stub_marc):
     assert stub_marc.dewey() == "909.092"
 
 
-def test_dewey_normalized(stub_marc):
+def test_dewey_shortened(stub_marc):
     stub_marc.add_field(
         Field(tag="082", indicators=[" ", " "], subfields=["a", "900.092"])
     )
@@ -291,7 +291,7 @@ def test_dewey_normalized(stub_marc):
     stub_marc.add_field(
         Field(tag="082", indicators=["0", "0"], subfields=["a", "909./09208"])
     )
-    assert stub_marc.dewey_normalized() == "909.092"
+    assert stub_marc.dewey_shortened() == "909.092"
 
 
 def test_languages_none_008(stub_marc):
