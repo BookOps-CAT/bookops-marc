@@ -3,7 +3,7 @@ Module replaces pymarc's Record module. Inherits all Record class functinality a
 adds some syntactic sugar.
 """
 from collections import namedtuple
-from datetime import datetime
+from datetime import datetime, date
 from typing import List, Optional
 
 from pymarc import Record, Field
@@ -54,7 +54,13 @@ def normalize_date(order_date: str) -> datetime:
     """
     Returns order created date in datetime format
     """
-    return datetime.strptime(order_date, "%d-%m-%y")
+    try:
+        if len(order_date) == 16:
+            return datetime.strptime(order_date[:10], "%m-%d-%Y").date()
+        elif len(order_date) == 8:
+            return datetime.strptime(order_date[:8], "%m-%d-%y").date()
+    except ValueError:
+        return None
 
 
 def normalize_dewey(class_mark: str) -> Optional[str]:
@@ -249,6 +255,13 @@ class Bib(Record):
                 return None
         else:
             return None
+
+    def created_date(self) -> date:
+        """
+        Extracts cataloging date from the bib
+        """
+        cat_date = normalize_date(self["907"]["c"])
+        return cat_date
 
     def dewey(self) -> Optional[str]:
         """

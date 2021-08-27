@@ -78,8 +78,19 @@ def test_get_branch_code(arg, expectation):
     assert get_branch_code(arg) == expectation
 
 
-def test_normalize_date():
-    assert normalize_date("01-07-21") == datetime(2021, 7, 1)
+@pytest.mark.parametrize(
+    "arg,expectation",
+    [
+        ("01-30-21", datetime(2021, 1, 30)),
+        ("08-02-2021 16:19", datetime(2021, 8, 2)),
+        ("  -  -  ", None),
+    ],
+)
+def test_normalize_date(arg, expectation):
+    if expectation is not None:
+        assert normalize_date(arg) == expectation.date()
+    else:
+        assert normalize_date(arg) is None
 
 
 @pytest.mark.parametrize(
@@ -196,6 +207,17 @@ def test_audience(stub_marc, arg1, arg2, expectation):
     s[7] = arg2
     stub_marc.leader = "".join(s)
     assert stub_marc.audience() == expectation
+
+
+@pytest.mark.parametrize("arg", ["08-02-2021 16:19", "08-02-21"])
+def test_created_date(stub_marc, arg):
+    stub_marc.add_field(
+        Field(
+            tag="907",
+            subfields=["a", ".b225375965", "b", "08-17-21", "c", arg],
+        )
+    )
+    assert stub_marc.created_date() == datetime(2021, 8, 2).date()
 
 
 def test_record_type(stub_marc):
@@ -324,7 +346,7 @@ def test_orders_single(stub_marc, mock_960):
     assert o.status == "o"
     assert o.branches == ["sn", "ag", "mu", "in"]
     assert o.copies == 13
-    assert o.created == datetime(2021, 2, 8)
+    assert o.created == datetime(2021, 8, 2).date()
     assert o.shelves == ["0y", "0y", "0y", "0y"]
     assert o.form == "b"
     assert o.lang == "eng"
