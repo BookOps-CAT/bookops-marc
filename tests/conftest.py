@@ -32,3 +32,38 @@ def stub_marc():
         )
     )
     return bib
+
+
+@pytest.fixture
+def mock_960():
+    # fmt: off
+    return Field(tag="960", indicators=[" ", " "], subfields=[
+        "a", "l",  # acq type
+        "b", "-",  # ?
+        "c", "j",  # order code 1 (selector)
+        "d", "c",  # order code 2 (NYPL library; BPL audn)
+        "e", "d",  # order code 3 (NYPL source; BPL not used)
+        "f", "a",  # order code 4 (NYPL audn; BPL Opac display)
+        "g", "b",  # form
+        "h", "-",  # ?
+        "i", "l",  # order type
+        "j", "-",  # ?
+        "m", "o",  # status
+        "n", "-",  # ?
+        "p", "  -  -  ",  # ?
+        "q", "08-02-21",  # order date
+        "r", "  -  -  ",  # ?
+        "s", "{{dollar}}13.20",  # price
+        "t", "(3)snj0y",  # location
+        "t", "agj0y",
+        "t", "muj0y",
+        "t", "inj0y",
+        "o", "13",  # copies
+        "u", "lease",  # fund
+        "v", "btlea",  # vendor
+        "w", "eng",  # lang
+        "x", "xxu",  # country
+        "y", "1",  # volumes
+        "z", ".o10000010"  # order#
+    ])
+    # fmt: on

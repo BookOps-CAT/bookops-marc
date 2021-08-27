@@ -169,135 +169,6 @@ class Bib(Record):
         self.pos += 1
         return self.fields[self.pos - 1]
 
-    def sierra_bib_no(self) -> Optional[str]:
-        """
-        Retrieves Sierra bib # from the 907 MARC tag
-        """
-        try:
-            return self["907"]["a"][1:]
-        except TypeError:
-            return None
-
-    def sierra_bib_no_normalized(self) -> Optional[str]:
-        """
-        Retrieves Sierra bib # from the 907 tag and returns it
-        without 'b' prefix and the check digit.
-        """
-        return self.sierra_bib_no()[1:-1]
-
-    def branch_call_no(self) -> Optional[str]:
-        """
-        Retrieves branch library call number as string without any MARC coding
-        """
-        if self.library == "bpl":
-            try:
-                return self["099"].value()
-            except AttributeError:
-                return None
-        elif self.library == "nypl":
-            try:
-                return self["091"].value()
-            except AttributeError:
-                return None
-        else:
-            return None
-
-    def audience(self) -> Optional[str]:
-        """
-        Retrieves audience code from the 008 MARC tag
-        """
-        try:
-            if self.leader[6] in "acdgijkmt" and self.leader[7] in "am":
-                code = self["008"].data[22]
-            else:
-                code = None
-        except AttributeError:
-            code = None
-        return code
-
-    def record_type(self) -> Optional[str]:
-        """
-        Retrieves record type code from MARC leader
-        """
-        return self.leader[6]
-
-    def physical_description(self) -> Optional[str]:
-        """
-        Returns value of the first 300 MARC tag in the bib
-        """
-        try:
-            return self.physicaldescription()[0].value()
-        except IndexError:
-            return None
-
-    def main_entry(self) -> Field:
-        """
-        Returns main entry field instance
-        """
-        entry_fields = ["100", "110", "111", "245"]
-        for field in entry_fields:
-            if bool(self[field]):
-                return self[field]
-
-    def dewey(self) -> Optional[str]:
-        """
-        Returns LC suggested Dewey classification then other agency's number.
-        Does not alter the class mark string.
-        """
-        fields = self.get_fields("082")
-
-        # check if LC full ed. present first
-        for field in fields:
-            if field.indicators == ["0", "0"]:
-                class_mark = field["a"].strip()
-                class_mark = normalize_dewey(class_mark)
-                return class_mark
-
-        # then other agency full ed.
-        for field in fields:
-            if field.indicators == ["0", "4"]:
-                class_mark = field["a"].strip()
-                class_mark = normalize_dewey(class_mark)
-                return class_mark
-
-    def dewey_normalized(self) -> Optional[str]:
-        """
-        Returns LC suggested Dewey classification then other agency's number
-        if present .
-        """
-        class_mark = self.dewey()
-        class_mark = shorten_dewey(class_mark)
-        return class_mark
-
-    def languages(self) -> List[str]:
-        """
-        Returns list of material main languages
-        """
-        languages = []
-
-        try:
-            languages.append(self["008"].data[35:38])
-        except AttributeError:
-            pass
-
-        for field in self.get_fields("041"):
-            for sub in field.get_subfields("a"):
-                languages.append(sub)
-        return languages
-
-    def form_of_item(self) -> Optional[str]:
-        """
-        Returns form of item code from the 008 tag position 23 if applicable for
-        a given material format
-        """
-        rec_type = self.record_type()
-        if rec_type in "acdijmopt":
-            return self["008"].data[23]
-        elif rec_type in "efgk":
-            return self["008"].data[29]
-        else:
-            return None
-
     def _get_branches(self, field: Field) -> List[str]:
         """
         Returns isolated from location codes branches as a list
@@ -349,14 +220,115 @@ class Bib(Record):
 
         return shelves
 
-    def orders(self, order: str = "descending") -> List[namedtuple]:
+    def audience(self) -> Optional[str]:
+        """
+        Retrieves audience code from the 008 MARC tag
+        """
+        try:
+            if self.leader[6] in "acdgijkmt" and self.leader[7] in "am":
+                code = self["008"].data[22]
+            else:
+                code = None
+        except AttributeError:
+            code = None
+        return code
+
+    def branch_call_no(self) -> Optional[str]:
+        """
+        Retrieves branch library call number as string without any MARC coding
+        """
+        if self.library == "bpl":
+            try:
+                return self["099"].value()
+            except AttributeError:
+                return None
+        elif self.library == "nypl":
+            try:
+                return self["091"].value()
+            except AttributeError:
+                return None
+        else:
+            return None
+
+    def dewey(self) -> Optional[str]:
+        """
+        Returns LC suggested Dewey classification then other agency's number.
+        Does not alter the class mark string.
+        """
+        fields = self.get_fields("082")
+
+        # check if LC full ed. present first
+        for field in fields:
+            if field.indicators == ["0", "0"]:
+                class_mark = field["a"].strip()
+                class_mark = normalize_dewey(class_mark)
+                return class_mark
+
+        # then other agency full ed.
+        for field in fields:
+            if field.indicators == ["0", "4"]:
+                class_mark = field["a"].strip()
+                class_mark = normalize_dewey(class_mark)
+                return class_mark
+
+    def dewey_normalized(self) -> Optional[str]:
+        """
+        Returns LC suggested Dewey classification then other agency's number
+        if present .
+        """
+        class_mark = self.dewey()
+        class_mark = shorten_dewey(class_mark)
+        return class_mark
+
+    def form_of_item(self) -> Optional[str]:
+        """
+        Returns form of item code from the 008 tag position 23 if applicable for
+        a given material format
+        """
+        rec_type = self.record_type()
+        if rec_type in "acdijmopt":
+            return self["008"].data[23]
+        elif rec_type in "efgk":
+            return self["008"].data[29]
+        else:
+            return None
+
+    def languages(self) -> List[str]:
+        """
+        Returns list of material main languages
+        """
+        languages = []
+
+        try:
+            languages.append(self["008"].data[35:38])
+        except AttributeError:
+            pass
+
+        for field in self.get_fields("041"):
+            for sub in field.get_subfields("a"):
+                languages.append(sub)
+        return languages
+
+    def main_entry(self) -> Field:
+        """
+        Returns main entry field instance
+        """
+        entry_fields = ["100", "110", "111", "245"]
+        for field in entry_fields:
+            if bool(self[field]):
+                return self[field]
+
+    def orders(self, sort: str = "descending") -> List[namedtuple]:
         """
         Returns a list of order attached to bib
 
         Args:
-            order:                  ascending (from most recent to oldest) or
-                                    descending (from oldest to most recent)
+            sort:                   ascending (from oldest to most recent) or
+                                    descending (from recent to oldest)
         """
+
+        if not isinstance(sort, str) or sort not in "ascending,descending":
+            raise BookopsMarcError("Invalid 'sort' argument was passed.")
 
         orders = []
 
@@ -378,9 +350,14 @@ class Bib(Record):
                 lang = field["w"]
                 shelves = self._get_shelves(field)
                 status = field["m"].strip()
-                following_field = self.fields[self.pos]
-                if following_field.tag == "961":
-                    venNotes = following_field["h"]
+
+                try:
+                    venNotes = None
+                    following_field = self.fields[self.pos]
+                    if following_field.tag == "961":
+                        venNotes = following_field["h"]
+                except IndexError:
+                    pass
 
                 o = Order(
                     oid,
@@ -396,4 +373,38 @@ class Bib(Record):
                 )
                 orders.append(o)
 
+        if sort == "descending":
+            orders.reverse()
+
         return orders
+
+    def physical_description(self) -> Optional[str]:
+        """
+        Returns value of the first 300 MARC tag in the bib
+        """
+        try:
+            return self.physicaldescription()[0].value()
+        except IndexError:
+            return None
+
+    def record_type(self) -> Optional[str]:
+        """
+        Retrieves record type code from MARC leader
+        """
+        return self.leader[6]
+
+    def sierra_bib_no(self) -> Optional[str]:
+        """
+        Retrieves Sierra bib # from the 907 MARC tag
+        """
+        try:
+            return self["907"]["a"][1:]
+        except TypeError:
+            return None
+
+    def sierra_bib_no_normalized(self) -> Optional[str]:
+        """
+        Retrieves Sierra bib # from the 907 tag and returns it
+        without 'b' prefix and the check digit.
+        """
+        return self.sierra_bib_no()[1:-1]

@@ -1,6 +1,7 @@
 """
 Tests bib.py module
 """
+from copy import deepcopy
 from datetime import datetime
 
 import pytest
@@ -17,6 +18,7 @@ from bookops_marc.bib import (
     normalize_location_code,
     normalize_order_number,
 )
+from bookops_marc.errors import BookopsMarcError
 
 
 @pytest.mark.parametrize(
@@ -296,46 +298,28 @@ def test_form_of_item_in_pos_29(arg, stub_marc):
     assert stub_marc.form_of_item() == "o"
 
 
-def test_orders(stub_marc):
-    # fmt: off
-    stub_marc.add_field(Field(tag="960", indicators=[" ", " "], subfields=[
-        "a", "l",  # acq type
-        "b", "-",  # ?
-        "c", "j",  # order code 1 (selector)
-        "d", "c",  # order code 2 (NYPL library; BPL audn)
-        "e", "d",  # order code 3 (NYPL source; BPL not used)
-        "f", "a",  # order code 4 (NYPL audn; BPL Opac display)
-        "g", "b",  # form
-        "h", "-",  # ?
-        "i", "l",  # order type
-        "j", "-",  # ?
-        "m", "o",  # status
-        "n", "-",  # ?
-        "p", "  -  -  ",  # ?
-        "q", "08-02-21",  # order date
-        "r", "  -  -  ",  # ?
-        "s", "{{dollar}}13.20",  # price
-        "t", "(3)snj0y",  # location
-        "t", "agj0y",
-        "t", "muj0y",
-        "t", "inj0y",
-        "o", "13",  # copies
-        "u", "lease",  # fund
-        "v", "btlea",  # vendor
-        "w", "eng",  # lang
-        "x", "xxu",  # country
-        "y", "1",  # volumes
-        "z", ".o28876714"  # order#
-    ]))
+@pytest.mark.parametrize("arg", [1, "foo"])
+def test_orders_exceptions(arg, stub_marc, mock_960):
+    msg = "Invalid 'sort' argument was passed."
+    stub_marc.add_field(mock_960)
+    with pytest.raises(BookopsMarcError) as exc:
+        stub_marc.orders(sort=arg)
+    assert msg in str(exc)
+
+
+def test_orders_single(stub_marc, mock_960):
+    stub_marc.add_field(mock_960)
     stub_marc.add_field(
         Field(
-            tag="961", indicators=[" ", " "],
-            subfields=["h", "e,bio", "l", "1643137123"]))
-    # fmt: on
+            tag="961",
+            indicators=[" ", " "],
+            subfields=["h", "e,bio", "l", "1643137123"],
+        )
+    )
     orders = stub_marc.orders()
     assert len(orders) == 1
     o = orders[0]
-    assert o.oid == 2887671
+    assert o.oid == 1000001
     assert o.audn == ["j", "j", "j", "j"]
     assert o.status == "o"
     assert o.branches == ["sn", "ag", "mu", "in"]
@@ -345,3 +329,26 @@ def test_orders(stub_marc):
     assert o.form == "b"
     assert o.lang == "eng"
     assert o.venNotes == "e,bio"
+
+
+def test_orders_reverse_sort(stub_marc, mock_960):
+    stub_marc.add_field(mock_960)
+    stub_marc.add_field(
+        Field(
+            tag="961",
+            indicators=[" ", " "],
+            subfields=["h", "e,bio", "l", "1643137123"],
+        )
+    )
+    # add second 960 without 961
+    second_960 = deepcopy(mock_960)
+    second_960.delete_subfield("z")
+    second_960.add_subfield("z", ".o10000020")
+    stub_marc.add_field(second_960)
+    orders = stub_marc.orders(sort="descending")
+
+    assert len(orders) == 2
+    assert orders[0].oid == 1000002
+    assert orders[0].venNotes is None
+    assert orders[1].oid == 1000001
+    assert orders[1].venNotes == "e,bio"
