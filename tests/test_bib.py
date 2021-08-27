@@ -220,6 +220,16 @@ def test_created_date(stub_marc, arg):
     assert stub_marc.created_date() == datetime(2021, 8, 2).date()
 
 
+def test_cataloging_date(stub_marc):
+    stub_marc.add_field(
+        Field(
+            tag="907",
+            subfields=["a", ".b225375965", "b", "08-17-21", "c", "08-02-21"],
+        )
+    )
+    assert stub_marc.cataloging_date() == datetime(2021, 8, 17).date()
+
+
 def test_record_type(stub_marc):
     assert stub_marc.record_type() == "a"
 

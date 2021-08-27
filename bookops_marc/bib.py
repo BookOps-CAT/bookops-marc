@@ -256,12 +256,19 @@ class Bib(Record):
         else:
             return None
 
-    def created_date(self) -> date:
+    def cataloging_date(self) -> Optional[date]:
         """
         Extracts cataloging date from the bib
         """
-        cat_date = normalize_date(self["907"]["c"])
+        cat_date = normalize_date(self["907"]["b"])
         return cat_date
+
+    def created_date(self) -> Optional[date]:
+        """
+        Extracts bib creation date
+        """
+        created_date = normalize_date(self["907"]["c"])
+        return created_date
 
     def dewey(self) -> Optional[str]:
         """
