@@ -384,3 +384,26 @@ def test_orders_reverse_sort(stub_marc, mock_960):
     assert orders[0].venNotes is None
     assert orders[1].oid == 1000001
     assert orders[1].venNotes == "e,bio"
+
+
+def test_subjects_lc(stub_marc):
+    stub_marc.add_field(
+        Field(tag="650", indicators=[" ", "7"], subfields=["a", "Foo", "2", "bar"])
+    )
+    stub_marc.add_field(
+        Field(
+            tag="600",
+            indicators=["1", "0"],
+            subfields=["a", "Doe, John", "x", "Childhood."],
+        )
+    )
+    stub_marc.add_field(
+        Field(tag="650", indicators=[" ", "4"], subfields=["a", "Foo", "2", "bar"])
+    )
+    stub_marc.add_field(
+        Field(tag="651", indicators=[" ", "0"], subfields=["a", "Spam."])
+    )
+    lc_subjects = stub_marc.subjects_lc()
+    assert len(lc_subjects) == 2
+    assert lc_subjects[0].subfields == ["a", "Doe, John", "x", "Childhood."]
+    assert lc_subjects[1].subfields == ["a", "Spam."]

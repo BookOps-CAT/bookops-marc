@@ -428,3 +428,13 @@ class Bib(Record):
         without 'b' prefix and the check digit.
         """
         return self.sierra_bib_id()[1:-1]
+
+    def subjects_lc(self) -> List[Field]:
+        """
+        Retrieves Library of Congress Subject Headings from the bib
+        """
+        lc_subjects = []
+        for field in self.subjects():
+            if field.indicator2 == "0":
+                lc_subjects.append(field)
+        return lc_subjects
