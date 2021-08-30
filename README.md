@@ -31,6 +31,9 @@ with open ('marc.mrc', "rb") as marcfile:
 Python 3.8 and up.
 
 ## Version
-> 0.1.0
+> 0.2.0
 
 ## Changelog
+
+### 0.2.0 (08/30/2021)
++ added a method to retrieve branch call number as `pymarc.Field`
