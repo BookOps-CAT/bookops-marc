@@ -243,16 +243,20 @@ class Bib(Record):
         """
         Retrieves branch library call number as string without any MARC coding
         """
+        field = self.branch_call_no_field()
+        try:
+            return field.value()
+        except AttributeError:
+            return None
+
+    def branch_call_no_field(self) -> Optional[Field]:
+        """
+        Retrieves a branch library call number field as pymarc.Field instance
+        """
         if self.library == "bpl":
-            try:
-                return self["099"].value()
-            except AttributeError:
-                return None
+            return self["099"]
         elif self.library == "nypl":
-            try:
-                return self["091"].value()
-            except AttributeError:
-                return None
+            return self["091"]
         else:
             return None
 
