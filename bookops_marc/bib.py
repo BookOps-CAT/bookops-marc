@@ -333,6 +333,15 @@ class Bib(Record):
                 languages.append(sub)
         return languages
 
+    def lccn(self) -> Optional[str]:
+        """
+        Returns Library of Congress Control Number
+        """
+        try:
+            return self["010"]["a"].strip()
+        except (AttributeError, TypeError):
+            return None
+
     def main_entry(self) -> Field:
         """
         Returns main entry field instance
@@ -402,6 +411,15 @@ class Bib(Record):
 
         return orders
 
+    def overdrive_number(self) -> Optional[str]:
+        """
+        Returns Overdrive Reserve ID parsed from the 037 tag.
+        """
+        try:
+            return self["037"]["a"].strip()
+        except (AttributeError, TypeError):
+            return None
+
     def physical_description(self) -> Optional[str]:
         """
         Returns value of the first 300 MARC tag in the bib
@@ -442,3 +460,16 @@ class Bib(Record):
             if field.indicator2 == "0":
                 lc_subjects.append(field)
         return lc_subjects
+
+    def upc_number(self) -> Optional[str]:
+        """
+        Returns a UPC number if present on the bib.
+        https://www.loc.gov/marc/bibliographic/bd024.html
+        """
+        tag = self["024"]
+        if tag:
+            if tag.indicator1 == "1":
+                try:
+                    return tag["a"].strip()
+                except AttributeError:
+                    pass

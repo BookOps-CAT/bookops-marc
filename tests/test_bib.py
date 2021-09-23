@@ -310,6 +310,30 @@ def test_languages_multiple(stub_marc):
     assert stub_marc.languages() == ["hat", "eng", "spa"]
 
 
+def test_lccn_missing_010(stub_marc):
+    assert stub_marc.lccn() is None
+
+
+def test_lccn_missing_sub_a(stub_marc):
+    stub_marc.add_field(Field(tag="010", indicators=[" ", " "], subfields=["z", "foo"]))
+    assert stub_marc.lccn() is None
+
+
+@pytest.mark.parametrize(
+    "arg,expectation",
+    [
+        ("   85153773 ", "85153773"),
+        ("nuc76039265 ", "nuc76039265"),
+        ("  2001627090", "2001627090"),
+    ],
+)
+def test_lccn(arg, expectation, stub_marc):
+    stub_marc.add_field(
+        Field(tag="010", indicators=[" ", " "], subfields=["a", arg, "b", "foo"])
+    )
+    assert stub_marc.lccn() == expectation
+
+
 def test_form_of_item_not_present(stub_marc):
     stub_marc.leader = "#" * 6 + "x" + "#" * 18
     stub_marc["008"].data = "#" * 23 + "f" + "#" * 10
@@ -386,6 +410,39 @@ def test_orders_reverse_sort(stub_marc, mock_960):
     assert orders[1].venNotes == "e,bio"
 
 
+def test_overdrive_number_missing_037(stub_marc):
+    assert stub_marc.overdrive_number() is None
+
+
+def test_overdrive_number_missing_sub_a(stub_marc):
+    stub_marc.add_field(Field(tag="037", indicators=[" ", " "], subfields=["z", "foo"]))
+    assert stub_marc.overdrive_number() is None
+
+
+@pytest.mark.parametrize(
+    "arg,expectation",
+    [
+        (
+            "EA72608D-6B04-446E-9AAC-4131D2E529C6",
+            "EA72608D-6B04-446E-9AAC-4131D2E529C6",
+        ),
+        (
+            " EA72608D-6B04-446E-9AAC-4131D2E529C6 ",
+            "EA72608D-6B04-446E-9AAC-4131D2E529C6",
+        ),
+    ],
+)
+def test_overdrive_number(arg, expectation, stub_marc):
+    stub_marc.add_field(
+        Field(
+            tag="037",
+            indicators=[" ", " "],
+            subfields=["a", arg, "b", "OverDrive, Inc."],
+        )
+    )
+    assert stub_marc.overdrive_number() == expectation
+
+
 def test_subjects_lc(stub_marc):
     stub_marc.add_field(
         Field(tag="650", indicators=[" ", "7"], subfields=["a", "Foo", "2", "bar"])
@@ -407,3 +464,45 @@ def test_subjects_lc(stub_marc):
     assert len(lc_subjects) == 2
     assert lc_subjects[0].subfields == ["a", "Doe, John", "x", "Childhood."]
     assert lc_subjects[1].subfields == ["a", "Spam."]
+
+
+def test_upc_number_missing_024(stub_marc):
+    assert stub_marc.upc_number() is None
+
+
+def test_upc_number_missing_sub_a(stub_marc):
+    stub_marc.add_field(Field(tag="024", indicators=["1", " "], subfields=["z", "foo"]))
+    assert stub_marc.upc_number() is None
+
+
+def test_upc_number_other_number(stub_marc):
+    stub_marc.add_field(
+        Field(
+            tag="024", indicators=["2", " "], subfields=["a", "M011234564", "z", "foo"]
+        )
+    )
+    assert stub_marc.upc_number() is None
+
+
+@pytest.mark.parametrize(
+    "arg,expectation",
+    [
+        (
+            "7822183031",
+            "7822183031",
+        ),
+        (
+            " 7822183031 ",
+            "7822183031",
+        ),
+    ],
+)
+def test_upc_number(arg, expectation, stub_marc):
+    stub_marc.add_field(
+        Field(
+            tag="024",
+            indicators=["1", " "],
+            subfields=["a", arg, "b", "foo"],
+        )
+    )
+    assert stub_marc.upc_number() == expectation
