@@ -4,7 +4,7 @@ from bookops_marc import __version__
 
 
 def test_version():
-    assert __version__ == "0.3.0"
+    assert __version__ == "0.4.0"
 
 
 def test_Bib_top_import():

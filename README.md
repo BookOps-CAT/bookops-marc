@@ -31,12 +31,16 @@ with open ('marc.mrc', "rb") as marcfile:
 Python 3.8 and up.
 
 ## Version
-> 0.2.0
+> 0.4.0
 
 ## Changelog
+
+## 0.4.0 (09/23/2021)
++ added `control_number` method to `Bib` (retrieves data from the tag 001)
+
+### 0.3.0 (09/23/2021)
++ added following methods: `lccn` (retrieves LCCN from bib), `overdrive_number` (retrieves Overdrive Reserve ID), and `upc_number` (retrieves UPC from bib)
 
 ### 0.2.0 (08/30/2021)
 + added a method for retrieving branch call number as `pymarc.Field`
 
-### 0.3.0 (09/23/2021)
-+ added following methods: `lccn` (retrieves LCCN from bib), `overdrive_number` (retrieves Overdrive Reserve ID), and `upc_number` (retrieves UPC from bib)
