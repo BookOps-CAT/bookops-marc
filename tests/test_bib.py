@@ -230,6 +230,18 @@ def test_cataloging_date(stub_marc):
     assert stub_marc.cataloging_date() == datetime(2021, 8, 17).date()
 
 
+def test_control_number_missing_001(stub_marc):
+    assert stub_marc.control_number() is None
+
+
+@pytest.mark.parametrize(
+    "arg,expectation", [("ocn12345", "ocn12345"), (" 12345 ", "12345")]
+)
+def test_control_nubmer(arg, expectation, stub_marc):
+    stub_marc.add_field(Field(tag="001", data=arg))
+    assert stub_marc.control_number() == expectation
+
+
 def test_record_type(stub_marc):
     assert stub_marc.record_type() == "a"
 

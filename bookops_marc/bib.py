@@ -267,6 +267,15 @@ class Bib(Record):
         cat_date = normalize_date(self["907"]["b"])
         return cat_date
 
+    def control_number(self) -> Optional[str]:
+        """
+        Returns a control number from the 001 tag if exists.
+        """
+        try:
+            return self["001"].data.strip()
+        except AttributeError:
+            return None
+
     def created_date(self) -> Optional[date]:
         """
         Extracts bib creation date
