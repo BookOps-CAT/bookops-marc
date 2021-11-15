@@ -478,6 +478,33 @@ def test_subjects_lc(stub_marc):
     assert lc_subjects[1].subfields == ["a", "Spam."]
 
 
+def test_suppressed_missing_998(stub_marc):
+    assert stub_marc.suppressed() is False
+
+
+def test_suppressed_missing_998_e(stub_marc):
+    stub_marc.add_field(Field(tag="998", subfields=["a", "foo"]))
+    assert stub_marc.suppressed() is False
+
+
+@pytest.mark.parametrize(
+    "arg,expectation",
+    [
+        ("-", False),
+        ("a", False),
+        ("c", True),
+        ("e", True),
+        ("n", True),
+        ("q", True),
+        ("o", True),
+        ("v", True),
+    ],
+)
+def test_suppressed(stub_marc, arg, expectation):
+    stub_marc.add_field(Field(tag="998", subfields=["e", arg]))
+    assert stub_marc.suppressed() == expectation
+
+
 def test_upc_number_missing_024(stub_marc):
     assert stub_marc.upc_number() is None
 

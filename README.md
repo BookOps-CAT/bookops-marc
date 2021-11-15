@@ -31,11 +31,14 @@ with open ('marc.mrc', "rb") as marcfile:
 Python 3.8 and up.
 
 ## Version
-> 0.4.0
+> 0.5.0
 
 ## Changelog
 
-## 0.4.0 (09/23/2021)
+### 0.5.0 (11/15/2021)
++ added `suppressed` method to `Bib` which determines if bib is suppressed from the public display
+
+### 0.4.0 (09/23/2021)
 + added `control_number` method to `Bib` (retrieves data from the tag 001)
 
 ### 0.3.0 (09/23/2021)

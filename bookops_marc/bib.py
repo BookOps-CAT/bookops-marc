@@ -470,6 +470,22 @@ class Bib(Record):
                 lc_subjects.append(field)
         return lc_subjects
 
+    def suppressed(self) -> bool:
+        """
+        Determines based on 998 $e value if bib is suppressed from public display
+        BPL usage: "c", "n"
+        NYPL usage: "c", "e", "n", "q", "o", "v"
+        """
+        try:
+            code = self["998"]["e"]
+        except TypeError:
+            return False
+
+        if code in ("c", "e", "n", "q", "o", "v"):
+            return True
+        else:
+            return False
+
     def upc_number(self) -> Optional[str]:
         """
         Returns a UPC number if present on the bib.
