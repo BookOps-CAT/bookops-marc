@@ -1,2 +1,1 @@
-pymarc==4.1.1; python_version >= "3.6" \
-    --hash=sha256:b86261927f346521bf1b02eaf75a47d9907ae9d9bc295c1a89ff24e7817dc1ba
+pymarc==4.1.2; python_version >= "3.6"
