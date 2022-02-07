@@ -1,4 +1,4 @@
-[![Build Status](https://app.travis-ci.com/BookOps-CAT/bookops-marc.svg?branch=master)](https://app.travis-ci.com/BookOps-CAT/bookops-marc) [![Coverage Status](https://coveralls.io/repos/github/BookOps-CAT/bookops-marc/badge.svg?branch=master)](https://coveralls.io/github/BookOps-CAT/bookops-marc?branch=master) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[tests](https://github.com/BookOps-CAT/bookops-marc/actions/workflows/unit-tests.yaml/badge.svg?branch=master)(https://app.travis-ci.com/BookOps-CAT/bookops-marc) [![Coverage Status](https://coveralls.io/repos/github/BookOps-CAT/bookops-marc/badge.svg?branch=master)](https://coveralls.io/github/BookOps-CAT/bookops-marc?branch=master) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 # bookops-marc
 
@@ -31,19 +31,34 @@ with open ('marc.mrc', "rb") as marcfile:
 Python 3.8 and up.
 
 ## Version
-> 0.5.0
+> 0.6.0
 
 ## Changelog
 
-### 0.5.0 (11/15/2021)
-+ added `suppressed` method to `Bib` which determines if bib is suppressed from the public display
+### [0.6.0] - 2022-02-06
+#### Changed
++ CI moved from Travis to Github-Actions
+    + added Python 3.10 tests
 
-### 0.4.0 (09/23/2021)
-+ added `control_number` method to `Bib` (retrieves data from the tag 001)
+### [0.5.0] - 2021-11-15
+#### Added
++ `bib.suppressed()` method to `Bib` which determines if bib is suppressed from the public display
 
-### 0.3.0 (09/23/2021)
-+ added following methods: `lccn` (retrieves LCCN from bib), `overdrive_number` (retrieves Overdrive Reserve ID), and `upc_number` (retrieves UPC from bib)
+### [0.4.0]  - 2021-09-23
+#### Added
++ `bib.control_number()` method to `Bib` (retrieves data from the tag 001)
 
-### 0.2.0 (08/30/2021)
-+ added a method for retrieving branch call number as `pymarc.Field`
+### [0.3.0] - 2021-09-23
+#### Added
++ `bib.lccn()` (retrieves LCCN from bib),
++ `bib.overdrive_number()` (retrieves Overdrive Reserve ID),
++ `bib.upc_number()` (retrieves UPC from bib)
 
+### [0.2.0] - [2021-08-30]
+#### Added
++ a method for retrieving branch call number as `pymarc.Field`
+
+[0.5.0]: https://github.com/BookOps-CAT/bookops-marc/compare/0.4.0...0.5.0
+[0.4.0]: https://github.com/BookOps-CAT/bookops-marc/compare/0.3.0...0.4.0
+[0.3.0]: https://github.com/BookOps-CAT/bookops-marc/compare/v0.2.0...0.3.0
+[0.2.0]: https://github.com/BookOps-CAT/bookops-marc/compare/v0.1.0...v0.2.0
