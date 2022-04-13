@@ -31,9 +31,15 @@ with open ('marc.mrc', "rb") as marcfile:
 Python 3.8 and up.
 
 ## Version
-> 0.6.0
+> 0.6.1
 
 ## Changelog
+### [0.6.1] - 2022-04-13
+#### Fixed
++ parsing of NYPL bib created date Sierra field (907$c)
+
+#### Changed
++ bumps pymarc to v4.2.0
 
 ### [0.6.0] - 2022-02-06
 #### Changed
