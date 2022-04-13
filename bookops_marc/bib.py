@@ -55,10 +55,10 @@ def normalize_date(order_date: str) -> datetime:
     Returns order created date in datetime format
     """
     try:
-        if len(order_date) == 16:
-            return datetime.strptime(order_date[:10], "%m-%d-%Y").date()
-        elif len(order_date) == 8:
+        if len(order_date) == 8:
             return datetime.strptime(order_date[:8], "%m-%d-%y").date()
+        else:
+            return datetime.strptime(order_date[:10], "%m-%d-%Y").date()
     except ValueError:
         return None
 

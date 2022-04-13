@@ -209,15 +209,24 @@ def test_audience(stub_marc, arg1, arg2, expectation):
     assert stub_marc.audience() == expectation
 
 
-@pytest.mark.parametrize("arg", ["08-02-2021 16:19", "08-02-21"])
-def test_created_date(stub_marc, arg):
+@pytest.mark.parametrize(
+    "arg, expectation",
+    [
+        ("08-02-2021 16:19", datetime(2021, 8, 2).date()),
+        ("12-30-2020 9:51", datetime(2020, 12, 30).date()),
+        ("12-30-2022", datetime(2022, 12, 30).date()),
+        ("01-30-22", datetime(2022, 1, 30).date()),
+    ],
+)
+def test_created_date(stub_marc, arg, expectation):
     stub_marc.add_field(
         Field(
             tag="907",
             subfields=["a", ".b225375965", "b", "08-17-21", "c", arg],
         )
     )
-    assert stub_marc.created_date() == datetime(2021, 8, 2).date()
+    # print(type(stub_marc.created_date()))
+    assert stub_marc.created_date() == expectation
 
 
 def test_cataloging_date(stub_marc):
