@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """
 Module replaces pymarc's Record module. Inherits all Record class functinality and
 adds some syntactic sugar.
@@ -11,6 +13,7 @@ from pymarc.constants import LEADER_LEN
 
 from .errors import BookopsMarcError
 from .models import Order
+from .constants import SUPPORTED_THESAURI, SUPPORTED_SUBJECT_TAGS
 
 
 def get_branch_code(location_code: str) -> str:
@@ -428,6 +431,30 @@ class Bib(Record):
             return self["037"]["a"].strip()
         except (AttributeError, TypeError):
             return None
+
+    def remove_unsupported_subjects(self) -> None:
+        """
+        Deletes subject fields from the record that contain
+        unsupported by BPL or NYPL thesauri
+        """
+        subjects = self.subjects()
+
+        for field in subjects:
+            if field.tag not in SUPPORTED_SUBJECT_TAGS:
+                self.remove_field(field)
+                continue
+            if field.indicator2 == "0":  # LCSH
+                continue
+            if field.indicator2 == "7":
+                if "2" in field:
+                    if field["2"].strip() in SUPPORTED_THESAURI:
+                        continue
+                    else:
+                        self.remove_field(field)
+                else:
+                    self.remove_field(field)
+            else:
+                self.remove_field(field)
 
     def physical_description(self) -> Optional[str]:
         """

@@ -464,6 +464,140 @@ def test_overdrive_number(arg, expectation, stub_marc):
     assert stub_marc.overdrive_number() == expectation
 
 
+@pytest.mark.parametrize(
+    "field,expectation",
+    [
+        pytest.param(
+            Field(tag="650", indicators=[" ", "0"], subfields=["a", "Foo."]),
+            True,
+            id="regular LCSH",
+        ),
+        pytest.param(
+            Field(
+                tag="650", indicators=[" ", "7"], subfields=["a", "Foo.", "2", "lcsh"]
+            ),
+            True,
+            id="LCSH $2",
+        ),
+        pytest.param(
+            Field(
+                tag="650", indicators=[" ", "7"], subfields=["a", "Foo.", "2", "fast"]
+            ),
+            True,
+            id="fast",
+        ),
+        pytest.param(
+            Field(
+                tag="650", indicators=[" ", "7"], subfields=["a", "Foo.", "2", "gsafd"]
+            ),
+            True,
+            id="gsafd",
+        ),
+        pytest.param(
+            Field(
+                tag="650", indicators=[" ", "7"], subfields=["a", "Foo.", "2", "lcgft"]
+            ),
+            True,
+            id="lcgft",
+        ),
+        pytest.param(
+            Field(
+                tag="650", indicators=[" ", "7"], subfields=["a", "Foo.", "2", "lctgm"]
+            ),
+            True,
+            id="lctgm",
+        ),
+        pytest.param(
+            Field(
+                tag="650",
+                indicators=[" ", "7"],
+                subfields=["a", "Foo.", "2", "bookops"],
+            ),
+            True,
+            id="bookops",
+        ),
+        pytest.param(
+            Field(
+                tag="650", indicators=[" ", "7"], subfields=["a", "Foo.", "2", "homoit"]
+            ),
+            True,
+            id="homoit",
+        ),
+        pytest.param(
+            Field(tag="600", indicators=["1", "0"], subfields=["a", "Foo."]),
+            True,
+            id="600 LCSH tag",
+        ),
+        pytest.param(
+            Field(tag="610", indicators=[" ", "0"], subfields=["a", "Foo."]),
+            True,
+            id="610 LCSH tag",
+        ),
+        pytest.param(
+            Field(tag="611", indicators=[" ", "0"], subfields=["a", "Foo."]),
+            True,
+            id="611 LCSH tag",
+        ),
+        pytest.param(
+            Field(tag="630", indicators=[" ", "0"], subfields=["a", "Foo."]),
+            True,
+            id="630 LCSH tag",
+        ),
+        pytest.param(
+            Field(tag="648", indicators=[" ", "0"], subfields=["a", "Foo."]),
+            True,
+            id="648 LCSH tag",
+        ),
+        pytest.param(
+            Field(tag="650", indicators=[" ", "0"], subfields=["a", "Foo."]),
+            True,
+            id="650 LCSH tag",
+        ),
+        pytest.param(
+            Field(tag="651", indicators=[" ", "0"], subfields=["a", "Foo."]),
+            True,
+            id="651 LCSH tag",
+        ),
+        pytest.param(
+            Field(tag="655", indicators=[" ", "0"], subfields=["a", "Foo."]),
+            True,
+            id="655 LCSH tag",
+        ),
+        pytest.param(
+            Field(
+                tag="650", indicators=[" ", "7"], subfields=["a", "Foo.", "2", "aat"]
+            ),
+            False,
+            id="att",
+        ),
+        pytest.param(
+            Field(tag="650", indicators=[" ", "1"], subfields=["a", "Foo."]),
+            False,
+            id="Children's LCSH",
+        ),
+        pytest.param(
+            Field(tag="654", indicators=[" ", "0"], subfields=["a", "Foo."]),
+            False,
+            id="654 tag",
+        ),
+        pytest.param(
+            Field(tag="690", indicators=[" ", "0"], subfields=["a", "Foo."]),
+            False,
+            id="690 tag",
+        ),
+        pytest.param(
+            Field(tag="650", indicators=[" ", "7"], subfields=["a", "Foo."]),
+            False,
+            id="Invalid ind2",
+        ),
+    ],
+)
+def test_remove_unsupported_subjects(stub_marc, field, expectation):
+    stub_marc.add_field(field)
+    stub_marc.remove_unsupported_subjects()
+    (field.tag in stub_marc) == expectation
+
+
 def test_subjects_lc(stub_marc):
     stub_marc.add_field(
         Field(tag="650", indicators=[" ", "7"], subfields=["a", "Foo", "2", "bar"])
