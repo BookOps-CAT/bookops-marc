@@ -12,8 +12,8 @@ python = "^3.9"
 pymarc = "^4.1.1"
 
 [tool.poetry.dev-dependencies]
-pytest = "^6.2.5"
-pytest-cov = "^2.12.1"
+pytest = "^7.1.1"
+pytest-cov = "^3.0.0"
 black = "^22.1.0"
 
 [build-system]
@@ -22,7 +22,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.black]
 line-length = 88
-target-version = ['py38']
+target-version = ['py39']
 include = '\.pyi?$'
 exclude = '''
 (
