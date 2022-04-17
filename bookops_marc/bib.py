@@ -6,7 +6,7 @@ adds some syntactic sugar.
 """
 from collections import namedtuple
 from datetime import datetime, date
-from typing import Optional
+from typing import List, Optional
 
 from pymarc import Record, Field
 from pymarc.constants import LEADER_LEN
@@ -178,7 +178,7 @@ class Bib(Record):
         self.pos += 1
         return self.fields[self.pos - 1]
 
-    def _get_branches(self, field: Field) -> list[str]:
+    def _get_branches(self, field: Field) -> List[str]:
         """
         Returns isolated from location codes branches as a list
 
@@ -197,7 +197,7 @@ class Bib(Record):
 
         return branches
 
-    def _get_shelf_audience_codes(self, field: Field) -> list[Optional[str]]:
+    def _get_shelf_audience_codes(self, field: Field) -> List[Optional[str]]:
         """
         Returns list of audience codes extracted from location codes
         """
@@ -211,7 +211,7 @@ class Bib(Record):
 
         return audns
 
-    def _get_shelves(self, field: Field) -> list[Optional[str]]:
+    def _get_shelves(self, field: Field) -> List[Optional[str]]:
         """
         Returns list of shelf codes extracted from location codes
 
@@ -336,7 +336,7 @@ class Bib(Record):
         else:
             return None
 
-    def languages(self) -> list[str]:
+    def languages(self) -> List[str]:
         """
         Returns list of material main languages
         """
@@ -370,7 +370,7 @@ class Bib(Record):
             if bool(self[field]):
                 return self[field]
 
-    def orders(self, sort: str = "descending") -> list[Order]:
+    def orders(self, sort: str = "descending") -> List[Order]:
         """
         Returns a list of order attached to bib
 
@@ -502,7 +502,7 @@ class Bib(Record):
         except TypeError:
             return None
 
-    def subjects_lc(self) -> list[Field]:
+    def subjects_lc(self) -> List[Field]:
         """
         Retrieves Library of Congress Subject Headings from the bib
         """
