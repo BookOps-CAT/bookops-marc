@@ -31,9 +31,19 @@ with open ('marc.mrc', "rb") as marcfile:
 Python 3.8 and up.
 
 ## Version
-> 0.6.1
+> 0.7.0
 
 ## Changelog
+### [0.7.0] - 2022-04-16
+#### Added
++ remove_unsupported_subjects() that deletes subject tags (6xx) which are not supported by BookOps (NYPL & BPL CAT)
++ dev dependency mypy 0.942
++ basic type checking
+
+#### Changed
++ pytest bumped to 7.1.1
++ pytest-cov bumped to 3.0.0
+
 ### [0.6.1] - 2022-04-13
 #### Fixed
 + parsing of NYPL bib created date Sierra field (907$c)

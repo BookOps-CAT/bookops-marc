@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """
 Module replaces pymarc's Record module. Inherits all Record class functinality and
 adds some syntactic sugar.
@@ -11,6 +13,7 @@ from pymarc.constants import LEADER_LEN
 
 from .errors import BookopsMarcError
 from .models import Order
+from .constants import SUPPORTED_THESAURI, SUPPORTED_SUBJECT_TAGS
 
 
 def get_branch_code(location_code: str) -> str:
@@ -50,7 +53,7 @@ def get_shelf_code(location_code: str) -> Optional[str]:
         return None
 
 
-def normalize_date(order_date: str) -> datetime:
+def normalize_date(order_date: str) -> Optional[date]:
     """
     Returns order created date in datetime format
     """
@@ -83,13 +86,13 @@ def normalize_dewey(class_mark: str) -> Optional[str]:
             .strip()
         )
         try:
-            # test if has correct format
             float(class_mark)
-            while class_mark[-1] == "0":
-                class_mark = class_mark[:-1]
-            return class_mark
         except ValueError:
             return None
+        else:
+            while len(class_mark) > 4 and class_mark[-1] == "0":
+                class_mark = class_mark[:-1]
+            return class_mark
     else:
         return None
 
@@ -194,7 +197,7 @@ class Bib(Record):
 
         return branches
 
-    def _get_shelf_audience_codes(self, field: Field) -> List[str]:
+    def _get_shelf_audience_codes(self, field: Field) -> List[Optional[str]]:
         """
         Returns list of audience codes extracted from location codes
         """
@@ -208,7 +211,7 @@ class Bib(Record):
 
         return audns
 
-    def _get_shelves(self, field: Field) -> List[str]:
+    def _get_shelves(self, field: Field) -> List[Optional[str]]:
         """
         Returns list of shelf codes extracted from location codes
 
@@ -232,12 +235,11 @@ class Bib(Record):
         """
         try:
             if self.leader[6] in "acdgijkmt" and self.leader[7] in "am":
-                code = self["008"].data[22]
+                return self["008"].data[22]  # type: ignore
             else:
-                code = None
+                return None
         except AttributeError:
-            code = None
-        return code
+            return None
 
     def branch_call_no(self) -> Optional[str]:
         """
@@ -245,7 +247,7 @@ class Bib(Record):
         """
         field = self.branch_call_no_field()
         try:
-            return field.value()
+            return field.value()  # type:ignore
         except AttributeError:
             return None
 
@@ -272,7 +274,7 @@ class Bib(Record):
         Returns a control number from the 001 tag if exists.
         """
         try:
-            return self["001"].data.strip()
+            return self["001"].data.strip()  # type: ignore
         except AttributeError:
             return None
 
@@ -295,14 +297,16 @@ class Bib(Record):
             if field.indicators == ["0", "0"]:
                 class_mark = field["a"].strip()
                 class_mark = normalize_dewey(class_mark)
-                return class_mark
+                return class_mark  # type: ignore
 
         # then other agency full ed.
         for field in fields:
             if field.indicators == ["0", "4"]:
                 class_mark = field["a"].strip()
                 class_mark = normalize_dewey(class_mark)
-                return class_mark
+                return class_mark  # type: ignore
+
+        return None
 
     def dewey_shortened(self) -> Optional[str]:
         """
@@ -310,8 +314,10 @@ class Bib(Record):
         if present .
         """
         class_mark = self.dewey()
-        class_mark = shorten_dewey(class_mark)
-        return class_mark
+        if isinstance(class_mark, str):
+            return shorten_dewey(class_mark)
+        else:
+            return None
 
     def form_of_item(self) -> Optional[str]:
         """
@@ -319,10 +325,14 @@ class Bib(Record):
         a given material format
         """
         rec_type = self.record_type()
-        if rec_type in "acdijmopt":
-            return self["008"].data[23]
-        elif rec_type in "efgk":
-            return self["008"].data[29]
+
+        if isinstance(rec_type, str) and "008" in self:
+            if rec_type in "acdijmopt":
+                return self["008"].data[23]  # type: ignore
+            elif rec_type in "efgk":
+                return self["008"].data[29]  # type: ignore
+            else:
+                return None
         else:
             return None
 
@@ -347,7 +357,7 @@ class Bib(Record):
         Returns Library of Congress Control Number
         """
         try:
-            return self["010"]["a"].strip()
+            return self["010"]["a"].strip()  # type: ignore
         except (AttributeError, TypeError):
             return None
 
@@ -360,7 +370,7 @@ class Bib(Record):
             if bool(self[field]):
                 return self[field]
 
-    def orders(self, sort: str = "descending") -> List[namedtuple]:
+    def orders(self, sort: str = "descending") -> List[Order]:
         """
         Returns a list of order attached to bib
 
@@ -425,16 +435,40 @@ class Bib(Record):
         Returns Overdrive Reserve ID parsed from the 037 tag.
         """
         try:
-            return self["037"]["a"].strip()
+            return self["037"]["a"].strip()  # type: ignore
         except (AttributeError, TypeError):
             return None
+
+    def remove_unsupported_subjects(self) -> None:
+        """
+        Deletes subject fields from the record that contain
+        unsupported by BPL or NYPL thesauri
+        """
+        subjects = self.subjects()
+
+        for field in subjects:
+            if field.tag not in SUPPORTED_SUBJECT_TAGS:
+                self.remove_field(field)
+                continue
+            if field.indicator2 == "0":  # LCSH
+                continue
+            if field.indicator2 == "7":
+                if "2" in field:
+                    if field["2"].strip() in SUPPORTED_THESAURI:
+                        continue
+                    else:
+                        self.remove_field(field)
+                else:
+                    self.remove_field(field)
+            else:
+                self.remove_field(field)
 
     def physical_description(self) -> Optional[str]:
         """
         Returns value of the first 300 MARC tag in the bib
         """
         try:
-            return self.physicaldescription()[0].value()
+            return self.physicaldescription()[0].value()  # type: ignore
         except IndexError:
             return None
 
@@ -442,15 +476,20 @@ class Bib(Record):
         """
         Retrieves record type code from MARC leader
         """
-        return self.leader[6]
+        return self.leader[6]  # type: ignore
 
     def sierra_bib_id(self) -> Optional[str]:
         """
         Retrieves Sierra bib # from the 907 MARC tag
         """
         try:
-            return self["907"]["a"][1:]
+            bib_id = self["907"]["a"][1:]
         except TypeError:
+            return None
+
+        if bib_id:
+            return bib_id  # type: ignore
+        else:
             return None
 
     def sierra_bib_id_normalized(self) -> Optional[str]:
@@ -458,7 +497,10 @@ class Bib(Record):
         Retrieves Sierra bib # from the 907 tag and returns it
         without 'b' prefix and the check digit.
         """
-        return self.sierra_bib_id()[1:-1]
+        try:
+            return self.sierra_bib_id()[1:-1]  # type: ignore
+        except TypeError:
+            return None
 
     def subjects_lc(self) -> List[Field]:
         """
@@ -495,6 +537,7 @@ class Bib(Record):
         if tag:
             if tag.indicator1 == "1":
                 try:
-                    return tag["a"].strip()
+                    return tag["a"].strip()  # type: ignore
                 except AttributeError:
                     pass
+        return None
