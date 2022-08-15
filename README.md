@@ -20,6 +20,7 @@ with open ('marc.mrc', "rb") as marcfile:
 	reader = SierraBibReader(marcfile)
 	for bib in reader:
 		print(bib.sierra_bib_id_normalized())
+		print(bib.sierra_bib_format())
 		print(bib.branch_call_no())
 		print(bib.orders())
 		print(bib.main_entry())
@@ -49,6 +50,7 @@ Python 3.8 and up.
 ### [0.8.0] - 2022-08-15
 #### Added
 + `bib.pymarc_record_to_local_bib()` method to instage `Bib` instance from `pymarc.Record` instance
++ `sierra_bib_format()` method in `Bib` class that returns 998$d of Sierra record
 
 #### Changed
 + added basic normalization to `library` parameter passed to `Bib` class
