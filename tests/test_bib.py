@@ -9,6 +9,7 @@ import pytest
 from pymarc import Field
 
 from bookops_marc.bib import (
+    Bib,
     get_branch_code,
     get_shelf_audience_code,
     get_shelf_code,
@@ -17,6 +18,7 @@ from bookops_marc.bib import (
     normalize_date,
     normalize_location_code,
     normalize_order_number,
+    pymarc_record_to_local_bib,
 )
 from bookops_marc.errors import BookopsMarcError
 
@@ -68,7 +70,7 @@ def test_shorten_dewey(arg1, arg2, expectation):
         ("(3)snj0y", "snj0y"),
     ],
 )
-def test_normalize_location_code(arg, expectation, stub_marc):
+def test_normalize_location_code(arg, expectation, stub_bib):
     assert normalize_location_code(arg) == expectation
 
 
@@ -121,71 +123,71 @@ def test_normalize_order_number():
     assert normalize_order_number(".o28876714") == 2887671
 
 
-def test_sierra_bib_id_missing_tag(stub_marc):
-    assert stub_marc.sierra_bib_id() is None
+def test_sierra_bib_id_missing_tag(stub_bib):
+    assert stub_bib.sierra_bib_id() is None
 
 
-def test_sierra_bib_id_missing_subfield(stub_marc):
-    stub_marc.add_field(
+def test_sierra_bib_id_missing_subfield(stub_bib):
+    stub_bib.add_field(
         Field(
             tag="907",
             indicators=[" ", " "],
             subfields=["b", "08-17-21$c08-17-2021 7:50"],
         )
     )
-    assert stub_marc.sierra_bib_id() is None
+    assert stub_bib.sierra_bib_id() is None
 
 
-def test_sierra_bib_id(stub_marc):
-    stub_marc.add_field(
+def test_sierra_bib_id(stub_bib):
+    stub_bib.add_field(
         Field(
             tag="907",
             indicators=[" ", " "],
             subfields=["a", ".b225444884", "b", "08-17-21$c08-17-2021 7:50"],
         )
     )
-    assert stub_marc.sierra_bib_id() == "b225444884"
+    assert stub_bib.sierra_bib_id() == "b225444884"
 
 
-def test_sierra_bib_id_missing_tag(stub_marc):
-    assert stub_marc.sierra_bib_id() is None
+def test_sierra_bib_id_missing_tag(stub_bib):
+    assert stub_bib.sierra_bib_id() is None
 
 
-def test_sierra_bib_id_missing_subfield(stub_marc):
-    stub_marc.add_field(
+def test_sierra_bib_id_missing_subfield(stub_bib):
+    stub_bib.add_field(
         Field(
             tag="907",
             indicators=[" ", " "],
             subfields=["b", "spam"],
         )
     )
-    assert stub_marc.sierra_bib_id() is None
+    assert stub_bib.sierra_bib_id() is None
 
 
-def test_sierra_bib_id_missing_value(stub_marc):
-    stub_marc.add_field(
+def test_sierra_bib_id_missing_value(stub_bib):
+    stub_bib.add_field(
         Field(
             tag="907",
             indicators=[" ", " "],
             subfields=["a", ""],
         )
     )
-    assert stub_marc.sierra_bib_id() is None
+    assert stub_bib.sierra_bib_id() is None
 
 
-def test_sierra_bib_id_normalized(stub_marc):
-    stub_marc.add_field(
+def test_sierra_bib_id_normalized(stub_bib):
+    stub_bib.add_field(
         Field(
             tag="907",
             indicators=[" ", " "],
             subfields=["a", ".b225444884", "b", "08-17-21$c08-17-2021 7:50"],
         )
     )
-    assert stub_marc.sierra_bib_id_normalized() == "22544488"
+    assert stub_bib.sierra_bib_id_normalized() == "22544488"
 
 
-def test_sierra_bib_id_normalized_missing_tag(stub_marc):
-    assert stub_marc.sierra_bib_id_normalized() is None
+def test_sierra_bib_id_normalized_missing_tag(stub_bib):
+    assert stub_bib.sierra_bib_id_normalized() is None
 
 
 @pytest.mark.parametrize(
@@ -198,15 +200,15 @@ def test_sierra_bib_id_normalized_missing_tag(stub_marc):
         ("", "091", ["a", "FIC", "c", "FOO"], None),
     ],
 )
-def test_branch_call_no(stub_marc, arg1, arg2, arg3, expectation):
-    stub_marc.library = arg1
-    stub_marc.add_field(Field(tag=arg2, indicators=[" ", " "], subfields=arg3))
-    assert stub_marc.branch_call_no() == expectation
+def test_branch_call_no(stub_bib, arg1, arg2, arg3, expectation):
+    stub_bib.library = arg1
+    stub_bib.add_field(Field(tag=arg2, indicators=[" ", " "], subfields=arg3))
+    assert stub_bib.branch_call_no() == expectation
 
 
-def test_audience_missing_008(stub_marc):
-    stub_marc.remove_fields("008")
-    assert stub_marc.audience() is None
+def test_audience_missing_008(stub_bib):
+    stub_bib.remove_fields("008")
+    assert stub_bib.audience() is None
 
 
 @pytest.mark.parametrize(
@@ -233,12 +235,12 @@ def test_audience_missing_008(stub_marc):
         ("a", "s", None),  # serial
     ],
 )
-def test_audience(stub_marc, arg1, arg2, expectation):
-    s = list(stub_marc.leader)
+def test_audience(stub_bib, arg1, arg2, expectation):
+    s = list(stub_bib.leader)
     s[6] = arg1
     s[7] = arg2
-    stub_marc.leader = "".join(s)
-    assert stub_marc.audience() == expectation
+    stub_bib.leader = "".join(s)
+    assert stub_bib.audience() == expectation
 
 
 @pytest.mark.parametrize(
@@ -250,45 +252,45 @@ def test_audience(stub_marc, arg1, arg2, expectation):
         ("01-30-22", datetime(2022, 1, 30).date()),
     ],
 )
-def test_created_date(stub_marc, arg, expectation):
-    stub_marc.add_field(
+def test_created_date(stub_bib, arg, expectation):
+    stub_bib.add_field(
         Field(
             tag="907",
             subfields=["a", ".b225375965", "b", "08-17-21", "c", arg],
         )
     )
-    # print(type(stub_marc.created_date()))
-    assert stub_marc.created_date() == expectation
+    # print(type(stub_bib.created_date()))
+    assert stub_bib.created_date() == expectation
 
 
-def test_cataloging_date(stub_marc):
-    stub_marc.add_field(
+def test_cataloging_date(stub_bib):
+    stub_bib.add_field(
         Field(
             tag="907",
             subfields=["a", ".b225375965", "b", "08-17-21", "c", "08-02-21"],
         )
     )
-    assert stub_marc.cataloging_date() == datetime(2021, 8, 17).date()
+    assert stub_bib.cataloging_date() == datetime(2021, 8, 17).date()
 
 
-def test_control_number_missing_001(stub_marc):
-    assert stub_marc.control_number() is None
+def test_control_number_missing_001(stub_bib):
+    assert stub_bib.control_number() is None
 
 
 @pytest.mark.parametrize(
     "arg,expectation", [("ocn12345", "ocn12345"), (" 12345 ", "12345")]
 )
-def test_control_nubmer(arg, expectation, stub_marc):
-    stub_marc.add_field(Field(tag="001", data=arg))
-    assert stub_marc.control_number() == expectation
+def test_control_nubmer(arg, expectation, stub_bib):
+    stub_bib.add_field(Field(tag="001", data=arg))
+    assert stub_bib.control_number() == expectation
 
 
-def test_record_type(stub_marc):
-    assert stub_marc.record_type() == "a"
+def test_record_type(stub_bib):
+    assert stub_bib.record_type() == "a"
 
 
-def test_physical_description_no_300_tag(stub_marc):
-    assert stub_marc.physical_description() is None
+def test_physical_description_no_300_tag(stub_bib):
+    assert stub_bib.physical_description() is None
 
 
 @pytest.mark.parametrize(
@@ -300,83 +302,83 @@ def test_physical_description_no_300_tag(stub_marc):
         (["245"], "245"),
     ],
 )
-def test_main_entry(stub_marc, tags, expectation):
-    stub_marc.remove_fields("100", "245")
+def test_main_entry(stub_bib, tags, expectation):
+    stub_bib.remove_fields("100", "245")
     for t in tags:
-        stub_marc.add_field(Field(tag=t, subfields=["a", "foo"]))
-    main_entry = stub_marc.main_entry()
+        stub_bib.add_field(Field(tag=t, subfields=["a", "foo"]))
+    main_entry = stub_bib.main_entry()
     assert type(main_entry) == Field
     assert main_entry.tag == expectation
 
 
-def test_dewey_no_082(stub_marc):
-    assert stub_marc.dewey() is None
+def test_dewey_no_082(stub_bib):
+    assert stub_bib.dewey() is None
 
 
-def test_dewey_lc_selected(stub_marc):
-    stub_marc.add_field(
+def test_dewey_lc_selected(stub_bib):
+    stub_bib.add_field(
         Field(tag="082", indicators=[" ", " "], subfields=["a", "900./092"])
     )
-    stub_marc.add_field(
+    stub_bib.add_field(
         Field(tag="082", indicators=["0", "4"], subfields=["a", "909.092"])
     )
-    stub_marc.add_field(
+    stub_bib.add_field(
         Field(tag="082", indicators=["0", "0"], subfields=["a", "909.12"])
     )
-    assert stub_marc.dewey() == "909.12"
+    assert stub_bib.dewey() == "909.12"
 
 
-def test_dewey_other_agency_selected(stub_marc):
-    stub_marc.add_field(Field(tag="082", indicators=["1", "0"], subfields=["a", "900"]))
-    stub_marc.add_field(
+def test_dewey_other_agency_selected(stub_bib):
+    stub_bib.add_field(Field(tag="082", indicators=["1", "0"], subfields=["a", "900"]))
+    stub_bib.add_field(
         Field(tag="082", indicators=["0", "4"], subfields=["a", "909./092"])
     )
-    assert stub_marc.dewey() == "909.092"
+    assert stub_bib.dewey() == "909.092"
 
 
-def test_dewey_shortened(stub_marc):
-    stub_marc.add_field(
+def test_dewey_shortened(stub_bib):
+    stub_bib.add_field(
         Field(tag="082", indicators=[" ", " "], subfields=["a", "900.092"])
     )
-    stub_marc.add_field(
+    stub_bib.add_field(
         Field(tag="082", indicators=["0", "4"], subfields=["a", "910.092"])
     )
-    stub_marc.add_field(
+    stub_bib.add_field(
         Field(tag="082", indicators=["0", "0"], subfields=["a", "909./09208"])
     )
-    assert stub_marc.dewey_shortened() == "909.092"
+    assert stub_bib.dewey_shortened() == "909.092"
 
 
-def test_dewey_shortened_missing_dewey(stub_marc):
-    stub_marc.add_field(
+def test_dewey_shortened_missing_dewey(stub_bib):
+    stub_bib.add_field(
         Field(tag="082", indicators=["0", "4"], subfields=["a", "[FIC]"])
     )
-    assert stub_marc.dewey_shortened() is None
+    assert stub_bib.dewey_shortened() is None
 
 
-def test_languages_none_008(stub_marc):
-    stub_marc.remove_fields("008")
-    assert stub_marc.languages() == []
+def test_languages_none_008(stub_bib):
+    stub_bib.remove_fields("008")
+    assert stub_bib.languages() == []
 
 
-def test_languages_only_008_present(stub_marc):
-    assert stub_marc.languages() == ["hat"]
+def test_languages_only_008_present(stub_bib):
+    assert stub_bib.languages() == ["hat"]
 
 
-def test_languages_multiple(stub_marc):
-    stub_marc.add_field(
+def test_languages_multiple(stub_bib):
+    stub_bib.add_field(
         Field(tag="041", subfields=["a", "eng", "a", "spa", "b", "chi", "h", "rus"])
     )
-    assert stub_marc.languages() == ["hat", "eng", "spa"]
+    assert stub_bib.languages() == ["hat", "eng", "spa"]
 
 
-def test_lccn_missing_010(stub_marc):
-    assert stub_marc.lccn() is None
+def test_lccn_missing_010(stub_bib):
+    assert stub_bib.lccn() is None
 
 
-def test_lccn_missing_sub_a(stub_marc):
-    stub_marc.add_field(Field(tag="010", indicators=[" ", " "], subfields=["z", "foo"]))
-    assert stub_marc.lccn() is None
+def test_lccn_missing_sub_a(stub_bib):
+    stub_bib.add_field(Field(tag="010", indicators=[" ", " "], subfields=["z", "foo"]))
+    assert stub_bib.lccn() is None
 
 
 @pytest.mark.parametrize(
@@ -387,57 +389,57 @@ def test_lccn_missing_sub_a(stub_marc):
         ("  2001627090", "2001627090"),
     ],
 )
-def test_lccn(arg, expectation, stub_marc):
-    stub_marc.add_field(
+def test_lccn(arg, expectation, stub_bib):
+    stub_bib.add_field(
         Field(tag="010", indicators=[" ", " "], subfields=["a", arg, "b", "foo"])
     )
-    assert stub_marc.lccn() == expectation
+    assert stub_bib.lccn() == expectation
 
 
-def test_form_of_item_not_present(stub_marc):
-    stub_marc.leader = "#" * 6 + "x" + "#" * 18
-    stub_marc["008"].data = "#" * 23 + "f" + "#" * 10
-    assert stub_marc.form_of_item() is None
+def test_form_of_item_not_present(stub_bib):
+    stub_bib.leader = "#" * 6 + "x" + "#" * 18
+    stub_bib["008"].data = "#" * 23 + "f" + "#" * 10
+    assert stub_bib.form_of_item() is None
 
 
-def test_form_of_item_missing_008_tag(stub_marc):
-    stub_marc.remove_fields("008")
-    assert stub_marc.form_of_item() is None
+def test_form_of_item_missing_008_tag(stub_bib):
+    stub_bib.remove_fields("008")
+    assert stub_bib.form_of_item() is None
 
 
 @pytest.mark.parametrize("arg", ["a", "c", "d", "i", "j", "m", "o", "p", "t"])
-def test_form_of_item_in_pos_23(arg, stub_marc):
-    stub_marc.leader = "#" * 6 + arg + "#" * 18
-    stub_marc["008"].data = "#" * 23 + "f" + "#" * 10
-    assert stub_marc.form_of_item() == "f"
+def test_form_of_item_in_pos_23(arg, stub_bib):
+    stub_bib.leader = "#" * 6 + arg + "#" * 18
+    stub_bib["008"].data = "#" * 23 + "f" + "#" * 10
+    assert stub_bib.form_of_item() == "f"
 
 
 @pytest.mark.parametrize("arg", ["e", "f", "g", "k"])
-def test_form_of_item_in_pos_29(arg, stub_marc):
-    stub_marc.leader = "#" * 6 + arg + "#" * 18
-    stub_marc["008"].data = "#" * 29 + "o" + "#" * 14
-    assert stub_marc.form_of_item() == "o"
+def test_form_of_item_in_pos_29(arg, stub_bib):
+    stub_bib.leader = "#" * 6 + arg + "#" * 18
+    stub_bib["008"].data = "#" * 29 + "o" + "#" * 14
+    assert stub_bib.form_of_item() == "o"
 
 
 @pytest.mark.parametrize("arg", [1, "foo"])
-def test_orders_exceptions(arg, stub_marc, mock_960):
+def test_orders_exceptions(arg, stub_bib, mock_960):
     msg = "Invalid 'sort' argument was passed."
-    stub_marc.add_field(mock_960)
+    stub_bib.add_field(mock_960)
     with pytest.raises(BookopsMarcError) as exc:
-        stub_marc.orders(sort=arg)
+        stub_bib.orders(sort=arg)
     assert msg in str(exc)
 
 
-def test_orders_single(stub_marc, mock_960):
-    stub_marc.add_field(mock_960)
-    stub_marc.add_field(
+def test_orders_single(stub_bib, mock_960):
+    stub_bib.add_field(mock_960)
+    stub_bib.add_field(
         Field(
             tag="961",
             indicators=[" ", " "],
             subfields=["h", "e,bio", "l", "1643137123"],
         )
     )
-    orders = stub_marc.orders()
+    orders = stub_bib.orders()
     assert len(orders) == 1
     o = orders[0]
     assert o.oid == 1000001
@@ -452,9 +454,9 @@ def test_orders_single(stub_marc, mock_960):
     assert o.venNotes == "e,bio"
 
 
-def test_orders_reverse_sort(stub_marc, mock_960):
-    stub_marc.add_field(mock_960)
-    stub_marc.add_field(
+def test_orders_reverse_sort(stub_bib, mock_960):
+    stub_bib.add_field(mock_960)
+    stub_bib.add_field(
         Field(
             tag="961",
             indicators=[" ", " "],
@@ -465,8 +467,8 @@ def test_orders_reverse_sort(stub_marc, mock_960):
     second_960 = deepcopy(mock_960)
     second_960.delete_subfield("z")
     second_960.add_subfield("z", ".o10000020")
-    stub_marc.add_field(second_960)
-    orders = stub_marc.orders(sort="descending")
+    stub_bib.add_field(second_960)
+    orders = stub_bib.orders(sort="descending")
 
     assert len(orders) == 2
     assert orders[0].oid == 1000002
@@ -475,13 +477,13 @@ def test_orders_reverse_sort(stub_marc, mock_960):
     assert orders[1].venNotes == "e,bio"
 
 
-def test_overdrive_number_missing_037(stub_marc):
-    assert stub_marc.overdrive_number() is None
+def test_overdrive_number_missing_037(stub_bib):
+    assert stub_bib.overdrive_number() is None
 
 
-def test_overdrive_number_missing_sub_a(stub_marc):
-    stub_marc.add_field(Field(tag="037", indicators=[" ", " "], subfields=["z", "foo"]))
-    assert stub_marc.overdrive_number() is None
+def test_overdrive_number_missing_sub_a(stub_bib):
+    stub_bib.add_field(Field(tag="037", indicators=[" ", " "], subfields=["z", "foo"]))
+    assert stub_bib.overdrive_number() is None
 
 
 @pytest.mark.parametrize(
@@ -497,15 +499,15 @@ def test_overdrive_number_missing_sub_a(stub_marc):
         ),
     ],
 )
-def test_overdrive_number(arg, expectation, stub_marc):
-    stub_marc.add_field(
+def test_overdrive_number(arg, expectation, stub_bib):
+    stub_bib.add_field(
         Field(
             tag="037",
             indicators=[" ", " "],
             subfields=["a", arg, "b", "OverDrive, Inc."],
         )
     )
-    assert stub_marc.overdrive_number() == expectation
+    assert stub_bib.overdrive_number() == expectation
 
 
 @pytest.mark.parametrize(
@@ -636,42 +638,42 @@ def test_overdrive_number(arg, expectation, stub_marc):
         ),
     ],
 )
-def test_remove_unsupported_subjects(stub_marc, field, expectation):
-    stub_marc.add_field(field)
-    stub_marc.remove_unsupported_subjects()
-    (field.tag in stub_marc) == expectation
+def test_remove_unsupported_subjects(stub_bib, field, expectation):
+    stub_bib.add_field(field)
+    stub_bib.remove_unsupported_subjects()
+    (field.tag in stub_bib) == expectation
 
 
-def test_subjects_lc(stub_marc):
-    stub_marc.add_field(
+def test_subjects_lc(stub_bib):
+    stub_bib.add_field(
         Field(tag="650", indicators=[" ", "7"], subfields=["a", "Foo", "2", "bar"])
     )
-    stub_marc.add_field(
+    stub_bib.add_field(
         Field(
             tag="600",
             indicators=["1", "0"],
             subfields=["a", "Doe, John", "x", "Childhood."],
         )
     )
-    stub_marc.add_field(
+    stub_bib.add_field(
         Field(tag="650", indicators=[" ", "4"], subfields=["a", "Foo", "2", "bar"])
     )
-    stub_marc.add_field(
+    stub_bib.add_field(
         Field(tag="651", indicators=[" ", "0"], subfields=["a", "Spam."])
     )
-    lc_subjects = stub_marc.subjects_lc()
+    lc_subjects = stub_bib.subjects_lc()
     assert len(lc_subjects) == 2
     assert lc_subjects[0].subfields == ["a", "Doe, John", "x", "Childhood."]
     assert lc_subjects[1].subfields == ["a", "Spam."]
 
 
-def test_suppressed_missing_998(stub_marc):
-    assert stub_marc.suppressed() is False
+def test_suppressed_missing_998(stub_bib):
+    assert stub_bib.suppressed() is False
 
 
-def test_suppressed_missing_998_e(stub_marc):
-    stub_marc.add_field(Field(tag="998", subfields=["a", "foo"]))
-    assert stub_marc.suppressed() is False
+def test_suppressed_missing_998_e(stub_bib):
+    stub_bib.add_field(Field(tag="998", subfields=["a", "foo"]))
+    assert stub_bib.suppressed() is False
 
 
 @pytest.mark.parametrize(
@@ -687,27 +689,27 @@ def test_suppressed_missing_998_e(stub_marc):
         ("v", True),
     ],
 )
-def test_suppressed(stub_marc, arg, expectation):
-    stub_marc.add_field(Field(tag="998", subfields=["e", arg]))
-    assert stub_marc.suppressed() == expectation
+def test_suppressed(stub_bib, arg, expectation):
+    stub_bib.add_field(Field(tag="998", subfields=["e", arg]))
+    assert stub_bib.suppressed() == expectation
 
 
-def test_upc_number_missing_024(stub_marc):
-    assert stub_marc.upc_number() is None
+def test_upc_number_missing_024(stub_bib):
+    assert stub_bib.upc_number() is None
 
 
-def test_upc_number_missing_sub_a(stub_marc):
-    stub_marc.add_field(Field(tag="024", indicators=["1", " "], subfields=["z", "foo"]))
-    assert stub_marc.upc_number() is None
+def test_upc_number_missing_sub_a(stub_bib):
+    stub_bib.add_field(Field(tag="024", indicators=["1", " "], subfields=["z", "foo"]))
+    assert stub_bib.upc_number() is None
 
 
-def test_upc_number_other_number(stub_marc):
-    stub_marc.add_field(
+def test_upc_number_other_number(stub_bib):
+    stub_bib.add_field(
         Field(
             tag="024", indicators=["2", " "], subfields=["a", "M011234564", "z", "foo"]
         )
     )
-    assert stub_marc.upc_number() is None
+    assert stub_bib.upc_number() is None
 
 
 @pytest.mark.parametrize(
@@ -723,12 +725,24 @@ def test_upc_number_other_number(stub_marc):
         ),
     ],
 )
-def test_upc_number(arg, expectation, stub_marc):
-    stub_marc.add_field(
+def test_upc_number(arg, expectation, stub_bib):
+    stub_bib.add_field(
         Field(
             tag="024",
             indicators=["1", " "],
             subfields=["a", arg, "b", "foo"],
         )
     )
-    assert stub_marc.upc_number() == expectation
+    assert stub_bib.upc_number() == expectation
+
+
+@pytest.mark.parametrize("arg", ["bpl", "nypl", None])
+def test_instating_from_pymarc_record(stub_pymarc_record, arg):
+    bib = pymarc_record_to_local_bib(stub_pymarc_record, arg)
+    assert isinstance(bib, Bib)
+
+    # bib atributes
+    assert bib.library == arg
+
+    # bib methods
+    assert str(bib.main_entry()) == "=100  1\\$aAdams, John,$eauthor."
