@@ -541,3 +541,22 @@ class Bib(Record):
                 except AttributeError:
                     pass
         return None
+
+
+def pymarc_record_to_local_bib(record: Record, library: str) -> Bib:
+    """
+    Converts an instance of `pymarc.Record` to `bookops_marc.Bib`
+
+    Args:
+        record:                 `pymarc.Record` instance
+        library:                'bpl' or 'nypl'
+
+    Returns:
+        `bookops_marc.bib.Bib` instance
+    """
+    if isinstance(record, Record):
+        bib = Bib(library=library)
+        bib.leader = record.leader
+        bib.fields = record.fields[:]
+
+        return bib
