@@ -123,6 +123,20 @@ def test_normalize_order_number():
     assert normalize_order_number(".o28876714") == 2887671
 
 
+def test_sierra_bib_format_missing_tag(stub_bib):
+    assert stub_bib.sierra_bib_format() is None
+
+
+def test_sierra_bib_format_missing_subfield(stub_bib):
+    stub_bib.add_field(Field(tag="998", subfields=["a", "foo"]))
+    assert stub_bib.sierra_bib_format() is None
+
+
+def test_sierra_bib_format(stub_bib):
+    stub_bib.add_field(Field(tag="998", subfields=["a", "foo", "d", "x  "]))
+    assert stub_bib.sierra_bib_format() == "x"
+
+
 def test_sierra_bib_id_missing_tag(stub_bib):
     assert stub_bib.sierra_bib_id() is None
 

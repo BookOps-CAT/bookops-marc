@@ -478,6 +478,15 @@ class Bib(Record):
         """
         return self.leader[6]  # type: ignore
 
+    def sierra_bib_format(self) -> Optional[str]:
+        """
+        Returns Sierra bib format fixed field code
+        """
+        try:
+            return self["998"]["d"].strip()
+        except (TypeError, AttributeError):
+            return None
+
     def sierra_bib_id(self) -> Optional[str]:
         """
         Retrieves Sierra bib # from the 907 MARC tag
