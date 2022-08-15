@@ -1,12 +1,41 @@
 import pytest
 
-from pymarc import Field
+from pymarc import Field, Record
 
 from bookops_marc import Bib
 
 
 @pytest.fixture
-def stub_marc():
+def stub_pymarc_record():
+    record = Record()
+    record.leader = "02866pam  2200517 i 4500"
+    record.add_field(Field(tag="008", data="190306s2017    ht a   j      000 1 hat d"))
+    record.add_field(
+        Field(
+            tag="100",
+            indicators=["1", " "],
+            subfields=["a", "Adams, John,", "e", "author."],
+        )
+    )
+    record.add_field(
+        Field(
+            tag="245",
+            indicators=["1", "4"],
+            subfields=["a", "The foo /", "c", "by John Adams."],
+        )
+    )
+    record.add_field(
+        Field(
+            tag="264",
+            indicators=[" ", "1"],
+            subfields=["a", "Bar :", "b", "New York,", "c", "2021"],
+        )
+    )
+    return record
+
+
+@pytest.fixture
+def stub_bib():
     bib = Bib()
     bib.leader = "02866pam  2200517 i 4500"
     bib.add_field(Field(tag="008", data="190306s2017    ht a   j      000 1 hat d"))

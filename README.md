@@ -28,12 +28,32 @@ with open ('marc.mrc', "rb") as marcfile:
 		print(bib.dewey_shortened())
 ```
 
+In certain scenarios it may be convinient to instate `Bib` directly from an instance of `pymarc.Record`. This can be accomplished using `pymarc_record_to_local_bib()`:
+
+```python
+from pymarc import Record
+from bookops_marc.bib import pymarc_record_to_local_bib
+
+# pymarc Record instance
+record = Record()
+bib = pymarc_record_to_local_bib(record, "bpl")
+bib.remove_unsupported_subjects()
+```
+
 Python 3.8 and up.
 
 ## Version
-> 0.7.0
+> 0.8.0
 
 ## Changelog
+### [0.8.0] - 2022-08-15
+#### Added
++ `bib.pymarc_record_to_local_bib()` method to instage `Bib` instance from `pymarc.Record` instance
+
+#### Changed
++ added basic normalization to `library` parameter passed to `Bib` class
++ `stub_marc` test fixture renamed to `stub_bib`
+
 ### [0.7.0] - 2022-04-16
 #### Added
 + remove_unsupported_subjects() that deletes subject tags (6xx) which are not supported by BookOps (NYPL & BPL CAT)
@@ -74,6 +94,7 @@ Python 3.8 and up.
 #### Added
 + a method for retrieving branch call number as `pymarc.Field`
 
+[0.8.0]: https://github.com/BookOps-CAT/bookops-marc/compare/0.7.0...0.8.0
 [0.7.0]: https://github.com/BookOps-CAT/bookops-marc/compare/v0.6.0...0.7.0
 [0.6.1]: https://github.com/BookOps-CAT/bookops-marc/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/BookOps-CAT/bookops-marc/compare/0.5.0...v0.6.0

@@ -140,9 +140,6 @@ def shorten_dewey(class_mark: str, digits_after_period: int = 4) -> str:
 class Bib(Record):
     """
     A class for representing local MARC record.
-    This implementation fixes pymarc.Record bug (?) which unable accessing
-    current position in the iterator (overwrites pymarc.Record's
-    __iter__ and __next__ methods).
     """
 
     def __init__(
@@ -166,7 +163,10 @@ class Bib(Record):
             file_encoding,
         )
 
-        self.library = library
+        if isinstance(library, str):
+            self.library = library.lower()
+        else:
+            self.library = library
 
     def __iter__(self):
         self.pos = 0
@@ -541,3 +541,22 @@ class Bib(Record):
                 except AttributeError:
                     pass
         return None
+
+
+def pymarc_record_to_local_bib(record: Record, library: str) -> Bib:
+    """
+    Converts an instance of `pymarc.Record` to `bookops_marc.Bib`
+
+    Args:
+        record:                 `pymarc.Record` instance
+        library:                'bpl' or 'nypl'
+
+    Returns:
+        `bookops_marc.bib.Bib` instance
+    """
+    if isinstance(record, Record):
+        bib = Bib(library=library)
+        bib.leader = record.leader
+        bib.fields = record.fields[:]
+
+        return bib
