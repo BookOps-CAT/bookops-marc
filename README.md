@@ -41,12 +41,17 @@ bib = pymarc_record_to_local_bib(record, "bpl")
 bib.remove_unsupported_subjects()
 ```
 
-Python 3.8 and up.
+Python 3.7 and up.
 
 ## Version
-> 0.8.0
+> 0.8.1
 
 ## Changelog
+### [0.8.1] - 2022-08-16
+#### Fixed
++ version bump propagated to all places
+
+
 ### [0.8.0] - 2022-08-15
 #### Added
 + `bib.pymarc_record_to_local_bib()` method to instage `Bib` instance from `pymarc.Record` instance
@@ -96,6 +101,7 @@ Python 3.8 and up.
 #### Added
 + a method for retrieving branch call number as `pymarc.Field`
 
+[0.8.1]: https://github.com/BookOps-CAT/bookops-marc/compare/0.8.0...0.8.1
 [0.8.0]: https://github.com/BookOps-CAT/bookops-marc/compare/0.7.0...0.8.0
 [0.7.0]: https://github.com/BookOps-CAT/bookops-marc/compare/v0.6.0...0.7.0
 [0.6.1]: https://github.com/BookOps-CAT/bookops-marc/compare/v0.6.0...v0.6.1
