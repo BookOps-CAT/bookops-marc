@@ -436,16 +436,16 @@ def test_form_of_item_in_pos_29(arg, stub_bib):
 
 
 @pytest.mark.parametrize("arg", [1, "foo"])
-def test_orders_exceptions(arg, stub_bib, mock_960):
+def test_orders_exceptions(arg, stub_bib, stub_960):
     msg = "Invalid 'sort' argument was passed."
-    stub_bib.add_field(mock_960)
+    stub_bib.add_field(stub_960)
     with pytest.raises(BookopsMarcError) as exc:
         stub_bib.orders(sort=arg)
     assert msg in str(exc)
 
 
-def test_orders_single(stub_bib, mock_960):
-    stub_bib.add_field(mock_960)
+def test_orders_single(stub_bib, stub_960):
+    stub_bib.add_field(stub_960)
     stub_bib.add_field(
         Field(
             tag="961",
@@ -468,8 +468,8 @@ def test_orders_single(stub_bib, mock_960):
     assert o.venNotes == "e,bio"
 
 
-def test_orders_reverse_sort(stub_bib, mock_960):
-    stub_bib.add_field(mock_960)
+def test_orders_reverse_sort(stub_bib, stub_960):
+    stub_bib.add_field(stub_960)
     stub_bib.add_field(
         Field(
             tag="961",
@@ -478,7 +478,7 @@ def test_orders_reverse_sort(stub_bib, mock_960):
         )
     )
     # add second 960 without 961
-    second_960 = deepcopy(mock_960)
+    second_960 = deepcopy(stub_960)
     second_960.delete_subfield("z")
     second_960.add_subfield("z", ".o10000020")
     stub_bib.add_field(second_960)

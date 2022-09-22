@@ -64,7 +64,7 @@ def stub_bib():
 
 
 @pytest.fixture
-def mock_960():
+def stub_960():
     # fmt: off
     return Field(tag="960", indicators=[" ", " "], subfields=[
         "a", "l",  # acq type
@@ -94,5 +94,18 @@ def mock_960():
         "x", "xxu",  # country
         "y", "1",  # volumes
         "z", ".o10000010"  # order#
+    ])
+    # fmt: on
+
+
+@pytest.fixture
+def stub_961():
+    # fmt: off
+    return Field(tag="961", indicators=[" ", " "], subfields=[
+        "a", "internal-note ($i)",
+        "h", "vendor-note ($v)",
+        "i", "vendor-title-no ($f)",
+        "l", "ISBN ($b)",
+        "m", "blanketPO ($p)"
     ])
     # fmt: on
