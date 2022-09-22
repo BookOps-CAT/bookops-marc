@@ -370,13 +370,69 @@ class Bib(Record):
             if bool(self[field]):
                 return self[field]
 
+    # def orders(self, sort: str = "descending") -> List[Order]:
+    #     """
+    #     Returns a list of order attached to bib
+
+    #     Args:
+    #         sort:                   ascending (from oldest to most recent) or
+    #                                 descending (from recent to oldest)
+    #     """
+
+    #     if not isinstance(sort, str) or sort not in "ascending,descending":
+    #         raise BookopsMarcError("Invalid 'sort' argument was passed.")
+
+    #     orders = []
+
+    #     # order data coded in the 960 tag (order fixed fields) may be followed by
+    #     # related 961 tag (order variable field) so iterating over entire bib
+    #     # is needed to connect these two;
+    #     # it is possible 960 tag may not have related 961 (BPL)
+
+    #     for field in self:
+    #         if field.tag == "960":
+    #             # shared NYPL & BPL mapping
+    #             oid = normalize_order_number(field["z"])
+
+    #             audns = self._get_shelf_audience_codes(field)
+    #             branches = self._get_branches(field)
+    #             copies = int(field["o"])
+    #             form = field["g"]
+    #             created = normalize_date(field["q"])
+    #             lang = field["w"]
+    #             shelves = self._get_shelves(field)
+    #             status = field["m"].strip()
+
+    #             try:
+    #                 venNotes = None
+    #                 following_field = self.fields[self.pos]
+    #                 if following_field.tag == "961":
+    #                     venNotes = following_field["h"]
+    #             except IndexError:
+    #                 pass
+
+    #             o = Order(
+    #                 oid,
+    #                 audn=audns,
+    #                 branches=branches,
+    #                 copies=copies,
+    #                 created=created,
+    #                 form=form,
+    #                 lang=lang,
+    #                 shelves=shelves,
+    #                 status=status,
+    #                 venNotes=venNotes,
+    #             )
+    #             orders.append(o)
+
     def orders(self, sort: str = "descending") -> List[Order]:
         """
-        Returns a list of order attached to bib
+        Parses 960 and 961 as pairs to exctact fixed and variable fields order data
 
         Args:
-            sort:                   ascending (from oldest to most recent) or
-                                    descending (from recent to oldest)
+            sort:                   'descending' (default, from most recent to oldest) or
+                                    'ascending' (from oldest to the newest). Relies no order
+                                    of fields in MARC record to make this determination.
         """
 
         if not isinstance(sort, str) or sort not in "ascending,descending":
@@ -384,46 +440,24 @@ class Bib(Record):
 
         orders = []
 
-        # order data coded in the 960 tag (order fixed fields) may be followed by
-        # related 961 tag (order variable field) so iterating over entire bib
-        # is needed to connect these two;
-        # it is possible 960 tag may not have related 961 (BPL)
-
         for field in self:
             if field.tag == "960":
-                # shared NYPL & BPL mapping
-                oid = normalize_order_number(field["z"])
+                f960 = field
 
-                audns = self._get_shelf_audience_codes(field)
-                branches = self._get_branches(field)
-                copies = int(field["o"])
-                form = field["g"]
-                created = normalize_date(field["q"])
-                lang = field["w"]
-                shelves = self._get_shelves(field)
-                status = field["m"].strip()
-
+                # 961 tag (order variable fields) makes only sense if it is
+                # preceeded by 960 tag (order fixed fields); ignore if 960 not
+                # present, in the 'pur/pout' export table 960/961 combinations are
+                # grouped together
                 try:
-                    venNotes = None
+                    print(bib.fields[self.__pos])
                     following_field = self.fields[self.pos]
                     if following_field.tag == "961":
-                        venNotes = following_field["h"]
+                        f961 = following_field
                 except IndexError:
-                    pass
+                    f961 = None
 
-                o = Order(
-                    oid,
-                    audn=audns,
-                    branches=branches,
-                    copies=copies,
-                    created=created,
-                    form=form,
-                    lang=lang,
-                    shelves=shelves,
-                    status=status,
-                    venNotes=venNotes,
-                )
-                orders.append(o)
+                order = Order(library, f960, f961)
+                orders.append(Order)
 
         if sort == "descending":
             orders.reverse()
