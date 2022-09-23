@@ -11,59 +11,10 @@ from typing import List, Optional
 from pymarc import Record, Field
 from pymarc.constants import LEADER_LEN
 
-from .errors import BookopsMarcError
-from .models import Order
-from .constants import SUPPORTED_THESAURI, SUPPORTED_SUBJECT_TAGS
-
-
-def get_branch_code(location_code: str) -> str:
-    """
-    Returns branch code from normalized location code
-    """
-    branch = location_code[:2]
-    return branch
-
-
-def get_shelf_audience_code(location_code: str) -> Optional[str]:
-    """
-    Parses audience code from given normalized location_code
-    """
-    try:
-        audn = location_code[2].strip()
-        if audn:
-            return audn
-        else:
-            return None
-
-    except IndexError:
-        return None
-
-
-def get_shelf_code(location_code: str) -> Optional[str]:
-    """
-    Parses shelf code from given normalized location_code
-    """
-    try:
-        shelf = location_code[3:5].strip()
-        if shelf:
-            return shelf
-        else:
-            return None
-    except (TypeError, IndexError):
-        return None
-
-
-def normalize_date(order_date: str) -> Optional[date]:
-    """
-    Returns order created date in datetime format
-    """
-    try:
-        if len(order_date) == 8:
-            return datetime.strptime(order_date[:8], "%m-%d-%y").date()
-        else:
-            return datetime.strptime(order_date[:10], "%m-%d-%Y").date()
-    except ValueError:
-        return None
+from bookops_marc.constants import SUPPORTED_THESAURI, SUPPORTED_SUBJECT_TAGS
+from bookops_marc.errors import BookopsMarcError
+from bookops_marc.order import Order
+from bookops_marc.utils import sierra_str2date
 
 
 def normalize_dewey(class_mark: str) -> Optional[str]:
@@ -95,25 +46,6 @@ def normalize_dewey(class_mark: str) -> Optional[str]:
             return class_mark
     else:
         return None
-
-
-def normalize_location_code(code: str) -> str:
-    """
-    Removes any quantity designation from location code value
-    """
-    try:
-        s = code.index("(")
-        e = code.index(")")
-        return f"{code[:s]}{code[e + 1:]}"
-    except ValueError:
-        return code
-
-
-def normalize_order_number(order_number: str) -> int:
-    """
-    Normalizes Sierra order number
-    """
-    return int(order_number[2:-1])
 
 
 def shorten_dewey(class_mark: str, digits_after_period: int = 4) -> str:
@@ -177,25 +109,6 @@ class Bib(Record):
             raise StopIteration
         self.pos += 1
         return self.fields[self.pos - 1]
-
-    def _get_branches(self, field: Field) -> List[str]:
-        """
-        Returns isolated from location codes branches as a list
-
-        Args:
-            field:                  pymarc.Field instance
-        """
-        branches = []
-
-        for sub in field.get_subfields("t"):
-
-            # remove any qty data
-            loc_code = normalize_location_code(sub)
-
-            branch = get_branch_code(loc_code)
-            branches.append(branch)
-
-        return branches
 
     def _get_shelf_audience_codes(self, field: Field) -> List[Optional[str]]:
         """
@@ -266,7 +179,7 @@ class Bib(Record):
         """
         Extracts cataloging date from the bib
         """
-        cat_date = normalize_date(self["907"]["b"])
+        cat_date = sierra_str2date(self["907"]["b"])
         return cat_date
 
     def control_number(self) -> Optional[str]:
@@ -282,7 +195,7 @@ class Bib(Record):
         """
         Extracts bib creation date
         """
-        created_date = normalize_date(self["907"]["c"])
+        created_date = sierra_str2date(self["907"]["c"])
         return created_date
 
     def dewey(self) -> Optional[str]:
@@ -370,61 +283,6 @@ class Bib(Record):
             if bool(self[field]):
                 return self[field]
 
-    # def orders(self, sort: str = "descending") -> List[Order]:
-    #     """
-    #     Returns a list of order attached to bib
-
-    #     Args:
-    #         sort:                   ascending (from oldest to most recent) or
-    #                                 descending (from recent to oldest)
-    #     """
-
-    #     if not isinstance(sort, str) or sort not in "ascending,descending":
-    #         raise BookopsMarcError("Invalid 'sort' argument was passed.")
-
-    #     orders = []
-
-    #     # order data coded in the 960 tag (order fixed fields) may be followed by
-    #     # related 961 tag (order variable field) so iterating over entire bib
-    #     # is needed to connect these two;
-    #     # it is possible 960 tag may not have related 961 (BPL)
-
-    #     for field in self:
-    #         if field.tag == "960":
-    #             # shared NYPL & BPL mapping
-    #             oid = normalize_order_number(field["z"])
-
-    #             audns = self._get_shelf_audience_codes(field)
-    #             branches = self._get_branches(field)
-    #             copies = int(field["o"])
-    #             form = field["g"]
-    #             created = normalize_date(field["q"])
-    #             lang = field["w"]
-    #             shelves = self._get_shelves(field)
-    #             status = field["m"].strip()
-
-    #             try:
-    #                 venNotes = None
-    #                 following_field = self.fields[self.pos]
-    #                 if following_field.tag == "961":
-    #                     venNotes = following_field["h"]
-    #             except IndexError:
-    #                 pass
-
-    #             o = Order(
-    #                 oid,
-    #                 audn=audns,
-    #                 branches=branches,
-    #                 copies=copies,
-    #                 created=created,
-    #                 form=form,
-    #                 lang=lang,
-    #                 shelves=shelves,
-    #                 status=status,
-    #                 venNotes=venNotes,
-    #             )
-    #             orders.append(o)
-
     def orders(self, sort: str = "descending") -> List[Order]:
         """
         Parses 960 and 961 as pairs to exctact fixed and variable fields order data
@@ -449,15 +307,14 @@ class Bib(Record):
                 # present, in the 'pur/pout' export table 960/961 combinations are
                 # grouped together
                 try:
-                    print(bib.fields[self.__pos])
                     following_field = self.fields[self.pos]
                     if following_field.tag == "961":
                         f961 = following_field
                 except IndexError:
                     f961 = None
 
-                order = Order(library, f960, f961)
-                orders.append(Order)
+                order = Order(self.library, f960, f961)
+                orders.append(order)
 
         if sort == "descending":
             orders.reverse()
