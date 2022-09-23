@@ -110,38 +110,6 @@ class Bib(Record):
         self.pos += 1
         return self.fields[self.pos - 1]
 
-    def _get_shelf_audience_codes(self, field: Field) -> List[Optional[str]]:
-        """
-        Returns list of audience codes extracted from location codes
-        """
-        audns = []
-
-        for sub in field.get_subfields("t"):
-            loc_code = normalize_location_code(sub)
-
-            audn = get_shelf_audience_code(loc_code)
-            audns.append(audn)
-
-        return audns
-
-    def _get_shelves(self, field: Field) -> List[Optional[str]]:
-        """
-        Returns list of shelf codes extracted from location codes
-
-        Args:
-            field:                  pymarc.Field instance
-        """
-        shelves = []
-
-        for sub in field.get_subfields("t"):
-            # remove any qty data
-            loc_code = normalize_location_code(sub)
-
-            shelf = get_shelf_code(loc_code)
-            shelves.append(shelf)
-
-        return shelves
-
     def audience(self) -> Optional[str]:
         """
         Retrieves audience code from the 008 MARC tag

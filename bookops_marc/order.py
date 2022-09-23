@@ -125,6 +125,35 @@ class Order:
 
         return branches
 
+    def _get_shelf_audience_codes(self) -> List[Optional[str]]:
+        """
+        Returns list of audience codes extracted from location codes
+        """
+        audns = []
+
+        for sub in self._960.get_subfields("t"):
+            loc_code = normalize_location_code(sub)
+
+            audn = get_shelf_audience_code(loc_code)
+            audns.append(audn)
+
+        return audns
+
+    def _get_shelves(self) -> List[Optional[str]]:
+        """
+        Returns list of shelf codes extracted from location codes
+        """
+        shelves = []
+
+        for sub in self._960.get_subfields("t"):
+            # remove any qty data
+            loc_code = normalize_location_code(sub)
+
+            shelf = get_shelf_code(loc_code)
+            shelves.append(shelf)
+
+        return shelves
+
     def _parse_order_fields(self):
         self.oid = normalize_order_number(self._960["z"])
         try:
