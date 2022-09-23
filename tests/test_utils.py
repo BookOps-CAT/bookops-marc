@@ -13,6 +13,7 @@ import pytest
         ("01-30-2022 12:12", datetime(2022, 1, 30).date()),
         ("foo", None),
         ("2022-01-30", None),
+        ("  -  -  ", None),
     ],
 )
 def test_sierra_str2date(arg, expectation):
