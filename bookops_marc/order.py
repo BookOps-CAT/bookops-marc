@@ -72,9 +72,20 @@ def get_shelf_audience_code(location_code: str) -> Optional[str]:
 class Order:
     def __init__(self, library: str, f960: Field, f961: Optional[Field] = None) -> None:
         """
-        Instates Order object
+        Instates Sierra Order object.
         """
+        if not isinstance(library, str) or library.lower() not in ("bpl", "nypl"):
+            raise ValueError(
+                "Invalid 'library' argument passed. Only 'BPL' or 'NYPL' are permitted."
+            )
 
+        if not isinstance(f960, Field):
+            raise ValueError("Invalid 'f960' argument. Must be pymarc.Field instance.")
+
+        if not isinstance(f961, Field) or not None:
+            raise ValueError("Invalid 'f961' argument. Must be pymarc.Field or None.")
+
+        self.library = library
         self._960 = f960
         self._961 = f961
         self.audn = None

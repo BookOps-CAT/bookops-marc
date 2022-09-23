@@ -61,36 +61,32 @@ def test_normalize_order_number():
     assert normalize_order_number(".o28876714") == 2887671
 
 
-# def test_get_orders_invalid_library_arg(stub_bib):
-#     with pytest.raises(ValueError) as exc:
-#         get_orders(library="foo", bib=stub_bib)
+@pytest.mark.parametrize("arg", ["foo", None, 123])
+def test_order_invalid_library_arg(stub_960, stub_961, arg):
+    with pytest.raises(ValueError) as exc:
+        Order(library=arg, f960=stub_960, f961=stub_961)
 
-#     assert (
-#         "Invalid 'library' argument passed. Only 'BPL' or 'NYPL' are permitted."
-#         in str(exc.value)
-#     )
+    assert (
+        "Invalid 'library' argument passed. Only 'BPL' or 'NYPL' are permitted."
+        in str(exc.value)
+    )
 
 
-# def test_get_orders_invalid_bib_arg():
-#     with pytest.raises(ValueError) as exc:
-#         get_orders("BPL", None)
+def test_order_invalid_f960_arg(stub_961):
+    with pytest.raises(ValueError) as exc:
+        Order("BPL", None, stub_961)
 
-#     assert (
-#         "Invalid argument 'bib' was passed. Must be bookops_marc.bib.Bib or pymarc.record.Record instance."
-#         in str(exc.value)
-#     )
+    assert "Invalid 'f960' argument. Must be pymarc.Field instance." in str(exc.value)
+
+
+def test_order_invalid_f961_arg(stub_960):
+    with pytest.raises(ValueError) as exc:
+        Order("BPL", stub_960, "foo")
+
+    assert "Invalid 'f961' argument. Must be pymarc.Field or None." in str(exc.value)
 
 
 # @pytest.mark.parametrize("arg", ["BPL", "NYPL", "bpl", "nypl"])
-# def test_get_orders_acceptable_library_args(stub_bib, arg):
+# def test_order_acceptable_library_args(stub_960, arg):
 #     with does_not_rise():
-#         get_orders(library=arg, bib=stub_bib)
-
-
-# def test_get_orders_no_data(stub_bib):
-#     stub_bib.remove_fields("960", "961")
-#     assert get_orders("BPL", stub_bib) == []
-
-
-# def test_get_orders(stub_bib):
-# 	stub_bib.add_fields(Field(tag="960", indicators=[" ", " "], subfields=["a", "foo"]))
+#         Order(library=arg, f960=stub_960)
