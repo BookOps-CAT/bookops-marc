@@ -4,7 +4,7 @@ from typing import Optional
 
 def sierra_str2date(date_str: str) -> Optional[date]:
     """
-    Returns date retrieved from Sierra in datetime format
+    Returns date retrieved from Sierra as `datetime.date` object.
     BPL & NYPL Sierra follows slightly different pattern, especially
     considering legacy records.
 
