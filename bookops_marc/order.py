@@ -70,24 +70,41 @@ def get_shelf_audience_code(location_code: str) -> Optional[str]:
 
 
 class Order:
-    def __init__(self, library: str, f960: Field, f961: Optional[Field] = None) -> None:
+    def __init__(
+        self, library: str, fixed_field: Field, variable_field: Optional[Field] = None
+    ) -> None:
         """
         Instates Sierra Order object.
+
+        Args:
+            library:                'bpl' or 'nypl' code
+            fixed_field:            `pymarc.field.Field` instance (960 tag)
+            variable_field:         `pymarc.field.Field` instance (961 tag)
+
         """
-        if not isinstance(library, str) or library.lower() not in ("bpl", "nypl"):
-            raise ValueError(
-                "Invalid 'library' argument passed. Only 'BPL' or 'NYPL' are permitted."
+        if not isinstance(library, str):
+            raise TypeError("Invalid 'library' argument type. Must be a string.")
+        else:
+            if library.lower() not in ("bpl", "nypl"):
+                raise ValueError(
+                    "Invalid 'library' argument value. Must be 'BPL' or 'NYPL'"
+                )
+
+        if not isinstance(fixed_field, Field):
+            raise TypeError(
+                "Invalid 'fixed_field' argument. Must be pymarc.field.Field instance."
             )
 
-        if not isinstance(f960, Field):
-            raise ValueError("Invalid 'f960' argument. Must be pymarc.Field instance.")
+        if isinstance(variable_field, Field) or variable_field is None:
+            pass
+        else:
+            raise TypeError(
+                "Invalid 'variable_field' argument. Must be pymarc.field.Field or None."
+            )
 
-        if not isinstance(f961, Field) or not None:
-            raise ValueError("Invalid 'f961' argument. Must be pymarc.Field or None.")
-
-        self.library = library
-        self._960 = f960
-        self._961 = f961
+        self.library = library.lower()
+        self._fixed_field = fixed_field
+        self._variable_field = variable_field
         self.audn = None
 
         # fixed fields
@@ -142,7 +159,7 @@ class Order:
         """
         audns = []
 
-        for sub in self._960.get_subfields("t"):
+        for sub in self._fixed_field.get_subfields("t"):
             loc_code = normalize_location_code(sub)
 
             audn = get_shelf_audience_code(loc_code)
@@ -156,7 +173,7 @@ class Order:
         """
         shelves = []
 
-        for sub in self._960.get_subfields("t"):
+        for sub in self._fixed_field.get_subfields("t"):
             # remove any qty data
             loc_code = normalize_location_code(sub)
 
@@ -166,9 +183,9 @@ class Order:
         return shelves
 
     def _parse_order_fields(self):
-        self.oid = normalize_order_number(self._960["z"])
+        self.oid = normalize_order_number(self._fixed_field["z"])
         try:
-            self.vendorNote = normalize_vendor_note(self._961["h"])
+            self.vendorNote = normalize_vendor_note(self._variable_field["h"])
         except (TypeError, KeyError):
             pass
 

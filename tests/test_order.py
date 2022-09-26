@@ -61,32 +61,47 @@ def test_normalize_order_number():
     assert normalize_order_number(".o28876714") == 2887671
 
 
-@pytest.mark.parametrize("arg", ["foo", None, 123])
-def test_order_invalid_library_arg(stub_960, stub_961, arg):
+@pytest.mark.parametrize("arg", [None, 123])
+def test_order_invalid_library_arg_type(stub_960, stub_961, arg):
+    with pytest.raises(TypeError) as exc:
+        Order(library=arg, fixed_field=stub_960, variable_field=stub_961)
+
+    assert "Invalid 'library' argument type. Must be a string." in str(exc.value)
+
+
+def test_order_invalid_library_arg_value(stub_960, stub_961):
     with pytest.raises(ValueError) as exc:
-        Order(library=arg, f960=stub_960, f961=stub_961)
+        Order(library="foo", fixed_field=stub_960, variable_field=stub_961)
+
+    assert "Invalid 'library' argument value. Must be 'BPL' or 'NYPL'."
+
+
+def test_order_invalid_fixed_field_arg(stub_961):
+    with pytest.raises(TypeError) as exc:
+        Order("BPL", None, stub_961)
 
     assert (
-        "Invalid 'library' argument passed. Only 'BPL' or 'NYPL' are permitted."
+        "Invalid 'fixed_field' argument. Must be pymarc.field.Field instance."
         in str(exc.value)
     )
 
 
-def test_order_invalid_f960_arg(stub_961):
-    with pytest.raises(ValueError) as exc:
-        Order("BPL", None, stub_961)
-
-    assert "Invalid 'f960' argument. Must be pymarc.Field instance." in str(exc.value)
-
-
-def test_order_invalid_f961_arg(stub_960):
-    with pytest.raises(ValueError) as exc:
+def test_order_invalid_variable_field_arg(stub_960):
+    with pytest.raises(TypeError) as exc:
         Order("BPL", stub_960, "foo")
 
-    assert "Invalid 'f961' argument. Must be pymarc.Field or None." in str(exc.value)
+    assert (
+        "Invalid 'variable_field' argument. Must be pymarc.field.Field or None."
+        in str(exc.value)
+    )
 
 
-# @pytest.mark.parametrize("arg", ["BPL", "NYPL", "bpl", "nypl"])
-# def test_order_acceptable_library_args(stub_960, arg):
-#     with does_not_rise():
-#         Order(library=arg, f960=stub_960)
+def test_order_variable_field_is_none(stub_960):
+    with does_not_rise():
+        Order("BPL", stub_960, None)
+
+
+@pytest.mark.parametrize("arg", ["BPL", "NYPL", "bpl", "nypl"])
+def test_order_acceptable_library_args(stub_960, arg):
+    with does_not_rise():
+        Order(library=arg, fixed_field=stub_960)
