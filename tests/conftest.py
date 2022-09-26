@@ -36,7 +36,7 @@ def stub_pymarc_record():
 
 @pytest.fixture
 def stub_bib():
-    bib = Bib()
+    bib = Bib(library="bpl")
     bib.leader = "02866pam  2200517 i 4500"
     bib.add_field(Field(tag="008", data="190306s2017    ht a   j      000 1 hat d"))
     bib.add_field(

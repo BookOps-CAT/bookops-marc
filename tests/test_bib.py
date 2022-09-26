@@ -1,6 +1,7 @@
 """
 Tests bib.py module
 """
+from contextlib import nullcontext as does_not_raise
 from copy import deepcopy
 from datetime import datetime
 
@@ -53,6 +54,22 @@ def test_audience(stub_bib, arg1, arg2, expectation):
 def test_audience_missing_008(stub_bib):
     stub_bib.remove_fields("008")
     assert stub_bib.audience() is None
+
+
+@pytest.mark.parametrize("arg", [None, "foo", 123])
+def test_bib_invalid_library_arg(arg):
+    with pytest.raises(ValueError) as exc:
+        Bib(library=arg)
+
+    assert "Invalid 'library' argument passed. Must be a library code as str." in str(
+        exc.value
+    )
+
+
+@pytest.mark.parametrize("arg", ["BPL", "bpl", "NYPL", "nypl"])
+def test_bib_blank_record(arg):
+    with does_not_raise():
+        Bib(library=arg)
 
 
 @pytest.mark.parametrize(
@@ -183,7 +200,7 @@ def test_form_of_item_in_pos_29(arg, stub_bib):
     assert stub_bib.form_of_item() == "o"
 
 
-@pytest.mark.parametrize("arg", ["bpl", "nypl", None])
+@pytest.mark.parametrize("arg", ["bpl", "nypl"])
 def test_instating_from_pymarc_record(stub_pymarc_record, arg):
     bib = pymarc_record_to_local_bib(stub_pymarc_record, arg)
     assert isinstance(bib, Bib)
@@ -193,6 +210,11 @@ def test_instating_from_pymarc_record(stub_pymarc_record, arg):
 
     # bib methods
     assert str(bib.main_entry()) == "=100  1\\$aAdams, John,$eauthor."
+
+
+def test_instating_from_pymarc_record_no_library_specified(stub_pymarc_record):
+    with pytest.raises(ValueError) as exc:
+        pymarc_record_to_local_bib(stub_pymarc_record, None)
 
 
 def test_languages_none_008(stub_bib):
@@ -286,6 +308,7 @@ def test_orders_exceptions(arg, stub_bib, stub_960):
 
 
 def test_orders_single(stub_bib, stub_960, stub_961):
+    stub_bib.library = "BPL"
     stub_bib.add_field(stub_960)
     stub_bib.add_field(stub_961)
     orders = stub_bib.orders()
