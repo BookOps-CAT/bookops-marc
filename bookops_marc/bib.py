@@ -95,12 +95,15 @@ class Bib(Record):
             file_encoding,
         )
 
-        if isinstance(library, str) and library.lower() in ("bpl", "nypl"):
-            self.library = library.lower()
+        if not isinstance(library, str):
+            raise TypeError("Invalid 'library' argument type. Must be a string.")
         else:
-            raise ValueError(
-                "Invalid 'library' argument passed. Must be a library code as str."
-            )
+            if library.lower() in ("bpl", "nypl"):
+                self.library = library.lower()
+            else:
+                raise ValueError(
+                    "Invalid 'library' argument value. Must be 'BPL' or 'NYPL'."
+                )
 
     def __iter__(self):
         self.pos = 0

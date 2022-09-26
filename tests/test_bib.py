@@ -56,14 +56,19 @@ def test_audience_missing_008(stub_bib):
     assert stub_bib.audience() is None
 
 
-@pytest.mark.parametrize("arg", [None, "foo", 123])
-def test_bib_invalid_library_arg(arg):
-    with pytest.raises(ValueError) as exc:
+@pytest.mark.parametrize("arg", [None, 123])
+def test_bib_invalid_library_arg_type(arg):
+    with pytest.raises(TypeError) as exc:
         Bib(library=arg)
 
-    assert "Invalid 'library' argument passed. Must be a library code as str." in str(
-        exc.value
-    )
+    assert "Invalid 'library' argument type. Must be a string." in str(exc.value)
+
+
+def test_bib_invalid_library_arg_value():
+    with pytest.raises(ValueError) as exc:
+        Bib(library="foo")
+
+    assert "Invalid 'library' argument value. Must be 'BPL' or 'NYPL'."
 
 
 @pytest.mark.parametrize("arg", ["BPL", "bpl", "NYPL", "nypl"])
@@ -213,7 +218,7 @@ def test_instating_from_pymarc_record(stub_pymarc_record, arg):
 
 
 def test_instating_from_pymarc_record_no_library_specified(stub_pymarc_record):
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(TypeError) as exc:
         pymarc_record_to_local_bib(stub_pymarc_record, None)
 
 
