@@ -10,21 +10,8 @@ from bookops_marc.order import (
     get_shelf_code,
     normalize_location_code,
     normalize_order_number,
+    normalize_vendor_note,
 )
-
-
-@pytest.mark.parametrize(
-    "arg,expectation",
-    [
-        ("(3)sn", "sn"),
-        ("(2)btj0f", "btj0f"),
-        ("41anf(5)", "41anf"),
-        ("41anf", "41anf"),
-        ("(3)snj0y", "snj0y"),
-    ],
-)
-def test_normalize_location_code(arg, expectation, stub_bib):
-    assert normalize_location_code(arg) == expectation
 
 
 @pytest.mark.parametrize(
@@ -57,8 +44,54 @@ def test_get_shelf_code(arg, expectation):
     assert get_shelf_code(arg) == expectation
 
 
+@pytest.mark.parametrize(
+    "arg,expectation",
+    [
+        ("(3)sn", "sn"),
+        ("(2)btj0f", "btj0f"),
+        ("41anf(5)", "41anf"),
+        ("41anf", "41anf"),
+        ("(3)snj0y", "snj0y"),
+    ],
+)
+def test_normalize_location_code(arg, expectation, stub_bib):
+    assert normalize_location_code(arg) == expectation
+
+
 def test_normalize_order_number():
     assert normalize_order_number(".o28876714") == 2887671
+
+
+@pytest.mark.parametrize(
+    "arg,expectation",
+    [
+        ("foo", "foo"),
+        ("FOO", "foo"),
+        ("foo,bar", "foo,bar"),
+        ("Foo,Bar", "foo,bar"),
+        ("foo , bar", "foo,bar"),
+        (" foo  ,  bar  ", "foo,bar"),
+        (",foo", "foo"),
+        ("foo,", "foo"),
+        (" , ", None),
+        ("foo;bar", "foo,bar"),
+        (" Foo ;  Bar ", "foo,bar"),
+        ("; Foo", "foo"),
+        ("", None),
+        (None, None),
+        ("e", None),
+        ("e,bio", "bio"),
+        ("e,m", "m"),
+        ("t,s", "t,s"),
+        ("n,bio", "bio"),
+        ("n, w", "w"),
+        ("N,BIO", "bio"),
+        ("bio, n", "bio"),
+        ("ref,lit;fic", "lit,fic"),
+    ],
+)
+def test_normalize_vendor_note(arg, expectation):
+    assert normalize_vendor_note(arg) == expectation
 
 
 @pytest.mark.parametrize("arg", [None, 123])
@@ -105,3 +138,34 @@ def test_order_variable_field_is_none(stub_960):
 def test_order_acceptable_library_args(stub_960, arg):
     with does_not_rise():
         Order(library=arg, fixed_field=stub_960)
+
+
+def test_order_get_funds(stub_960):
+    order = Order(library="nypl", fixed_field=stub_960)
+    assert order._get_funds() == tuple(["lease"])
+
+
+def test_order_get_branches(stub_960):
+    order = Order(library="nypl", fixed_field=stub_960)
+    assert order._get_locations() == tuple(["sn", "ag", "mu", "in"])
+
+
+def test_order_get_shelf_audience_codes(stub_960):
+    order = Order(library="nypl", fixed_field=stub_960)
+    assert order._get_shelf_audience_codes() == tuple(["j", "j", "j", "j"])
+
+
+def test_order_get_shelves(stub_960):
+    order = Order(library="nypl", fixed_field=stub_960)
+    assert order._get_shelves() == tuple(["0y", "0y", "0y", "0y"])
+
+
+def test_order_unique_funds(stub_960):
+    stub_960.add_subfield(code="u", value="foo")
+    stub_960.add_subfield(code="u", value="foo")
+
+    assert len(stub_960.get_subfields("u")) == 3
+
+    order = Order(library="nypl", fixed_field=stub_960)
+
+    assert order.unique_funds() == set(["lease", "foo"])

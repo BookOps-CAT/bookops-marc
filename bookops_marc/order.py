@@ -1,4 +1,4 @@
-from typing import Generator, List, Optional, Union
+from typing import Generator, List, Optional, Tuple, Union
 
 from pymarc import Record, Field
 
@@ -51,7 +51,36 @@ def normalize_order_number(order_number: str) -> int:
 
 
 def normalize_vendor_note(ven_note: str) -> Optional[str]:
-    pass
+    """
+    Normalizes PO per Line (vendor note).
+    BPL uses semi-colon, NYPL comma in vendor notes.
+
+    Args:
+        ven_note:                   value of vendor note variable field
+
+    Returns:
+        normalized note
+    """
+    if isinstance(ven_note, str):
+        ven_note = (
+            ven_note.lower()
+            .replace("deck", "")
+            .replace("sr", "")
+            .replace("mm", "")
+            .replace("ref", "")
+            # .replace("st", "")  # BPL story collection
+        )
+        ven_note = ven_note.replace(";", ",")
+        ven_note_lst = [n.strip().lower() for n in ven_note.split(",")]
+        ven_note_lst = [n.replace("n", "").replace("e", "") for n in ven_note_lst]
+        ven_note_lst = [n for n in ven_note_lst if n]
+
+        if ven_note_lst:
+            return ",".join(ven_note_lst)
+        else:
+            return None
+    else:
+        return None
 
 
 def get_shelf_audience_code(location_code: str) -> Optional[str]:
@@ -122,6 +151,8 @@ class Order:
         self.lang = None
         self.orderType = None
         self.price = None
+        self.shelf_audn_codes = ()
+        self.shelves = ()
         self.status = None
         self.venCode = None
 
@@ -134,26 +165,37 @@ class Order:
 
         self._parse_order_fields()
 
-    def _get_branches(self, field: Field) -> List[str]:
+    def _get_funds(self) -> Tuple[Optional[str]]:
+        """
+        Returns as a tuple fund codes encoded in order fixed field.
+        """
+        funds = []
+
+        for sub in self._fixed_field.get_subfields("u"):
+            funds.append(sub)
+
+        return tuple(funds)
+
+    def _get_locations(self) -> Tuple[str]:
         """
         Returns isolated from location codes branches as a list
 
-        Args:
-            field:                  pymarc.Field instance
+        Returns:
+            branch codes as a sorted set
         """
-        branches = []
+        locations = []
 
-        for sub in field.get_subfields("t"):
+        for sub in self._fixed_field.get_subfields("t"):
 
             # remove any qty data
             loc_code = normalize_location_code(sub)
 
             branch = get_branch_code(loc_code)
-            branches.append(branch)
+            locations.append(branch)
 
-        return branches
+        return tuple(locations)
 
-    def _get_shelf_audience_codes(self) -> List[Optional[str]]:
+    def _get_shelf_audience_codes(self) -> Tuple[Optional[str]]:
         """
         Returns list of audience codes extracted from location codes
         """
@@ -165,9 +207,9 @@ class Order:
             audn = get_shelf_audience_code(loc_code)
             audns.append(audn)
 
-        return audns
+        return tuple(audns)
 
-    def _get_shelves(self) -> List[Optional[str]]:
+    def _get_shelves(self) -> Tuple[Optional[str]]:
         """
         Returns list of shelf codes extracted from location codes
         """
@@ -180,23 +222,35 @@ class Order:
             shelf = get_shelf_code(loc_code)
             shelves.append(shelf)
 
-        return shelves
+        return tuple(shelves)
+
+    def _get_vendor_note(self) -> Optional[str]:
+        """
+        Returns vendor note (PO per line) encoded in variable field of the order tag
+        """
+        vendor_notes = []
 
     def _parse_order_fields(self):
         self.oid = normalize_order_number(self._fixed_field["z"])
+
+        self.funds = self._get_funds()
+        self.locations = self._get_locations()
+        self.shelf_audn_codes = self._get_shelf_audience_codes()
+        self.shelves = self._get_shelves()
+
         try:
             self.vendorNote = normalize_vendor_note(self._variable_field["h"])
         except (TypeError, KeyError):
             pass
 
-    def unique_branches(self):
-        pass
+    def unique_funds(self):
+        return set(self.funds)
+
+    def unique_locations(self):
+        return set(self.locations)
+
+    def unique_shelf_audn_codes(self):
+        return set(self.shelf_audn_codes)
 
     def unique_shelves(self):
-        pass
-
-    def unique_shelves_audn(self):
-        pass
-
-    def unique_funds(self):
-        pass
+        return set(self.shelves)
