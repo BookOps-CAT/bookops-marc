@@ -141,6 +141,60 @@ def test_order_acceptable_library_args(stub_960, arg):
         Order(library=arg, fixed_field=stub_960)
 
 
+def test_order_get_code1(stub_960):
+    order = Order(library="nypl", fixed_field=stub_960)
+
+    assert order._get_code1() == "j"
+
+
+def test_order_get_code2(stub_960):
+    order = Order(library="nypl", fixed_field=stub_960)
+
+    assert order._get_code2() == "c"
+
+
+def test_order_get_code3(stub_960):
+    order = Order(library="nypl", fixed_field=stub_960)
+
+    assert order._get_code3() == "d"
+
+
+def test_order_get_code4(stub_960):
+    order = Order(library="nypl", fixed_field=stub_960)
+
+    assert order._get_code4() == "a"
+
+
+def test_order_get_first_fixed_field(stub_960):
+    stub_960.add_subfield(code="l", value=" foo ")
+    stub_960.add_subfield(code="l", value=" bar ")
+
+    order = Order(library="nypl", fixed_field=stub_960)
+
+    assert order._get_first_fixed_field("l") == "foo"
+
+
+def test_order_get_first_fixed_field_missing(stub_960):
+    order = Order(library="nypl", fixed_field=stub_960)
+
+    assert order._get_first_fixed_field("l") is None
+
+
+def test_order_get_first_varialbe_field(stub_960, stub_961):
+    stub_961.add_subfield(code="x", value=" foo ")
+    stub_961.add_subfield(code="x", value=" bar ")
+
+    order = Order(library="nypl", fixed_field=stub_960, variable_field=stub_961)
+
+    assert order._get_first_variable_field("x") == "foo"
+
+
+def test_order_get_first_variable_field_missing(stub_960, stub_961):
+    order = Order(library="nypl", fixed_field=stub_960, variable_field=stub_961)
+
+    assert order._get_first_variable_field("x") is None
+
+
 def test_order_get_funds(stub_960):
     order = Order(library="nypl", fixed_field=stub_960)
     assert order._get_funds() == tuple(["lease"])

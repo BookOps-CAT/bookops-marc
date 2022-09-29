@@ -165,6 +165,34 @@ class Order:
 
         self._parse_order_fields()
 
+    def _get_code1(self) -> Optional[str]:
+        """Returns order Code1 from order fixed fields."""
+        return self._get_first_fixed_field("c")
+
+    def _get_code2(self) -> Optional[str]:
+        """Returns order Code2 from order fixed fields."""
+        return self._get_first_fixed_field("d")
+
+    def _get_code3(self) -> Optional[str]:
+        """Returns order Code3 from order fixed fields."""
+        return self._get_first_fixed_field("e")
+
+    def _get_code4(self) -> Optional[str]:
+        """Returns order Code4 from order fixed fields."""
+        return self._get_first_fixed_field("f")
+
+    def _get_first_fixed_field(self, subfield: str) -> Optional[str]:
+        try:
+            return self._fixed_field[subfield].strip()
+        except AttributeError:
+            return None
+
+    def _get_first_variable_field(self, subfield: str) -> Optional[str]:
+        try:
+            return self._variable_field[subfield].strip()
+        except AttributeError:
+            return None
+
     def _get_funds(self) -> Tuple[Optional[str]]:
         """
         Returns as a tuple fund codes encoded in order fixed field.
@@ -228,26 +256,26 @@ class Order:
         """
         Returns vendor note (PO per line) encoded in variable field of the order tag
         """
-        vendor_note = None
-        for sub in self._variable_field.get_subfields("h"):
-            # consider only the first one since only one is allowed
-            vendor_note = normalize_vendor_note(sub)
-            break
-
+        sub = self._get_first_variable_field("h")
+        vendor_note = normalize_vendor_note(sub)
         return vendor_note
 
     def _parse_order_fields(self):
+        # fixed fields
         self.oid = normalize_order_number(self._fixed_field["z"])
+        self.code1 = self._get_code1()
+        self.code2 = self._get_code2()
+        self.code3 = self._get_code3()
+        self.code4 = self._get_code4()
 
         self.funds = self._get_funds()
         self.locations = self._get_locations()
         self.shelf_audn_codes = self._get_shelf_audience_codes()
         self.shelves = self._get_shelves()
 
-        try:
-            self.vendorNote = normalize_vendor_note(self._variable_field["h"])
-        except (TypeError, KeyError):
-            pass
+        # variable fields
+        if self._variable_field is not None:
+            self.vendorNote = self._get_vendor_note()
 
     def unique_funds(self) -> Set[str]:
         return set(self.funds)
