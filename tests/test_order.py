@@ -88,6 +88,7 @@ def test_normalize_order_number():
         ("N,BIO", "bio"),
         ("bio, n", "bio"),
         ("ref,lit;fic", "lit,fic"),
+        ("lit;non", "lit,non"),
     ],
 )
 def test_normalize_vendor_note(arg, expectation):
@@ -169,3 +170,31 @@ def test_order_unique_funds(stub_960):
     order = Order(library="nypl", fixed_field=stub_960)
 
     assert order.unique_funds() == set(["lease", "foo"])
+
+
+def test_order_unique_locations(stub_960):
+    stub_960.add_subfield(code="t", value="(2)snj0y")
+
+    assert len(stub_960.get_subfields("t")) == 5
+
+    order = Order(library="nypl", fixed_field=stub_960)
+
+    assert order.unique_locations() == set(["sn", "ag", "mu", "in"])
+
+
+def test_order_unique_shelf_audn_codes(stub_960):
+    order = Order(library="nypl", fixed_field=stub_960)
+
+    assert order.unique_shelf_audn_codes() == set(["j"])
+
+
+def test_order_unique_shelves(stub_960):
+    order = Order(library="nypl", fixed_field=stub_960)
+
+    assert order.unique_shelves() == set(["0y"])
+
+
+def test_order_get_vendor_note(stub_960, stub_961):
+    order = Order(library="nypl", fixed_field=stub_960, variable_field=stub_961)
+
+    assert order._get_vendor_note() == "vendor-note ($v)"

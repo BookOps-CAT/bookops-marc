@@ -1,4 +1,4 @@
-from typing import Generator, List, Optional, Tuple, Union
+from typing import Generator, List, Optional, Set, Tuple, Union
 
 from pymarc import Record, Field
 
@@ -72,7 +72,7 @@ def normalize_vendor_note(ven_note: str) -> Optional[str]:
         )
         ven_note = ven_note.replace(";", ",")
         ven_note_lst = [n.strip().lower() for n in ven_note.split(",")]
-        ven_note_lst = [n.replace("n", "").replace("e", "") for n in ven_note_lst]
+        ven_note_lst = [n for n in ven_note_lst if n != "n" and n != "e"]
         ven_note_lst = [n for n in ven_note_lst if n]
 
         if ven_note_lst:
@@ -228,7 +228,13 @@ class Order:
         """
         Returns vendor note (PO per line) encoded in variable field of the order tag
         """
-        vendor_notes = []
+        vendor_note = None
+        for sub in self._variable_field.get_subfields("h"):
+            # consider only the first one since only one is allowed
+            vendor_note = normalize_vendor_note(sub)
+            break
+
+        return vendor_note
 
     def _parse_order_fields(self):
         self.oid = normalize_order_number(self._fixed_field["z"])
@@ -243,14 +249,14 @@ class Order:
         except (TypeError, KeyError):
             pass
 
-    def unique_funds(self):
+    def unique_funds(self) -> Set[str]:
         return set(self.funds)
 
-    def unique_locations(self):
+    def unique_locations(self) -> Set[str]:
         return set(self.locations)
 
-    def unique_shelf_audn_codes(self):
+    def unique_shelf_audn_codes(self) -> Set[str]:
         return set(self.shelf_audn_codes)
 
-    def unique_shelves(self):
+    def unique_shelves(self) -> Set[str]:
         return set(self.shelves)
