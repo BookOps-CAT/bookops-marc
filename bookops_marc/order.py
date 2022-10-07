@@ -181,6 +181,14 @@ class Order:
         """Returns order Code4 from order fixed fields."""
         return self._get_first_fixed_field("f")
 
+    def _get_copies(self) -> Optional[int]:
+        """Returns number of copies from order fixed fields."""
+        copies = self._get_first_fixed_field("o")
+        try:
+            return int(copies)
+        except ValueError:
+            return None
+
     def _get_first_fixed_field(self, subfield: str) -> Optional[str]:
         try:
             return self._fixed_field[subfield].strip()
@@ -267,6 +275,7 @@ class Order:
         self.code2 = self._get_code2()
         self.code3 = self._get_code3()
         self.code4 = self._get_code4()
+        self.copies = self._get_copies()
 
         self.funds = self._get_funds()
         self.locations = self._get_locations()

@@ -165,6 +165,14 @@ def test_order_get_code4(stub_960):
     assert order._get_code4() == "a"
 
 
+@pytest.mark.parametrize("arg,expectation", [("150", 150), ("-", None)])
+def test_order_get_copies(stub_960, arg, expectation):
+    stub_960["o"] = arg
+    order = Order(library="nypl", fixed_field=stub_960)
+
+    assert order._get_copies() == expectation
+
+
 def test_order_get_first_fixed_field(stub_960):
     stub_960.add_subfield(code="l", value=" foo ")
     stub_960.add_subfield(code="l", value=" bar ")
