@@ -105,6 +105,7 @@ class Order:
     ) -> None:
         """
         Instates Sierra Order object.
+        Sierra's not coded values are represented as None type.
 
         Args:
             library:                'bpl' or 'nypl' code
@@ -148,8 +149,8 @@ class Order:
         self.created = None
         self.format = None
         self.funds = ()
+        self.language = None
         self.locations = ()
-        self.lang = None
         self.orderType = None
         self.price = None
         self.shelf_audn_codes = ()
@@ -159,7 +160,7 @@ class Order:
 
         # variable fields
         self.blanketPo = None
-        self.orderIsbn = None
+        self.isbn = None
         self.internalNote = None
         self.vendorNotes = ()
         self.vendorTitleNo = None
@@ -168,19 +169,35 @@ class Order:
 
     def _get_code1(self) -> Optional[str]:
         """Returns order Code1 from order fixed fields."""
-        return self._get_first_fixed_field("c")
+        code = self._get_first_fixed_field("c")
+        if code == "-":
+            return None
+        else:
+            return code
 
     def _get_code2(self) -> Optional[str]:
         """Returns order Code2 from order fixed fields."""
-        return self._get_first_fixed_field("d")
+        code = self._get_first_fixed_field("d")
+        if code == "-":
+            return None
+        else:
+            return code
 
     def _get_code3(self) -> Optional[str]:
         """Returns order Code3 from order fixed fields."""
-        return self._get_first_fixed_field("e")
+        code = self._get_first_fixed_field("e")
+        if code == "-":
+            return None
+        else:
+            return code
 
     def _get_code4(self) -> Optional[str]:
         """Returns order Code4 from order fixed fields."""
-        return self._get_first_fixed_field("f")
+        code = self._get_first_fixed_field("f")
+        if code == "-":
+            return None
+        else:
+            return code
 
     def _get_copies(self) -> Optional[int]:
         """Returns number of copies from order fixed fields."""
@@ -211,6 +228,14 @@ class Order:
         except AttributeError:
             return None
 
+    def _get_format(self) -> Optional[str]:
+        """Returns material format code from order fixed fields."""
+        code = self._get_first_fixed_field("g")
+        if code == "-":
+            return None
+        else:
+            return code
+
     def _get_funds(self) -> Tuple[Optional[str]]:
         """
         Returns as a tuple fund codes encoded in order fixed field.
@@ -221,6 +246,14 @@ class Order:
             funds.append(sub)
 
         return tuple(funds)
+
+    def _get_language_code(self) -> Optional[str]:
+        """Returns a language code from order fixed fields."""
+        code = self._get_first_fixed_field("w")
+        if not code.strip():
+            return None
+        else:
+            return code
 
     def _get_locations(self) -> Tuple[str]:
         """
@@ -240,6 +273,14 @@ class Order:
             locations.append(branch)
 
         return tuple(locations)
+
+    def _get_order_type(self) -> Optional[str]:
+        """Returns order type code from order fixed fields."""
+        code = self._get_first_fixed_field("i")
+        if code == "-":
+            return None
+        else:
+            return code
 
     def _get_shelf_audience_codes(self) -> Tuple[Optional[str]]:
         """
@@ -288,6 +329,7 @@ class Order:
         self.copies = self._get_copies()
         self.country = self._get_country()
         self.created = self._get_created_date()
+        self.format = self._get_format()
 
         self.funds = self._get_funds()
         self.locations = self._get_locations()

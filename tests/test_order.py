@@ -142,35 +142,38 @@ def test_order_acceptable_library_args(stub_960, arg):
         Order(library=arg, fixed_field=stub_960)
 
 
-def test_order_get_code1(stub_960):
+@pytest.mark.parametrize("arg,expectation", [("j", "j"), ("-", None)])
+def test_order_get_code1(stub_960, arg, expectation):
+    stub_960["c"] = arg
     order = Order(library="nypl", fixed_field=stub_960)
+    assert order._get_code1() == expectation
 
-    assert order._get_code1() == "j"
 
-
-def test_order_get_code2(stub_960):
+@pytest.mark.parametrize("arg,expectation", [("c", "c"), ("-", None)])
+def test_order_get_code2(stub_960, arg, expectation):
+    stub_960["d"] = arg
     order = Order(library="nypl", fixed_field=stub_960)
+    assert order._get_code2() == expectation
 
-    assert order._get_code2() == "c"
 
-
-def test_order_get_code3(stub_960):
+@pytest.mark.parametrize("arg,expectation", [("d", "d"), ("-", None)])
+def test_order_get_code3(stub_960, arg, expectation):
+    stub_960["e"] = arg
     order = Order(library="nypl", fixed_field=stub_960)
+    assert order._get_code3() == expectation
 
-    assert order._get_code3() == "d"
 
-
-def test_order_get_code4(stub_960):
+@pytest.mark.parametrize("arg,expectation", [("a", "a"), ("-", None)])
+def test_order_get_code4(stub_960, arg, expectation):
+    stub_960["f"] = arg
     order = Order(library="nypl", fixed_field=stub_960)
-
-    assert order._get_code4() == "a"
+    assert order._get_code4() == expectation
 
 
 @pytest.mark.parametrize("arg,expectation", [("150", 150), ("-", None)])
 def test_order_get_copies(stub_960, arg, expectation):
     stub_960["o"] = arg
     order = Order(library="nypl", fixed_field=stub_960)
-
     assert order._get_copies() == expectation
 
 
@@ -190,13 +193,11 @@ def test_order_get_first_fixed_field(stub_960):
     stub_960.add_subfield(code="l", value=" bar ")
 
     order = Order(library="nypl", fixed_field=stub_960)
-
     assert order._get_first_fixed_field("l") == "foo"
 
 
 def test_order_get_first_fixed_field_missing(stub_960):
     order = Order(library="nypl", fixed_field=stub_960)
-
     assert order._get_first_fixed_field("l") is None
 
 
@@ -205,14 +206,19 @@ def test_order_get_first_varialbe_field(stub_960, stub_961):
     stub_961.add_subfield(code="x", value=" bar ")
 
     order = Order(library="nypl", fixed_field=stub_960, variable_field=stub_961)
-
     assert order._get_first_variable_field("x") == "foo"
 
 
 def test_order_get_first_variable_field_missing(stub_960, stub_961):
     order = Order(library="nypl", fixed_field=stub_960, variable_field=stub_961)
-
     assert order._get_first_variable_field("x") is None
+
+
+@pytest.mark.parametrize("arg,expectation", [("b", "b"), ("-", None)])
+def test_order_get_format(stub_960, arg, expectation):
+    stub_960["g"] = arg
+    order = Order(library="nypl", fixed_field=stub_960)
+    assert order._get_format() == expectation
 
 
 def test_order_get_funds(stub_960):
@@ -220,9 +226,23 @@ def test_order_get_funds(stub_960):
     assert order._get_funds() == tuple(["lease"])
 
 
-def test_order_get_branches(stub_960):
+@pytest.mark.parametrize("arg,expectation", [("eng", "eng"), ("   ", None)])
+def test_order_get_language(stub_960, arg, expectation):
+    stub_960["w"] = arg
+    order = Order(library="nypl", fixed_field=stub_960)
+    assert order._get_language_code() == expectation
+
+
+def test_order_get_locations(stub_960):
     order = Order(library="nypl", fixed_field=stub_960)
     assert order._get_locations() == tuple(["sn", "ag", "mu", "in"])
+
+
+@pytest.mark.parametrize("arg,expectation", [("l", "l"), ("-", None)])
+def test_order_get_order_type(stub_960, arg, expectation):
+    stub_960["i"] = arg
+    order = Order(library="nypl", fixed_field=stub_960)
+    assert order._get_order_type() == expectation
 
 
 def test_order_get_shelf_audience_codes(stub_960):
@@ -240,9 +260,7 @@ def test_order_unique_funds(stub_960):
     stub_960.add_subfield(code="u", value="foo")
 
     assert len(stub_960.get_subfields("u")) == 3
-
     order = Order(library="nypl", fixed_field=stub_960)
-
     assert order.unique_funds() == set(["lease", "foo"])
 
 
@@ -250,21 +268,17 @@ def test_order_unique_locations(stub_960):
     stub_960.add_subfield(code="t", value="(2)snj0y")
 
     assert len(stub_960.get_subfields("t")) == 5
-
     order = Order(library="nypl", fixed_field=stub_960)
-
     assert order.unique_locations() == set(["sn", "ag", "mu", "in"])
 
 
 def test_order_unique_shelf_audn_codes(stub_960):
     order = Order(library="nypl", fixed_field=stub_960)
-
     assert order.unique_shelf_audn_codes() == set(["j"])
 
 
 def test_order_unique_shelves(stub_960):
     order = Order(library="nypl", fixed_field=stub_960)
-
     assert order.unique_shelves() == set(["0y"])
 
 
