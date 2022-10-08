@@ -175,7 +175,7 @@ def test_order_get_code4(stub_960, arg, expectation):
     assert order._get_code4() == expectation
 
 
-@pytest.mark.parametrize("arg,expectation", [("150", 150), ("-", None)])
+@pytest.mark.parametrize("arg,expectation", [("150", 150), ("-", None), (None, None)])
 def test_order_get_copies(stub_960, arg, expectation):
     stub_960["o"] = arg
     order = Order(library="nypl", fixed_field=stub_960)
@@ -229,6 +229,11 @@ def test_order_get_format(stub_960, arg, expectation):
 def test_order_get_funds(stub_960):
     order = Order(library="nypl", fixed_field=stub_960)
     assert order._get_funds() == tuple(["lease"])
+
+
+def test_order_get_internal_note(stub_960, stub_961):
+    order = Order(library="nypl", fixed_field=stub_960, variable_field=stub_961)
+    assert order._get_internal_note() == "internal-note ($i)"
 
 
 def test_order_get_isbn(stub_960, stub_961):
@@ -290,6 +295,11 @@ def test_order_get_status(stub_960):
 def test_order_get_vendor_code(stub_960):
     order = Order(library="nypl", fixed_field=stub_960)
     assert order._get_vendor_code() == "btlea"
+
+
+def test_order_get_ventor_title_number(stub_960, stub_961):
+    order = Order(library="nypl", fixed_field=stub_960, variable_field=stub_961)
+    assert order._get_vendor_title_number() == "vendor-title-no ($f)"
 
 
 def test_order_unique_funds(stub_960):

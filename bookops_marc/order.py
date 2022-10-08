@@ -160,8 +160,8 @@ class Order:
 
         # variable fields
         self.blanketPo = None
-        self.isbn = None
         self.internalNote = None
+        self.isbn = None
         self.vendorNotes = ()
         self.vendorTitleNo = None
 
@@ -208,17 +208,20 @@ class Order:
         copies = self._get_first_fixed_field("o")
         try:
             return int(copies)
-        except ValueError:
+        except (TypeError, ValueError):
             return None
 
     def _get_country(self) -> Optional[str]:
         """Returns three letter country code from order fixed fields."""
         return self._get_first_fixed_field("x")
 
-    def _get_created_date(self) -> date:
+    def _get_created_date(self) -> Optional[date]:
         """Returns order created date serialized as datetime.date object."""
         value = self._get_first_fixed_field("q")
-        return datetime.strptime(value, "%d-%m-%y").date()
+        if value:
+            return datetime.strptime(value, "%d-%m-%y").date()
+        else:
+            return None
 
     def _get_first_fixed_field(self, subfield: str) -> Optional[str]:
         try:
@@ -250,6 +253,10 @@ class Order:
             funds.append(sub)
 
         return tuple(funds)
+
+    def _get_internal_note(self) -> Optional[str]:
+        """Returns internal note from order variable fields."""
+        return self._get_first_variable_field("a")
 
     def _get_isbn(self) -> Optional[str]:
         """Returns ISBN from order variable fields."""
@@ -352,6 +359,10 @@ class Order:
         vendor_note = normalize_vendor_note(sub)
         return vendor_note
 
+    def _get_vendor_title_number(self) -> Optional[str]:
+        """Returns vendor title number from order variable fields."""
+        return self._get_first_variable_field("i")
+
     def _parse_order_fields(self):
         # fixed fields
         self.oid = normalize_order_number(self._fixed_field["z"])
@@ -375,9 +386,11 @@ class Order:
 
         # variable fields
         if self._variable_field is not None:
-            self.vendorNote = self._get_vendor_note()
             self.blanketPo = self._get_blanket_po()
+            self.internalNote = self._get_internal_note()
             self.isbn = self._get_isbn()
+            self.vendorNote = self._get_vendor_note()
+            self.vendorTitleNo = self._get_vendor_title_number()
 
     def unique_funds(self) -> Set[str]:
         return set(self.funds)
