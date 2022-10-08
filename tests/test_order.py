@@ -245,6 +245,22 @@ def test_order_get_order_type(stub_960, arg, expectation):
     assert order._get_order_type() == expectation
 
 
+@pytest.mark.parametrize(
+    "arg,expectation",
+    [
+        ("{{dollar}}13.20", 13.2),
+        ("{{dollar}}0.0", 0.0),
+        ("{{foo}}0", 0.0),
+        ("foo", None),
+        ("{{dollar}}foo", None),
+    ],
+)
+def test_order_get_price(stub_960, arg, expectation):
+    stub_960["s"] = arg
+    order = Order(library="nypl", fixed_field=stub_960)
+    assert order._get_price() == expectation
+
+
 def test_order_get_shelf_audience_codes(stub_960):
     order = Order(library="nypl", fixed_field=stub_960)
     assert order._get_shelf_audience_codes() == tuple(["j", "j", "j", "j"])

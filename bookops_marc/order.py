@@ -282,6 +282,20 @@ class Order:
         else:
             return code
 
+    def _get_price(self) -> Optional[float]:
+        """Returns order price from order fixed fields."""
+        value = self._get_first_fixed_field("s")
+        try:
+            pos = value.rindex("}")
+        except ValueError:
+            pos = -1
+
+        value = value[pos + 1 :]
+        try:
+            return float(value)
+        except ValueError:
+            return None
+
     def _get_shelf_audience_codes(self) -> Tuple[Optional[str]]:
         """
         Returns list of audience codes extracted from location codes
@@ -330,6 +344,9 @@ class Order:
         self.country = self._get_country()
         self.created = self._get_created_date()
         self.format = self._get_format()
+        self.language = self._get_language_code()
+        self.orderType = self._get_order_type()
+        self.price = self._get_price()
 
         self.funds = self._get_funds()
         self.locations = self._get_locations()
