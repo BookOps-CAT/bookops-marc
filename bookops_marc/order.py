@@ -1,3 +1,4 @@
+from datetime import datetime, date
 from typing import Generator, List, Optional, Set, Tuple, Union
 
 from pymarc import Record, Field
@@ -189,6 +190,15 @@ class Order:
         except ValueError:
             return None
 
+    def _get_country(self) -> Optional[str]:
+        """Returns three letter country code from order fixed fields."""
+        return self._get_first_fixed_field("x")
+
+    def _get_created_date(self) -> date:
+        """Returns order created date serialized as datetime.date object."""
+        value = self._get_first_fixed_field("q")
+        return datetime.strptime(value, "%d-%m-%y").date()
+
     def _get_first_fixed_field(self, subfield: str) -> Optional[str]:
         try:
             return self._fixed_field[subfield].strip()
@@ -276,6 +286,8 @@ class Order:
         self.code3 = self._get_code3()
         self.code4 = self._get_code4()
         self.copies = self._get_copies()
+        self.country = self._get_country()
+        self.created = self._get_created_date()
 
         self.funds = self._get_funds()
         self.locations = self._get_locations()

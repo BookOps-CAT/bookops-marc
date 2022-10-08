@@ -1,4 +1,5 @@
 from contextlib import nullcontext as does_not_rise
+from datetime import datetime
 
 from pymarc import Field
 import pytest
@@ -171,6 +172,17 @@ def test_order_get_copies(stub_960, arg, expectation):
     order = Order(library="nypl", fixed_field=stub_960)
 
     assert order._get_copies() == expectation
+
+
+def test_order_get_country(stub_960):
+    order = Order(library="nypl", fixed_field=stub_960)
+    assert order._get_country() == "xxu"
+
+
+def test_order_get_created_date(stub_960):
+    order = Order(library="nypl", fixed_field=stub_960)
+    order_date = datetime(2021, 2, 8).date()
+    assert order._get_created_date() == order_date
 
 
 def test_order_get_first_fixed_field(stub_960):
