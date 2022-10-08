@@ -156,7 +156,7 @@ class Order:
         self.shelf_audn_codes = ()
         self.shelves = ()
         self.status = None
-        self.venCode = None
+        self.vendorCode = None
 
         # variable fields
         self.blanketPo = None
@@ -166,6 +166,10 @@ class Order:
         self.vendorTitleNo = None
 
         self._parse_order_fields()
+
+    def _get_blanket_po(self) -> Optional[str]:
+        """Returns first blanketPO value from order variable field"""
+        return self._get_first_variable_field("m")
 
     def _get_code1(self) -> Optional[str]:
         """Returns order Code1 from order fixed fields."""
@@ -247,6 +251,10 @@ class Order:
 
         return tuple(funds)
 
+    def _get_isbn(self) -> Optional[str]:
+        """Returns ISBN from order variable fields."""
+        return self._get_first_variable_field("l")
+
     def _get_language_code(self) -> Optional[str]:
         """Returns a language code from order fixed fields."""
         code = self._get_first_fixed_field("w")
@@ -325,6 +333,17 @@ class Order:
 
         return tuple(shelves)
 
+    def _get_status(self) -> Optional[str]:
+        """Returns order status from order fixed fields."""
+        return self._get_first_fixed_field("m")
+
+    def _get_vendor_code(self) -> str:
+        """Returns vendor code from order fixed fields."""
+        # not sure how the value looks like for empty code
+        # is possible vendor code cannot be empty?
+        # verify
+        return self._get_first_fixed_field("v")
+
     def _get_vendor_note(self) -> Optional[str]:
         """
         Returns vendor note (PO per line) encoded in variable field of the order tag
@@ -344,18 +363,21 @@ class Order:
         self.country = self._get_country()
         self.created = self._get_created_date()
         self.format = self._get_format()
+        self.funds = self._get_funds()
         self.language = self._get_language_code()
+        self.locations = self._get_locations()
         self.orderType = self._get_order_type()
         self.price = self._get_price()
-
-        self.funds = self._get_funds()
-        self.locations = self._get_locations()
         self.shelf_audn_codes = self._get_shelf_audience_codes()
         self.shelves = self._get_shelves()
+        self.status = self._get_status()
+        self.vendorCode = self._get_vendor_code()
 
         # variable fields
         if self._variable_field is not None:
             self.vendorNote = self._get_vendor_note()
+            self.blanketPo = self._get_blanket_po()
+            self.isbn = self._get_isbn()
 
     def unique_funds(self) -> Set[str]:
         return set(self.funds)

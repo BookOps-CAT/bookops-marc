@@ -142,6 +142,11 @@ def test_order_acceptable_library_args(stub_960, arg):
         Order(library=arg, fixed_field=stub_960)
 
 
+def test_order_get_blanket_po(stub_960, stub_961):
+    order = Order(library="nypl", fixed_field=stub_960, variable_field=stub_961)
+    assert order._get_blanket_po() == "blanketPO ($p)"
+
+
 @pytest.mark.parametrize("arg,expectation", [("j", "j"), ("-", None)])
 def test_order_get_code1(stub_960, arg, expectation):
     stub_960["c"] = arg
@@ -226,6 +231,11 @@ def test_order_get_funds(stub_960):
     assert order._get_funds() == tuple(["lease"])
 
 
+def test_order_get_isbn(stub_960, stub_961):
+    order = Order(library="nypl", fixed_field=stub_960, variable_field=stub_961)
+    assert order._get_isbn() == "ISBN ($b)"
+
+
 @pytest.mark.parametrize("arg,expectation", [("eng", "eng"), ("   ", None)])
 def test_order_get_language(stub_960, arg, expectation):
     stub_960["w"] = arg
@@ -251,6 +261,7 @@ def test_order_get_order_type(stub_960, arg, expectation):
         ("{{dollar}}13.20", 13.2),
         ("{{dollar}}0.0", 0.0),
         ("{{foo}}0", 0.0),
+        ("9.99", 9.99),
         ("foo", None),
         ("{{dollar}}foo", None),
     ],
@@ -269,6 +280,16 @@ def test_order_get_shelf_audience_codes(stub_960):
 def test_order_get_shelves(stub_960):
     order = Order(library="nypl", fixed_field=stub_960)
     assert order._get_shelves() == tuple(["0y", "0y", "0y", "0y"])
+
+
+def test_order_get_status(stub_960):
+    order = Order(library="nypl", fixed_field=stub_960)
+    assert order._get_status() == "o"
+
+
+def test_order_get_vendor_code(stub_960):
+    order = Order(library="nypl", fixed_field=stub_960)
+    assert order._get_vendor_code() == "btlea"
 
 
 def test_order_unique_funds(stub_960):
