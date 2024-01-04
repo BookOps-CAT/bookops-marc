@@ -40,7 +40,7 @@ class SierraBibReader(MARCReader):
     def __next__(self):
         """Read and parse the next record."""
         if self._current_exception:
-            if isinstance(self._current_exception, exceptions.FatalReaderEror):
+            if isinstance(self._current_exception, exceptions.FatalReaderError):
                 raise StopIteration
 
         self._current_chunk = None

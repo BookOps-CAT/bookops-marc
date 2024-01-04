@@ -6,7 +6,7 @@ from datetime import datetime
 
 import pytest
 
-from pymarc import Field
+from pymarc import Field, Subfield
 
 from bookops_marc.bib import (
     Bib,
@@ -128,27 +128,20 @@ def test_sierra_bib_format_missing_tag(stub_bib):
 
 
 def test_sierra_bib_format_missing_subfield(stub_bib):
-    stub_bib.add_field(Field(tag="998", subfields=["a", "foo"]))
+    stub_bib.add_field(Field(tag="998", subfields=[Subfield(code="a", value="foo")]))
     assert stub_bib.sierra_bib_format() is None
 
 
 def test_sierra_bib_format(stub_bib):
-    stub_bib.add_field(Field(tag="998", subfields=["a", "foo", "d", "x  "]))
+    stub_bib.add_field(
+        Field(
+            tag="998", subfields=[Subfield(code="a", value="foo"), Subfield("d", "x  ")]
+        )
+    )
     assert stub_bib.sierra_bib_format() == "x"
 
 
 def test_sierra_bib_id_missing_tag(stub_bib):
-    assert stub_bib.sierra_bib_id() is None
-
-
-def test_sierra_bib_id_missing_subfield(stub_bib):
-    stub_bib.add_field(
-        Field(
-            tag="907",
-            indicators=[" ", " "],
-            subfields=["b", "08-17-21$c08-17-2021 7:50"],
-        )
-    )
     assert stub_bib.sierra_bib_id() is None
 
 
@@ -157,24 +150,42 @@ def test_sierra_bib_id(stub_bib):
         Field(
             tag="907",
             indicators=[" ", " "],
-            subfields=["a", ".b225444884", "b", "08-17-21$c08-17-2021 7:50"],
+            subfields=[
+                Subfield(code="a", value=".b225444884"),
+                Subfield(code="b", value="08-17-21$c08-17-2021 7:50"),
+            ],
         )
     )
     assert stub_bib.sierra_bib_id() == "b225444884"
 
 
-def test_sierra_bib_id_missing_tag(stub_bib):
-    assert stub_bib.sierra_bib_id() is None
-
-
-def test_sierra_bib_id_missing_subfield(stub_bib):
-    stub_bib.add_field(
-        Field(
-            tag="907",
-            indicators=[" ", " "],
-            subfields=["b", "spam"],
-        )
-    )
+@pytest.mark.parametrize(
+    "field,expectation",
+    [
+        pytest.param(
+            Field(
+                tag="907",
+                indicators=[" ", " "],
+                subfields=[Subfield(code="b", value="spam")],
+            ),
+            True,
+            id="Spam",
+        ),
+        pytest.param(
+            Field(
+                tag="907",
+                indicators=[" ", " "],
+                subfields=[
+                    Subfield(code="b", value="08-17-21"),
+                    Subfield(code="c", value="08-17-2021 7:50"),
+                ],
+            ),
+            True,
+            id="date",
+        ),
+    ],
+)
+def test_sierra_bib_id_missing_subfield(stub_bib, field, expectation):
     assert stub_bib.sierra_bib_id() is None
 
 
@@ -183,7 +194,7 @@ def test_sierra_bib_id_missing_value(stub_bib):
         Field(
             tag="907",
             indicators=[" ", " "],
-            subfields=["a", ""],
+            subfields=[Subfield(code="a", value="")],
         )
     )
     assert stub_bib.sierra_bib_id() is None
@@ -194,7 +205,10 @@ def test_sierra_bib_id_normalized(stub_bib):
         Field(
             tag="907",
             indicators=[" ", " "],
-            subfields=["a", ".b225444884", "b", "08-17-21$c08-17-2021 7:50"],
+            subfields=[
+                Subfield(code="a", value=".b225444884"),
+                Subfield(code="b", value="08-17-21$c08-17-2021 7:50"),
+            ],
         )
     )
     assert stub_bib.sierra_bib_id_normalized() == "22544488"
@@ -207,11 +221,36 @@ def test_sierra_bib_id_normalized_missing_tag(stub_bib):
 @pytest.mark.parametrize(
     "arg1,arg2,arg3,expectation",
     [
-        ("bpl", "099", ["a", "FIC", "a", "FOO"], "FIC FOO"),
-        ("bpl", "091", ["a", "FIC", "a", "FOO"], None),
-        ("nypl", "091", ["a", "FIC", "c", "FOO"], "FIC FOO"),
-        ("nypl", "099", ["a", "FIC", "c", "FOO"], None),
-        ("", "091", ["a", "FIC", "c", "FOO"], None),
+        (
+            "bpl",
+            "099",
+            [Subfield(code="a", value="FIC"), Subfield(code="a", value="FOO")],
+            "FIC FOO",
+        ),
+        (
+            "bpl",
+            "091",
+            [Subfield(code="a", value="FIC"), Subfield(code="a", value="FOO")],
+            None,
+        ),
+        (
+            "nypl",
+            "091",
+            [Subfield(code="a", value="FIC"), Subfield(code="c", value="FOO")],
+            "FIC FOO",
+        ),
+        (
+            "nypl",
+            "099",
+            [Subfield(code="a", value="FIC"), Subfield(code="c", value="FOO")],
+            None,
+        ),
+        (
+            "",
+            "091",
+            [Subfield(code="a", value="FIC"), Subfield(code="c", value="FOO")],
+            None,
+        ),
     ],
 )
 def test_branch_call_no(stub_bib, arg1, arg2, arg3, expectation):
@@ -270,7 +309,11 @@ def test_created_date(stub_bib, arg, expectation):
     stub_bib.add_field(
         Field(
             tag="907",
-            subfields=["a", ".b225375965", "b", "08-17-21", "c", arg],
+            subfields=[
+                Subfield(code="a", value=".b225375965"),
+                Subfield(code="b", value="08-17-21"),
+                Subfield(code="c", value=arg),
+            ],
         )
     )
     # print(type(stub_bib.created_date()))
@@ -281,7 +324,11 @@ def test_cataloging_date(stub_bib):
     stub_bib.add_field(
         Field(
             tag="907",
-            subfields=["a", ".b225375965", "b", "08-17-21", "c", "08-02-21"],
+            subfields=[
+                Subfield(code="a", value=".b225375965"),
+                Subfield(code="b", value="08-17-21"),
+                Subfield(code="c", value="08-02-21"),
+            ],
         )
     )
     assert stub_bib.cataloging_date() == datetime(2021, 8, 17).date()
@@ -319,9 +366,9 @@ def test_physical_description_no_300_tag(stub_bib):
 def test_main_entry(stub_bib, tags, expectation):
     stub_bib.remove_fields("100", "245")
     for t in tags:
-        stub_bib.add_field(Field(tag=t, subfields=["a", "foo"]))
+        stub_bib.add_field(Field(tag=t, subfields=[Subfield(code="a", value="foo")]))
     main_entry = stub_bib.main_entry()
-    assert type(main_entry) == Field
+    assert type(main_entry) is Field
     assert main_entry.tag == expectation
 
 
@@ -331,41 +378,79 @@ def test_dewey_no_082(stub_bib):
 
 def test_dewey_lc_selected(stub_bib):
     stub_bib.add_field(
-        Field(tag="082", indicators=[" ", " "], subfields=["a", "900./092"])
+        Field(
+            tag="082",
+            indicators=[" ", " "],
+            subfields=[Subfield(code="a", value="900./092")],
+        )
     )
     stub_bib.add_field(
-        Field(tag="082", indicators=["0", "4"], subfields=["a", "909.092"])
+        Field(
+            tag="082",
+            indicators=["0", "4"],
+            subfields=[Subfield(code="a", value="909.092")],
+        )
     )
     stub_bib.add_field(
-        Field(tag="082", indicators=["0", "0"], subfields=["a", "909.12"])
+        Field(
+            tag="082",
+            indicators=["0", "0"],
+            subfields=[Subfield(code="a", value="909.12")],
+        )
     )
     assert stub_bib.dewey() == "909.12"
 
 
 def test_dewey_other_agency_selected(stub_bib):
-    stub_bib.add_field(Field(tag="082", indicators=["1", "0"], subfields=["a", "900"]))
     stub_bib.add_field(
-        Field(tag="082", indicators=["0", "4"], subfields=["a", "909./092"])
+        Field(
+            tag="082",
+            indicators=["1", "0"],
+            subfields=[Subfield(code="a", value="900")],
+        )
+    )
+    stub_bib.add_field(
+        Field(
+            tag="082",
+            indicators=["0", "4"],
+            subfields=[Subfield(code="a", value="909./092")],
+        )
     )
     assert stub_bib.dewey() == "909.092"
 
 
 def test_dewey_shortened(stub_bib):
     stub_bib.add_field(
-        Field(tag="082", indicators=[" ", " "], subfields=["a", "900.092"])
+        Field(
+            tag="082",
+            indicators=[" ", " "],
+            subfields=[Subfield(code="a", value="900.092")],
+        )
     )
     stub_bib.add_field(
-        Field(tag="082", indicators=["0", "4"], subfields=["a", "910.092"])
+        Field(
+            tag="082",
+            indicators=["0", "4"],
+            subfields=[Subfield(code="a", value="910.092")],
+        )
     )
     stub_bib.add_field(
-        Field(tag="082", indicators=["0", "0"], subfields=["a", "909./09208"])
+        Field(
+            tag="082",
+            indicators=["0", "0"],
+            subfields=[Subfield(code="a", value="909./09208")],
+        )
     )
     assert stub_bib.dewey_shortened() == "909.092"
 
 
 def test_dewey_shortened_missing_dewey(stub_bib):
     stub_bib.add_field(
-        Field(tag="082", indicators=["0", "4"], subfields=["a", "[FIC]"])
+        Field(
+            tag="082",
+            indicators=["0", "4"],
+            subfields=[Subfield(code="a", value="[FIC]")],
+        )
     )
     assert stub_bib.dewey_shortened() is None
 
@@ -381,7 +466,15 @@ def test_languages_only_008_present(stub_bib):
 
 def test_languages_multiple(stub_bib):
     stub_bib.add_field(
-        Field(tag="041", subfields=["a", "eng", "a", "spa", "b", "chi", "h", "rus"])
+        Field(
+            tag="041",
+            subfields=[
+                Subfield(code="a", value="eng"),
+                Subfield(code="a", value="spa"),
+                Subfield(code="b", value="chi"),
+                Subfield(code="h", value="rus"),
+            ],
+        )
     )
     assert stub_bib.languages() == ["hat", "eng", "spa"]
 
@@ -391,7 +484,13 @@ def test_lccn_missing_010(stub_bib):
 
 
 def test_lccn_missing_sub_a(stub_bib):
-    stub_bib.add_field(Field(tag="010", indicators=[" ", " "], subfields=["z", "foo"]))
+    stub_bib.add_field(
+        Field(
+            tag="010",
+            indicators=[" ", " "],
+            subfields=[Subfield(code="z", value="foo")],
+        )
+    )
     assert stub_bib.lccn() is None
 
 
@@ -405,7 +504,11 @@ def test_lccn_missing_sub_a(stub_bib):
 )
 def test_lccn(arg, expectation, stub_bib):
     stub_bib.add_field(
-        Field(tag="010", indicators=[" ", " "], subfields=["a", arg, "b", "foo"])
+        Field(
+            tag="010",
+            indicators=[" ", " "],
+            subfields=[Subfield(code="a", value=arg), Subfield(code="b", value="foo")],
+        )
     )
     assert stub_bib.lccn() == expectation
 
@@ -450,7 +553,10 @@ def test_orders_single(stub_bib, mock_960):
         Field(
             tag="961",
             indicators=[" ", " "],
-            subfields=["h", "e,bio", "l", "1643137123"],
+            subfields=[
+                Subfield(code="h", value="e,bio"),
+                Subfield(code="l", value="1643137123"),
+            ],
         )
     )
     orders = stub_bib.orders()
@@ -474,7 +580,10 @@ def test_orders_reverse_sort(stub_bib, mock_960):
         Field(
             tag="961",
             indicators=[" ", " "],
-            subfields=["h", "e,bio", "l", "1643137123"],
+            subfields=[
+                Subfield(code="h", value="e,bio"),
+                Subfield(code="l", value="1643137123"),
+            ],
         )
     )
     # add second 960 without 961
@@ -496,7 +605,13 @@ def test_overdrive_number_missing_037(stub_bib):
 
 
 def test_overdrive_number_missing_sub_a(stub_bib):
-    stub_bib.add_field(Field(tag="037", indicators=[" ", " "], subfields=["z", "foo"]))
+    stub_bib.add_field(
+        Field(
+            tag="037",
+            indicators=[" ", " "],
+            subfields=[Subfield(code="z", value="foo")],
+        )
+    )
     assert stub_bib.overdrive_number() is None
 
 
@@ -518,7 +633,10 @@ def test_overdrive_number(arg, expectation, stub_bib):
         Field(
             tag="037",
             indicators=[" ", " "],
-            subfields=["a", arg, "b", "OverDrive, Inc."],
+            subfields=[
+                Subfield(code="a", value=arg),
+                Subfield(code="b", value="OverDrive, Inc."),
+            ],
         )
     )
     assert stub_bib.overdrive_number() == expectation
@@ -528,41 +646,70 @@ def test_overdrive_number(arg, expectation, stub_bib):
     "field,expectation",
     [
         pytest.param(
-            Field(tag="650", indicators=[" ", "0"], subfields=["a", "Foo."]),
+            Field(
+                tag="650",
+                indicators=[" ", "0"],
+                subfields=[Subfield(code="a", value="Foo.")],
+            ),
             True,
             id="regular LCSH",
         ),
         pytest.param(
             Field(
-                tag="650", indicators=[" ", "7"], subfields=["a", "Foo.", "2", "lcsh"]
+                tag="650",
+                indicators=[" ", "7"],
+                subfields=[
+                    Subfield(code="a", value="Foo."),
+                    Subfield(code="2", value="lcsh"),
+                ],
             ),
             True,
             id="LCSH $2",
         ),
         pytest.param(
             Field(
-                tag="650", indicators=[" ", "7"], subfields=["a", "Foo.", "2", "fast"]
+                tag="650",
+                indicators=[" ", "7"],
+                subfields=[
+                    Subfield(code="a", value="Foo."),
+                    Subfield(code="2", value="fast"),
+                ],
             ),
             True,
             id="fast",
         ),
         pytest.param(
             Field(
-                tag="650", indicators=[" ", "7"], subfields=["a", "Foo.", "2", "gsafd"]
+                tag="650",
+                indicators=[" ", "7"],
+                subfields=[
+                    Subfield(code="a", value="Foo."),
+                    Subfield(code="2", value="gsafd"),
+                ],
             ),
             True,
             id="gsafd",
         ),
         pytest.param(
             Field(
-                tag="650", indicators=[" ", "7"], subfields=["a", "Foo.", "2", "lcgft"]
+                tag="650",
+                indicators=[" ", "7"],
+                subfields=[
+                    Subfield(code="a", value="Foo."),
+                    Subfield(code="2", value="lcgft"),
+                ],
             ),
             True,
             id="lcgft",
         ),
         pytest.param(
             Field(
-                tag="650", indicators=[" ", "7"], subfields=["a", "Foo.", "2", "lctgm"]
+                tag="650",
+                indicators=[" ", "7"],
+                subfields=[
+                    Subfield(code="a", value="Foo."),
+                    Subfield(code="2", value="lctgm"),
+                ],
             ),
             True,
             id="lctgm",
@@ -571,82 +718,143 @@ def test_overdrive_number(arg, expectation, stub_bib):
             Field(
                 tag="650",
                 indicators=[" ", "7"],
-                subfields=["a", "Foo.", "2", "bookops"],
+                subfields=[
+                    Subfield(code="a", value="Foo."),
+                    Subfield(code="2", value="bookops"),
+                ],
             ),
             True,
             id="bookops",
         ),
         pytest.param(
             Field(
-                tag="650", indicators=[" ", "7"], subfields=["a", "Foo.", "2", "homoit"]
+                tag="650",
+                indicators=[" ", "7"],
+                subfields=[
+                    Subfield(code="a", value="Foo."),
+                    Subfield(code="2", value="homoit"),
+                ],
             ),
             True,
             id="homoit",
         ),
         pytest.param(
-            Field(tag="600", indicators=["1", "0"], subfields=["a", "Foo."]),
+            Field(
+                tag="600",
+                indicators=["1", "0"],
+                subfields=[Subfield(code="a", value="Foo.")],
+            ),
             True,
             id="600 LCSH tag",
         ),
         pytest.param(
-            Field(tag="610", indicators=[" ", "0"], subfields=["a", "Foo."]),
+            Field(
+                tag="610",
+                indicators=[" ", "0"],
+                subfields=[Subfield(code="a", value="Foo.")],
+            ),
             True,
             id="610 LCSH tag",
         ),
         pytest.param(
-            Field(tag="611", indicators=[" ", "0"], subfields=["a", "Foo."]),
+            Field(
+                tag="611",
+                indicators=[" ", "0"],
+                subfields=[Subfield(code="a", value="Foo.")],
+            ),
             True,
             id="611 LCSH tag",
         ),
         pytest.param(
-            Field(tag="630", indicators=[" ", "0"], subfields=["a", "Foo."]),
+            Field(
+                tag="630",
+                indicators=[" ", "0"],
+                subfields=[Subfield(code="a", value="Foo.")],
+            ),
             True,
             id="630 LCSH tag",
         ),
         pytest.param(
-            Field(tag="648", indicators=[" ", "0"], subfields=["a", "Foo."]),
+            Field(
+                tag="648",
+                indicators=[" ", "0"],
+                subfields=[Subfield(code="a", value="Foo.")],
+            ),
             True,
             id="648 LCSH tag",
         ),
         pytest.param(
-            Field(tag="650", indicators=[" ", "0"], subfields=["a", "Foo."]),
+            Field(
+                tag="650",
+                indicators=[" ", "0"],
+                subfields=[Subfield(code="a", value="Foo.")],
+            ),
             True,
             id="650 LCSH tag",
         ),
         pytest.param(
-            Field(tag="651", indicators=[" ", "0"], subfields=["a", "Foo."]),
+            Field(
+                tag="651",
+                indicators=[" ", "0"],
+                subfields=[Subfield(code="a", value="Foo.")],
+            ),
             True,
             id="651 LCSH tag",
         ),
         pytest.param(
-            Field(tag="655", indicators=[" ", "0"], subfields=["a", "Foo."]),
+            Field(
+                tag="655",
+                indicators=[" ", "0"],
+                subfields=[Subfield(code="a", value="Foo.")],
+            ),
             True,
             id="655 LCSH tag",
         ),
         pytest.param(
             Field(
-                tag="650", indicators=[" ", "7"], subfields=["a", "Foo.", "2", "aat"]
+                tag="650",
+                indicators=[" ", "7"],
+                subfields=[
+                    Subfield(code="a", value="Foo."),
+                    Subfield(code="2", value="aat"),
+                ],
             ),
             False,
             id="att",
         ),
         pytest.param(
-            Field(tag="650", indicators=[" ", "1"], subfields=["a", "Foo."]),
+            Field(
+                tag="650",
+                indicators=[" ", "1"],
+                subfields=[Subfield(code="a", value="Foo.")],
+            ),
             False,
             id="Children's LCSH",
         ),
         pytest.param(
-            Field(tag="654", indicators=[" ", "0"], subfields=["a", "Foo."]),
+            Field(
+                tag="654",
+                indicators=[" ", "0"],
+                subfields=[Subfield(code="a", value="Foo.")],
+            ),
             False,
             id="654 tag",
         ),
         pytest.param(
-            Field(tag="690", indicators=[" ", "0"], subfields=["a", "Foo."]),
+            Field(
+                tag="690",
+                indicators=[" ", "0"],
+                subfields=[Subfield(code="a", value="Foo.")],
+            ),
             False,
             id="690 tag",
         ),
         pytest.param(
-            Field(tag="650", indicators=[" ", "7"], subfields=["a", "Foo."]),
+            Field(
+                tag="650",
+                indicators=[" ", "7"],
+                subfields=[Subfield(code="a", value="Foo.")],
+            ),
             False,
             id="Invalid ind2",
         ),
@@ -660,25 +868,49 @@ def test_remove_unsupported_subjects(stub_bib, field, expectation):
 
 def test_subjects_lc(stub_bib):
     stub_bib.add_field(
-        Field(tag="650", indicators=[" ", "7"], subfields=["a", "Foo", "2", "bar"])
+        Field(
+            tag="650",
+            indicators=[" ", "7"],
+            subfields=[
+                Subfield(code="a", value="Foo"),
+                Subfield(code="2", value="bar"),
+            ],
+        )
     )
     stub_bib.add_field(
         Field(
             tag="600",
             indicators=["1", "0"],
-            subfields=["a", "Doe, John", "x", "Childhood."],
+            subfields=[
+                Subfield(code="a", value="Doe, John"),
+                Subfield(code="x", value="Childhood."),
+            ],
         )
     )
     stub_bib.add_field(
-        Field(tag="650", indicators=[" ", "4"], subfields=["a", "Foo", "2", "bar"])
+        Field(
+            tag="650",
+            indicators=[" ", "4"],
+            subfields=[
+                Subfield(code="a", value="Foo"),
+                Subfield(code="2", value="bar"),
+            ],
+        )
     )
     stub_bib.add_field(
-        Field(tag="651", indicators=[" ", "0"], subfields=["a", "Spam."])
+        Field(
+            tag="651",
+            indicators=[" ", "0"],
+            subfields=[Subfield(code="a", value="Spam.")],
+        )
     )
     lc_subjects = stub_bib.subjects_lc()
     assert len(lc_subjects) == 2
-    assert lc_subjects[0].subfields == ["a", "Doe, John", "x", "Childhood."]
-    assert lc_subjects[1].subfields == ["a", "Spam."]
+    assert lc_subjects[0].subfields == [
+        Subfield(code="a", value="Doe, John"),
+        Subfield(code="x", value="Childhood."),
+    ]
+    assert lc_subjects[1].subfields == [Subfield(code="a", value="Spam.")]
 
 
 def test_suppressed_missing_998(stub_bib):
@@ -686,7 +918,7 @@ def test_suppressed_missing_998(stub_bib):
 
 
 def test_suppressed_missing_998_e(stub_bib):
-    stub_bib.add_field(Field(tag="998", subfields=["a", "foo"]))
+    stub_bib.add_field(Field(tag="998", subfields=[Subfield(code="a", value="foo")]))
     assert stub_bib.suppressed() is False
 
 
@@ -704,7 +936,7 @@ def test_suppressed_missing_998_e(stub_bib):
     ],
 )
 def test_suppressed(stub_bib, arg, expectation):
-    stub_bib.add_field(Field(tag="998", subfields=["e", arg]))
+    stub_bib.add_field(Field(tag="998", subfields=[Subfield(code="e", value=arg)]))
     assert stub_bib.suppressed() == expectation
 
 
@@ -713,14 +945,25 @@ def test_upc_number_missing_024(stub_bib):
 
 
 def test_upc_number_missing_sub_a(stub_bib):
-    stub_bib.add_field(Field(tag="024", indicators=["1", " "], subfields=["z", "foo"]))
+    stub_bib.add_field(
+        Field(
+            tag="024",
+            indicators=["1", " "],
+            subfields=[Subfield(code="z", value="foo")],
+        )
+    )
     assert stub_bib.upc_number() is None
 
 
 def test_upc_number_other_number(stub_bib):
     stub_bib.add_field(
         Field(
-            tag="024", indicators=["2", " "], subfields=["a", "M011234564", "z", "foo"]
+            tag="024",
+            indicators=["2", " "],
+            subfields=[
+                Subfield(code="a", value="M011234564"),
+                Subfield(code="z", value="foo"),
+            ],
         )
     )
     assert stub_bib.upc_number() is None
@@ -744,7 +987,7 @@ def test_upc_number(arg, expectation, stub_bib):
         Field(
             tag="024",
             indicators=["1", " "],
-            subfields=["a", arg, "b", "foo"],
+            subfields=[Subfield(code="a", value=arg), Subfield(code="b", value="foo")],
         )
     )
     assert stub_bib.upc_number() == expectation
