@@ -1003,3 +1003,26 @@ def test_instating_from_pymarc_record(stub_pymarc_record, arg):
 
     # bib methods
     assert str(bib.main_entry()) == "=100  1\\$aAdams, John,$eauthor."
+
+
+def test_flat_dict(stub_bib):
+    flattened = stub_bib.flat_dict()
+    assert flattened == {
+        "leader": "02866pam  2200517 i 4500",
+        "008": "190306s2017    ht a   j      000 1 hat d",
+        "100": {
+            "ind1": "1",
+            "ind2": " ",
+            "subfields": [{"a": "Adams, John,"}, {"e": "author."}],
+        },
+        "245": {
+            "ind1": "1",
+            "ind2": "4",
+            "subfields": [{"a": "The foo /"}, {"c": "by John Adams."}],
+        },
+        "264": {
+            "ind1": " ",
+            "ind2": "1",
+            "subfields": [{"a": "Bar :"}, {"b": "New York,"}, {"c": "2021"}],
+        },
+    }
