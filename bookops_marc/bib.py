@@ -5,7 +5,7 @@ Module replaces pymarc's Record module. Inherits all Record class functinality a
 adds some syntactic sugar.
 """
 from datetime import datetime, date
-from typing import List, Optional, Dict
+from typing import List, Optional
 
 from pymarc import Record, Field
 from pymarc.constants import LEADER_LEN
@@ -549,25 +549,6 @@ class Bib(Record):
                     pass
         return None
 
-    def flat_dict(self) -> Dict[str, str]:
-        """
-        Turn a Bib into a dict with all fields in key,value pairs
-        Avoids the {"leader": value, "fields": []} structure of as_dict() method
-        """
-        record: Dict = {"leader": str(self.leader)}
-
-        for field in self:
-            if field.tag < "010" and field.tag.isdigit():
-                record[field.tag] = field.data
-            else:
-                data = {
-                    "ind1": field.indicator1,
-                    "ind2": field.indicator2,
-                    "subfields": [{s.code: s.value} for s in field.subfields],
-                }
-                record[field.tag] = data
-        return record
-
 
 def pymarc_record_to_local_bib(record: Record, library: str) -> Bib:
     """
@@ -580,9 +561,10 @@ def pymarc_record_to_local_bib(record: Record, library: str) -> Bib:
     Returns:
         `bookops_marc.bib.Bib` instance
     """
-    # if isinstance(record, Record):
-    bib = Bib(library=library)
-    bib.leader = record.leader
-    bib.fields = record.fields[:]
-
-    return bib
+    if isinstance(record, Record):
+        bib = Bib(library=library)
+        bib.leader = record.leader
+        bib.fields = record.fields[:]
+        return bib
+    else:
+        return None
