@@ -44,9 +44,20 @@ bib.remove_unsupported_subjects()
 Python 3.7 and up.
 
 ## Version
-> 0.8.1
+> 0.9.0
 
 ## Changelog
+### [0.9.0] - 2024-01-05
+#### Changed
++ updated to pymarc 5.0
++ updated dev dependencies:
+  + black (22.12.0)
+  + pytest (7.4.4)
++ github actions upgrade to v4
+#### Added
++ tests for Python 3.11 & 3.12
+  
+
 ### [0.8.1] - 2022-08-16
 #### Fixed
 + version bump propagated to all places
@@ -101,6 +112,7 @@ Python 3.7 and up.
 #### Added
 + a method for retrieving branch call number as `pymarc.Field`
 
+[0.9.0]: https://github.com/BookOps-CAT/bookops-marc/compare/0.8.1...0.9.0
 [0.8.1]: https://github.com/BookOps-CAT/bookops-marc/compare/0.8.0...0.8.1
 [0.8.0]: https://github.com/BookOps-CAT/bookops-marc/compare/0.7.0...0.8.0
 [0.7.0]: https://github.com/BookOps-CAT/bookops-marc/compare/v0.6.0...0.7.0
