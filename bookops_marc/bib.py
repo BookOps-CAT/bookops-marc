@@ -481,7 +481,7 @@ class Bib(Record):
         Returns Sierra bib format fixed field code
         """
         try:
-            return self.get("998").get(code="d").strip()
+            return self.get("998").get(code="d").strip()  # type: ignore
         except (TypeError, AttributeError):
             return None
 
