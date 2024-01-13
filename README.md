@@ -54,10 +54,6 @@ Python 3.7 and up.
   + black (22.12.0)
   + pytest (7.4.4)
 
-#### Added
-+ `flat_dict()` method in `Bib` class that returns a dict without fields in a list
-
-
 ### [0.8.1] - 2022-08-16
 #### Fixed
 + version bump propagated to all places
