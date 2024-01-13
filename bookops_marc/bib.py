@@ -550,7 +550,7 @@ class Bib(Record):
         return None
 
 
-def pymarc_record_to_local_bib(record: Record, library: str) -> Bib:
+def pymarc_record_to_local_bib(record: Record, library: str) -> Optional[Bib]:
     """
     Converts an instance of `pymarc.Record` to `bookops_marc.Bib`
 
