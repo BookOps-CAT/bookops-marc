@@ -1007,5 +1007,4 @@ def test_instating_from_pymarc_record(stub_pymarc_record, arg):
 
 @pytest.mark.parametrize("arg", ["bpl", "nypl", None])
 def test_from_pymarc_record_invalid(mock_960, arg):
-    bib = pymarc_record_to_local_bib(mock_960, arg)
-    assert bib is None
+    assert pymarc_record_to_local_bib(mock_960, arg) is None
