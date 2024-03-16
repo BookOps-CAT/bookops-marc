@@ -4,136 +4,28 @@
 Module replaces pymarc's Record module. Inherits all Record class functinality and
 adds some syntactic sugar.
 """
-from datetime import datetime, date
+from datetime import date
 from typing import List, Optional
 
 from pymarc import Record, Field
 from pymarc.constants import LEADER_LEN
 
 from .errors import BookopsMarcError
+from .local_values import (
+    get_branch_code,
+    get_shelf_audience_code,
+    get_shelf_code,
+    is_oclc_number,
+    oclcNo_with_prefix,
+    oclcNo_without_prefix,
+    normalize_date,
+    normalize_dewey,
+    normalize_location_code,
+    normalize_order_number,
+    shorten_dewey,
+)
 from .models import Order
 from .constants import SUPPORTED_THESAURI, SUPPORTED_SUBJECT_TAGS
-
-
-def get_branch_code(location_code: str) -> str:
-    """
-    Returns branch code from normalized location code
-    """
-    branch = location_code[:2]
-    return branch
-
-
-def get_shelf_audience_code(location_code: str) -> Optional[str]:
-    """
-    Parses audience code from given normalized location_code
-    """
-    try:
-        audn = location_code[2].strip()
-        if audn:
-            return audn
-        else:
-            return None
-
-    except IndexError:
-        return None
-
-
-def get_shelf_code(location_code: str) -> Optional[str]:
-    """
-    Parses shelf code from given normalized location_code
-    """
-    try:
-        shelf = location_code[3:5].strip()
-        if shelf:
-            return shelf
-        else:
-            return None
-    except (TypeError, IndexError):
-        return None
-
-
-def normalize_date(order_date: str) -> Optional[date]:
-    """
-    Returns order created date in datetime format
-    """
-    try:
-        if len(order_date) == 8:
-            return datetime.strptime(order_date[:8], "%m-%d-%y").date()
-        else:
-            return datetime.strptime(order_date[:10], "%m-%d-%Y").date()
-    except ValueError:
-        return None
-
-
-def normalize_dewey(class_mark: str) -> Optional[str]:
-    """
-    Normalizes Dewey classification to be used in call numbers
-
-    Args:
-        class_mark:                  Dewey classification
-
-    Returns:
-        normalized class_mark
-    """
-    if isinstance(class_mark, str):
-        class_mark = (
-            class_mark.replace("/", "")
-            .replace("j", "")
-            .replace("C", "")
-            .replace("[B]", "")
-            .replace("'", "")
-            .strip()
-        )
-        try:
-            float(class_mark)
-        except ValueError:
-            return None
-        else:
-            while len(class_mark) > 4 and class_mark[-1] == "0":
-                class_mark = class_mark[:-1]
-            return class_mark
-    else:
-        return None
-
-
-def normalize_location_code(code: str) -> str:
-    """
-    Removes any quantity designation from location code value
-    """
-    try:
-        s = code.index("(")
-        e = code.index(")")
-        return f"{code[:s]}{code[e + 1:]}"
-    except ValueError:
-        return code
-
-
-def normalize_order_number(order_number: str) -> int:
-    """
-    Normalizes Sierra order number
-    """
-    return int(order_number[2:-1])
-
-
-def shorten_dewey(class_mark: str, digits_after_period: int = 4) -> str:
-    """
-    Shortens Dewey classification number to maximum 4 digits after period.
-    BPL materials: default 4 digits - 505.4167
-    NYPl adult/young adult: default 4 digits
-    NYPL juvenile materials:    2 digits - 618.54
-
-    Args:
-        class_mark:                 Dewey classification
-        digits_after_period:        number of allowed digits after period
-
-    Returns:
-        shortened class_mark
-
-    """
-    class_mark = class_mark[: 4 + digits_after_period]
-    while len(class_mark) > 3 and class_mark[-1] in ".0":
-        class_mark = class_mark[:-1]
-    return class_mark
 
 
 class Bib(Record):
@@ -264,8 +156,11 @@ class Bib(Record):
         """
         Extracts cataloging date from the bib
         """
-        cat_date = normalize_date(self.get("907").get(code="b"))
-        return cat_date
+        try:
+            cat_date = normalize_date(self.get("907").get(code="b"))  # type: ignore
+            return cat_date
+        except AttributeError:
+            return None
 
     def control_number(self) -> Optional[str]:
         """
@@ -280,8 +175,11 @@ class Bib(Record):
         """
         Extracts bib creation date
         """
-        created_date = normalize_date(self.get("907").get(code="c"))
-        return created_date
+        try:
+            created_date = normalize_date(self.get("907").get(code="c"))  # type: ignore
+            return created_date
+        except AttributeError:
+            return None
 
     def dewey(self) -> Optional[str]:
         """
@@ -341,7 +239,7 @@ class Bib(Record):
         languages = []
 
         try:
-            languages.append(self.get("008").data[35:38])
+            languages.append(self.get("008").data[35:38])  # type: ignore
         except AttributeError:
             pass
 
@@ -359,7 +257,7 @@ class Bib(Record):
         except (AttributeError, TypeError):
             return None
 
-    def main_entry(self) -> Field:
+    def main_entry(self) -> Optional[Field]:
         """
         Returns main entry field instance
         """
@@ -367,6 +265,24 @@ class Bib(Record):
         for field in entry_fields:
             if bool(self.get(field)):
                 return self.get(field)
+        else:
+            raise BookopsMarcError("Incomplete MARC record: missing the main entry.")
+
+    def normalize_oclc_control_number(self):
+        """
+        Enforces practices of recording OCLC prefix (BPL) or not (NYPL) in
+        the 001 control field.
+        """
+        controlNo = self.control_number()
+        if is_oclc_number(controlNo):
+            if self.library == "BPL":
+                self["001"].data = oclcNo_with_prefix(controlNo)
+            elif self.library == "NYPL":
+                self["001"].data = oclcNo_without_prefix(controlNo)
+            else:
+                raise BookopsMarcError(
+                    "Not defined library argument to apply the correct practice."
+                )
 
     def orders(self, sort: str = "descending") -> List[Order]:
         """
@@ -490,7 +406,7 @@ class Bib(Record):
         Retrieves Sierra bib # from the 907 MARC tag
         """
         try:
-            bib_id = self.get("907").get(code="a")[1:]
+            bib_id = self.get("907").get(code="a")[1:]  # type: ignore
         except (TypeError, AttributeError):
             return None
 
@@ -526,7 +442,7 @@ class Bib(Record):
         NYPL usage: "c", "e", "n", "q", "o", "v"
         """
         try:
-            code = self.get("998").get(code="e")
+            code = self.get("998").get(code="e")  # type: ignore
         except (TypeError, AttributeError):
             return False
 

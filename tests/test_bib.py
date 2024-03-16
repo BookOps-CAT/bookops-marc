@@ -1,6 +1,7 @@
 """
 Tests bib.py module
 """
+
 from copy import deepcopy
 from datetime import datetime
 
@@ -10,117 +11,9 @@ from pymarc import Field, Subfield
 
 from bookops_marc.bib import (
     Bib,
-    get_branch_code,
-    get_shelf_audience_code,
-    get_shelf_code,
-    normalize_dewey,
-    shorten_dewey,
-    normalize_date,
-    normalize_location_code,
-    normalize_order_number,
     pymarc_record_to_local_bib,
 )
 from bookops_marc.errors import BookopsMarcError
-
-
-@pytest.mark.parametrize(
-    "arg,expectation",
-    [
-        ("[Fic]", None),
-        ("[E]", None),
-        ("909", "909"),
-        ("001.54", "001.54"),
-        ("362.84/924043809049", "362.84924043809049"),
-        ("362.84/9040", "362.84904"),
-        ("j574", "574"),
-        ("942.082 [B]", "942.082"),
-        ("364'.971", "364.971"),
-        ("C364/.971", "364.971"),
-        ("505 ", "505"),
-        ("900", "900"),
-        ("900.100", "900.1"),
-        (None, None),
-    ],
-)
-def test_normalize_dewey(arg, expectation):
-    assert normalize_dewey(arg) == expectation
-
-
-@pytest.mark.parametrize(
-    "arg1,arg2,expectation",
-    [
-        ("505", 4, "505"),
-        ("362.84924043809049", 4, "362.8492"),
-        ("362.849040", 4, "362.849"),
-        ("900", 4, "900"),
-        ("512.1234", 2, "512.12"),
-    ],
-)
-def test_shorten_dewey(arg1, arg2, expectation):
-    assert shorten_dewey(class_mark=arg1, digits_after_period=arg2) == expectation
-
-
-@pytest.mark.parametrize(
-    "arg,expectation",
-    [
-        ("(3)sn", "sn"),
-        ("(2)btj0f", "btj0f"),
-        ("41anf(5)", "41anf"),
-        ("41anf", "41anf"),
-        ("(3)snj0y", "snj0y"),
-    ],
-)
-def test_normalize_location_code(arg, expectation, stub_bib):
-    assert normalize_location_code(arg) == expectation
-
-
-@pytest.mark.parametrize(
-    "arg,expectation",
-    [("41anf", "41"), ("02jje", "02"), ("snj0f", "sn"), ("fty0n", "ft")],
-)
-def test_get_branch_code(arg, expectation):
-    assert get_branch_code(arg) == expectation
-
-
-@pytest.mark.parametrize(
-    "arg,expectation",
-    [
-        ("01-30-21", datetime(2021, 1, 30)),
-        ("08-02-2021 16:19", datetime(2021, 8, 2)),
-        ("  -  -  ", None),
-    ],
-)
-def test_normalize_date(arg, expectation):
-    if expectation is not None:
-        assert normalize_date(arg) == expectation.date()
-    else:
-        assert normalize_date(arg) is None
-
-
-@pytest.mark.parametrize(
-    "arg,expectation", [("41", None), ("41anf", "a"), ("snj0y", "j"), ("sn   ", None)]
-)
-def test_get_shelf_audience_code(arg, expectation):
-    assert get_shelf_audience_code(arg) == expectation
-
-
-@pytest.mark.parametrize(
-    "arg,expectation",
-    [
-        ("41anf", "nf"),
-        ("13anb", "nb"),
-        ("snj0f", "0f"),
-        ("tb", None),
-        ("tb   ", None),
-        (None, None),
-    ],
-)
-def test_get_shelf_code(arg, expectation):
-    assert get_shelf_code(arg) == expectation
-
-
-def test_normalize_order_number():
-    assert normalize_order_number(".o28876714") == 2887671
 
 
 def test_sierra_bib_format_missing_tag(stub_bib):
@@ -320,6 +213,10 @@ def test_created_date(stub_bib, arg, expectation):
     assert stub_bib.created_date() == expectation
 
 
+def test_created_date_missing_field(stub_bib):
+    stub_bib.created_date() is None
+
+
 def test_cataloging_date(stub_bib):
     stub_bib.add_field(
         Field(
@@ -334,6 +231,10 @@ def test_cataloging_date(stub_bib):
     assert stub_bib.cataloging_date() == datetime(2021, 8, 17).date()
 
 
+def test_cataloging_date_exception(stub_bib):
+    assert stub_bib.cataloging_date() is None
+
+
 def test_control_number_missing_001(stub_bib):
     assert stub_bib.control_number() is None
 
@@ -341,7 +242,7 @@ def test_control_number_missing_001(stub_bib):
 @pytest.mark.parametrize(
     "arg,expectation", [("ocn12345", "ocn12345"), (" 12345 ", "12345")]
 )
-def test_control_nubmer(arg, expectation, stub_bib):
+def test_control_number(arg, expectation, stub_bib):
     stub_bib.add_field(Field(tag="001", data=arg))
     assert stub_bib.control_number() == expectation
 
@@ -370,6 +271,51 @@ def test_main_entry(stub_bib, tags, expectation):
     main_entry = stub_bib.main_entry()
     assert type(main_entry) is Field
     assert main_entry.tag == expectation
+
+
+def test_main_entry_exception(stub_bib):
+    stub_bib.remove_fields("100", "245")
+    with pytest.raises(BookopsMarcError) as exc:
+        stub_bib.main_entry()
+
+    assert "Incomplete MARC record: missing the main entry." in str(exc.value)
+
+
+@pytest.mark.parametrize(
+    "arg,lib,expectation",
+    [
+        ("ocm00000001", "BPL", "ocm00000001"),
+        ("ocn12345678", "BPL", "ocn12345678"),
+        ("on1234567890", "BPL", "on1234567890"),
+        ("1", "BPL", "ocm00000001"),
+        ("0001", "BPL", "ocm00000001"),
+        ("OCM00000001", "BPL", "ocm00000001"),
+        ("foo", "BPL", "foo"),
+        ("ocm00000001", "NYPL", "1"),
+        ("ocn123456789", "NYPL", "123456789"),
+        ("on1234567890", "NYPL", "1234567890"),
+        ("OCN123456789", "NYPL", "123456789"),
+        ("1", "NYPL", "1"),
+        ("1234567890", "NYPL", "1234567890"),
+        ("foo", "NYPL", "foo"),
+    ],
+)
+def test_normalize_oclc_control_number(arg, lib, expectation, stub_bib):
+    stub_bib.library = lib
+    stub_bib.add_field(Field(tag="001", data=arg))
+    stub_bib.normalize_oclc_control_number()
+
+    assert stub_bib.get("001").data == expectation
+
+
+def test_normalize_oclc_control_number_no_defined_library(stub_bib):
+    stub_bib.add_field(Field(tag="001", data="ocm12345678"))
+    with pytest.raises(BookopsMarcError) as exc:
+        stub_bib.normalize_oclc_control_number()
+
+    assert "Not defined library argument to apply the correct practice." in str(
+        exc.value
+    )
 
 
 def test_dewey_no_082(stub_bib):
