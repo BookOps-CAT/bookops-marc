@@ -484,6 +484,32 @@ def test_form_of_item_in_pos_29(arg, stub_bib):
     assert stub_bib.form_of_item() == "o"
 
 
+def test_oclc_nos_001_and_035(stub_bib):
+    stub_bib.add_field(Field(tag="001", data="on123456789"))
+    stub_bib.add_field(Field(tag="003", data="OCoLC"))
+    stub_bib.add_field(Field(tag="035", subfields=[Subfield("a", "(Foo)12345")]))
+    stub_bib.add_field(Field(tag="035", subfields=[Subfield("a", "(OCoLC)123456789")]))
+    stub_bib.add_field(Field(tag="035", subfields=[Subfield("a", "12345")]))
+
+    assert stub_bib.oclc_nos() == {"001": "123456789", "035": "123456789"}
+
+
+def test_oclc_nos_991_only(stub_bib):
+    stub_bib.library = "NYPL"
+    stub_bib.add_field(Field(tag="001", data="wlo000001"))
+    stub_bib.add_field(Field(tag="035", subfields=[Subfield("a", "wlo000001")]))
+    stub_bib.add_field(Field(tag="991", subfields=[Subfield("y", "12345678")]))
+
+    assert stub_bib.oclc_nos() == {"991": "12345678"}
+
+
+def test_oclc_nos_001_only(stub_bib):
+    stub_bib.add_field(Field(tag="001", data="12345678"))
+    stub_bib.add_field(Field(tag="003", data="OCoLC"))
+    stub_bib.add_field(Field(tag="035", subfields=[Subfield("z", "foo123")]))
+    assert stub_bib.oclc_nos() == {"001": "12345678"}
+
+
 @pytest.mark.parametrize("arg", [1, "foo"])
 def test_orders_exceptions(arg, stub_bib, mock_960):
     msg = "Invalid 'sort' argument was passed."

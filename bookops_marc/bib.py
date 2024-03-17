@@ -5,7 +5,7 @@ Module replaces pymarc's Record module. Inherits all Record class functinality a
 adds some syntactic sugar.
 """
 from datetime import date
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 from pymarc import Record, Field
 from pymarc.constants import LEADER_LEN
@@ -16,6 +16,7 @@ from .local_values import (
     get_shelf_audience_code,
     get_shelf_code,
     is_oclc_number,
+    has_oclc_prefix,
     oclcNo_with_prefix,
     oclcNo_without_prefix,
     normalize_date,
@@ -283,6 +284,46 @@ class Bib(Record):
                 raise BookopsMarcError(
                     "Not defined library argument to apply the correct practice."
                 )
+
+    def oclc_nos(self) -> Dict[str, str]:
+        """
+        Returns dictionary of MARC tags and OCLC identifiers found in a bib.
+        """
+        unique_oclcs = dict()
+
+        # get OCLC #s from 001
+        id_field = self.get("001")
+        source_field = self.get("003")
+        if source_field and "ocolc" in source_field.data.lower():
+            if id_field and is_oclc_number(id_field.data):
+                oclc_no = oclcNo_without_prefix(id_field.data)
+                unique_oclcs["001"] = oclc_no
+
+        # get OCLC #s from 035
+        id_fields = self.get_fields("035")
+        if id_fields:
+            for field in id_fields:
+                try:
+                    value = field.get("a")
+                    if has_oclc_prefix(value):
+                        oclc_no = oclcNo_without_prefix(value)
+                        unique_oclcs["035"] = oclc_no
+                        break
+                except TypeError:
+                    continue
+
+        # for NYPL also check 991
+        if self.library == "NYPL":
+            id_fields = self.get_fields("991")
+            if id_fields:
+                for field in id_fields:
+                    value = field.get("y")
+                    if is_oclc_number(value):
+                        oclc_no = oclcNo_without_prefix(value)
+                        unique_oclcs["991"] = oclc_no
+                        break
+
+        return unique_oclcs
 
     def orders(self, sort: str = "descending") -> List[Order]:
         """
