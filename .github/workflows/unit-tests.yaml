@@ -47,3 +47,12 @@ jobs:
           parallel: true
           flag-name: Unit Test
           github-token: ${{ secrets.GITHUB_TOKEN}}
+
+  coveralls_finish:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Coveralls finished
+        uses: AndreMiras/coveralls-python-action@develop
+        with:
+          parallel-finished: true
