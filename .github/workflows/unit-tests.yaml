@@ -18,14 +18,25 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Bootstrap Poetry
-        run: pipx install poetry
+        run: pipx install poetry==1.8.2
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version}}
+          cache: poetry
+        
+      - name: Configure Poetry
+        run: |
+          poetry config virtualenvs.in-project true
+          poetry config virtualenvs.options.no-pip true
+          poetry config virtualenvs.options.no-setuptools true
+
+      - name: Check lock file
+        run: poetry check --lock
+
       - name: Install dependencies
-        run: poetry install
+        run: poetry install --with github-actions
     
       - name: Run tests
         run: poetry run pytest -v --cov=bookops_marc/
