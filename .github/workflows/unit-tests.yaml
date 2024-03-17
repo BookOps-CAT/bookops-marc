@@ -12,21 +12,36 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
     name: Python ${{ matrix.python-version}}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Bootstrap Poetry
+        run: pipx install poetry
+
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version}}
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -r dev-requirements.txt
+        run: poetry install
+    
       - name: Run tests
-        run: python -m pytest --cov=bookops_marc/
+        run: poetry run pytest -v --cov=bookops_marc/
+
       - name: Send report to Coveralls
         uses: AndreMiras/coveralls-python-action@develop
         with:
+          parallel: true
+          flag-name: Unit Test
           github-token: ${{ secrets.GITHUB_TOKEN}}
+
+  coveralls_finish:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Coveralls finished
+        uses: AndreMiras/coveralls-python-action@develop
+        with:
+          parallel-finished: true
