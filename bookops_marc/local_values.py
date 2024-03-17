@@ -44,6 +44,8 @@ def _delete_oclc_prefix(value: str) -> str:
         return str(int(value[3:]))
     elif value.startswith("on"):
         return str(int(value[2:]))
+    elif value.startswith("(ocolc)"):
+        return str(int(value[7:]))
     else:
         return str(int(value))
 
@@ -98,6 +100,8 @@ def has_oclc_prefix(oclcNo: str) -> bool:
             or oclcNo.lower().startswith("ocn")
             or oclcNo.lower().startswith("on")
         ):
+            return True
+        elif oclcNo.lower().startswith("(ocolc)"):
             return True
         else:
             return False

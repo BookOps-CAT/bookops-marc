@@ -47,6 +47,7 @@ def test_add_oclc_prefix_exceptions(arg, expectation):
         ("ocm00000001", "1"),
         ("ocn123456789", "123456789"),
         ("on1234567890", "1234567890"),
+        ("(ocolc)1", "1"),
     ],
 )
 def test_delete_oclc_prefix(arg, expectation):
@@ -70,6 +71,7 @@ def test_delete_oclc_prefix_exceptions(arg, expectation):
         ("OCM12345678", True),
         ("OCN123456789", True),
         ("ON1234567890", True),
+        ("(OCoLC)123456789", True),
         ("foo", False),
         ("", False),
         ("123456789", False),
