@@ -49,7 +49,8 @@ Python 3.8 and up.
 ## Changelog
 ### [0.10.0] - 2024-03-16
 #### Added
-+ methods to normalize OCLC number in the 001 control field in `bib.Bib` class
++ method to retrieve all OCLC numbers present in a bib (001, 035, 991): `bib.oclc_nos()`
++ methods to normalize OCLC number in the 001 control field in `bib.Bib` class: `bib.normalize_oclc_control_number`
 + new module `local_values` with the followoing methods:
   + `_add_oclc_prefix`
   + `_delete_oclc_prefix`
@@ -64,7 +65,7 @@ Python 3.8 and up.
   + mypy (1.9)
   + pytest (8.1.1)
   + pytest-cov (4.1.0)
-+ changed `pyproject.toml` settings for black & mypy
++ changed `pyproject.toml` settings for black, mypy, & coverage
 + deleted `requirements.txt` and transition to `pyproject.toml` for dependencies
 ### [0.9.0] - 2024-01-05
 #### Changed
