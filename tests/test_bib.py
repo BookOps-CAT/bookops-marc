@@ -284,20 +284,20 @@ def test_main_entry_exception(stub_bib):
 @pytest.mark.parametrize(
     "arg,lib,expectation",
     [
-        ("ocm00000001", "BPL", "ocm00000001"),
-        ("ocn12345678", "BPL", "ocn12345678"),
-        ("on1234567890", "BPL", "on1234567890"),
-        ("1", "BPL", "ocm00000001"),
-        ("0001", "BPL", "ocm00000001"),
-        ("OCM00000001", "BPL", "ocm00000001"),
-        ("foo", "BPL", "foo"),
-        ("ocm00000001", "NYPL", "1"),
-        ("ocn123456789", "NYPL", "123456789"),
-        ("on1234567890", "NYPL", "1234567890"),
-        ("OCN123456789", "NYPL", "123456789"),
-        ("1", "NYPL", "1"),
-        ("1234567890", "NYPL", "1234567890"),
-        ("foo", "NYPL", "foo"),
+        ("ocm00000001", "bpl", "ocm00000001"),
+        ("ocn12345678", "bpl", "ocn12345678"),
+        ("on1234567890", "bpl", "on1234567890"),
+        ("1", "bpl", "ocm00000001"),
+        ("0001", "bpl", "ocm00000001"),
+        ("OCM00000001", "bpl", "ocm00000001"),
+        ("foo", "bpl", "foo"),
+        ("ocm00000001", "nypl", "1"),
+        ("ocn123456789", "nypl", "123456789"),
+        ("on1234567890", "nypl", "1234567890"),
+        ("OCN123456789", "nypl", "123456789"),
+        ("1", "nypl", "1"),
+        ("1234567890", "nypl", "1234567890"),
+        ("foo", "nypl", "foo"),
     ],
 )
 def test_normalize_oclc_control_number(arg, lib, expectation, stub_bib):
@@ -495,7 +495,7 @@ def test_oclc_nos_001_and_035(stub_bib):
 
 
 def test_oclc_nos_991_only(stub_bib):
-    stub_bib.library = "NYPL"
+    stub_bib.library = "nypl"
     stub_bib.add_field(Field(tag="001", data="wlo000001"))
     stub_bib.add_field(Field(tag="035", subfields=[Subfield("a", "wlo000001")]))
     stub_bib.add_field(Field(tag="991", subfields=[Subfield("y", "12345678")]))

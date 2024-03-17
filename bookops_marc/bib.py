@@ -276,9 +276,9 @@ class Bib(Record):
         """
         controlNo = self.control_number()
         if is_oclc_number(controlNo):
-            if self.library == "BPL":
+            if self.library == "bpl":
                 self["001"].data = oclcNo_with_prefix(controlNo)
-            elif self.library == "NYPL":
+            elif self.library == "nypl":
                 self["001"].data = oclcNo_without_prefix(controlNo)
             else:
                 raise BookopsMarcError(
@@ -313,7 +313,7 @@ class Bib(Record):
                     continue
 
         # for NYPL also check 991
-        if self.library == "NYPL":
+        if self.library == "nypl":
             id_fields = self.get_fields("991")
             if id_fields:
                 for field in id_fields:
