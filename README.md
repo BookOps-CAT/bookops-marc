@@ -16,7 +16,7 @@ python -m pip install git+https://github.com/BookOps-CAT/bookops-marc
 ```python
 from bookops_marc import SierraBibReader
 
-with open ('marc.mrc', "rb") as marcfile:
+with open('marc.mrc', "rb") as marcfile:
 	reader = SierraBibReader(marcfile)
 	for bib in reader:
 		print(bib.sierra_bib_id_normalized())
@@ -41,12 +41,32 @@ bib = pymarc_record_to_local_bib(record, "bpl")
 bib.remove_unsupported_subjects()
 ```
 
-Python 3.7 and up.
+Python 3.8 and up.
 
 ## Version
-> 0.9.0
+> 0.10.0
 
 ## Changelog
+### [0.10.0] - 2024-03-16
+#### Added
++ method to retrieve all OCLC numbers present in a bib (001, 035, 991): `bib.oclc_nos()`
++ methods to normalize OCLC number in the 001 control field in `bib.Bib` class: `bib.normalize_oclc_control_number`
++ new module `local_values` with the followoing methods:
+  + `_add_oclc_prefix`
+  + `_delete_oclc_prefix`
+  + `has_oclc_prefix`,
+  + `is_oclc_number`,
+  + `oclcNo_with_prefix`,
+  + `oclcNo_without_prefix`
+#### Changed
++ dropped Python 3.7 support
++ update dev dependencies:
+  + black (24.3.0)
+  + mypy (1.9)
+  + pytest (8.1.1)
+  + pytest-cov (4.1.0)
++ changed `pyproject.toml` settings for black, mypy, & coverage
++ deleted `requirements.txt` and transition to `pyproject.toml` for dependencies
 ### [0.9.0] - 2024-01-05
 #### Changed
 + updated to pymarc 5.0
@@ -112,6 +132,7 @@ Python 3.7 and up.
 #### Added
 + a method for retrieving branch call number as `pymarc.Field`
 
+[0.10.0]:https://github.com/BookOps-CAT/bookops-marc/compare/0.9.0...0.10.0
 [0.9.0]: https://github.com/BookOps-CAT/bookops-marc/compare/0.8.1...0.9.0
 [0.8.1]: https://github.com/BookOps-CAT/bookops-marc/compare/0.8.0...0.8.1
 [0.8.0]: https://github.com/BookOps-CAT/bookops-marc/compare/0.7.0...0.8.0
