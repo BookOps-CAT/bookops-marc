@@ -7,7 +7,7 @@ adds some syntactic sugar.
 from datetime import date
 from typing import List, Optional, Dict
 
-from pymarc import Record, Field
+from pymarc import Record, Field, Indicators
 from pymarc.constants import LEADER_LEN
 
 from .errors import BookopsMarcError
@@ -191,14 +191,14 @@ class Bib(Record):
 
         # check if LC full ed. present first
         for field in fields:
-            if field.indicators == ["0", "0"]:
+            if field.indicators == Indicators("0", "0"):
                 class_mark = field.get(code="a").strip()
                 class_mark = normalize_dewey(class_mark)
                 return class_mark  # type: ignore
 
         # then other agency full ed.
         for field in fields:
-            if field.indicators == ["0", "4"]:
+            if field.indicators == Indicators("0", "4"):
                 class_mark = field.get(code="a").strip()
                 class_mark = normalize_dewey(class_mark)
                 return class_mark  # type: ignore

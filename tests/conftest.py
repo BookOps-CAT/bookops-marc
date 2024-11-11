@@ -1,6 +1,6 @@
 import pytest
 
-from pymarc import Field, Record, Subfield
+from pymarc import Field, Record, Subfield, Indicators
 
 from bookops_marc import Bib
 
@@ -13,7 +13,7 @@ def stub_pymarc_record():
     record.add_field(
         Field(
             tag="100",
-            indicators=["1", " "],
+            indicators=Indicators("1", " "),
             subfields=[
                 Subfield(code="a", value="Adams, John,"),
                 Subfield(code="e", value="author."),
@@ -23,7 +23,7 @@ def stub_pymarc_record():
     record.add_field(
         Field(
             tag="245",
-            indicators=["1", "4"],
+            indicators=Indicators("1", "4"),
             subfields=[
                 Subfield(code="a", value="The foo /"),
                 Subfield(code="c", value="by John Adams."),
@@ -33,7 +33,7 @@ def stub_pymarc_record():
     record.add_field(
         Field(
             tag="264",
-            indicators=[" ", "1"],
+            indicators=Indicators(" ", "1"),
             subfields=[
                 Subfield(code="a", value="Bar :"),
                 Subfield(code="b", value="New York,"),
@@ -52,7 +52,7 @@ def stub_bib():
     bib.add_field(
         Field(
             tag="100",
-            indicators=["1", " "],
+            indicators=Indicators("1", " "),
             subfields=[
                 Subfield(code="a", value="Adams, John,"),
                 Subfield(code="e", value="author."),
@@ -62,7 +62,7 @@ def stub_bib():
     bib.add_field(
         Field(
             tag="245",
-            indicators=["1", "4"],
+            indicators=Indicators("1", "4"),
             subfields=[
                 Subfield(code="a", value="The foo /"),
                 Subfield(code="c", value="by John Adams."),
@@ -72,7 +72,7 @@ def stub_bib():
     bib.add_field(
         Field(
             tag="264",
-            indicators=[" ", "1"],
+            indicators=Indicators(" ", "1"),
             subfields=[
                 Subfield(code="a", value="Bar :"),
                 Subfield(code="b", value="New York,"),
@@ -86,7 +86,7 @@ def stub_bib():
 @pytest.fixture
 def mock_960():
     # fmt: off
-    return Field(tag="960", indicators=[" ", " "], subfields=[
+    return Field(tag="960", indicators=Indicators(" ", " "), subfields=[
         Subfield(code="a", value="l"),  # acq type
         Subfield(code="b", value="-"),  # ?
         Subfield(code="c", value="j"),  # order code 1 (selector)
