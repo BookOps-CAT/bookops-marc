@@ -11,7 +11,7 @@ from bookops_marc import Bib
 
 class SierraBibReader(MARCReader):
     """
-    An interator class for reading file of local Sierra MARC records.
+    An iterator class for reading file of local Sierra MARC records.
     """
 
     def __init__(

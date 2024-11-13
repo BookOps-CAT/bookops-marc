@@ -7,7 +7,7 @@ from datetime import datetime
 
 import pytest
 
-from pymarc import Field, Subfield
+from pymarc import Field, Subfield, Indicators
 
 from bookops_marc.bib import (
     Bib,
@@ -42,7 +42,7 @@ def test_sierra_bib_id(stub_bib):
     stub_bib.add_field(
         Field(
             tag="907",
-            indicators=[" ", " "],
+            indicators=Indicators(" ", " "),
             subfields=[
                 Subfield(code="a", value=".b225444884"),
                 Subfield(code="b", value="08-17-21$c08-17-2021 7:50"),
@@ -58,7 +58,7 @@ def test_sierra_bib_id(stub_bib):
         pytest.param(
             Field(
                 tag="907",
-                indicators=[" ", " "],
+                indicators=Indicators(" ", " "),
                 subfields=[Subfield(code="b", value="spam")],
             ),
             True,
@@ -67,7 +67,7 @@ def test_sierra_bib_id(stub_bib):
         pytest.param(
             Field(
                 tag="907",
-                indicators=[" ", " "],
+                indicators=Indicators(" ", " "),
                 subfields=[
                     Subfield(code="b", value="08-17-21"),
                     Subfield(code="c", value="08-17-2021 7:50"),
@@ -86,7 +86,7 @@ def test_sierra_bib_id_missing_value(stub_bib):
     stub_bib.add_field(
         Field(
             tag="907",
-            indicators=[" ", " "],
+            indicators=Indicators(" ", " "),
             subfields=[Subfield(code="a", value="")],
         )
     )
@@ -97,7 +97,7 @@ def test_sierra_bib_id_normalized(stub_bib):
     stub_bib.add_field(
         Field(
             tag="907",
-            indicators=[" ", " "],
+            indicators=Indicators(" ", " "),
             subfields=[
                 Subfield(code="a", value=".b225444884"),
                 Subfield(code="b", value="08-17-21$c08-17-2021 7:50"),
@@ -148,7 +148,7 @@ def test_sierra_bib_id_normalized_missing_tag(stub_bib):
 )
 def test_branch_call_no(stub_bib, arg1, arg2, arg3, expectation):
     stub_bib.library = arg1
-    stub_bib.add_field(Field(tag=arg2, indicators=[" ", " "], subfields=arg3))
+    stub_bib.add_field(Field(tag=arg2, indicators=Indicators(" ", " "), subfields=arg3))
     assert stub_bib.branch_call_no() == expectation
 
 
@@ -326,21 +326,21 @@ def test_dewey_lc_selected(stub_bib):
     stub_bib.add_field(
         Field(
             tag="082",
-            indicators=[" ", " "],
+            indicators=Indicators(" ", " "),
             subfields=[Subfield(code="a", value="900./092")],
         )
     )
     stub_bib.add_field(
         Field(
             tag="082",
-            indicators=["0", "4"],
+            indicators=Indicators("0", "4"),
             subfields=[Subfield(code="a", value="909.092")],
         )
     )
     stub_bib.add_field(
         Field(
             tag="082",
-            indicators=["0", "0"],
+            indicators=Indicators("0", "0"),
             subfields=[Subfield(code="a", value="909.12")],
         )
     )
@@ -351,14 +351,14 @@ def test_dewey_other_agency_selected(stub_bib):
     stub_bib.add_field(
         Field(
             tag="082",
-            indicators=["1", "0"],
+            indicators=Indicators("1", "0"),
             subfields=[Subfield(code="a", value="900")],
         )
     )
     stub_bib.add_field(
         Field(
             tag="082",
-            indicators=["0", "4"],
+            indicators=Indicators("0", "4"),
             subfields=[Subfield(code="a", value="909./092")],
         )
     )
@@ -369,21 +369,21 @@ def test_dewey_shortened(stub_bib):
     stub_bib.add_field(
         Field(
             tag="082",
-            indicators=[" ", " "],
+            indicators=Indicators(" ", " "),
             subfields=[Subfield(code="a", value="900.092")],
         )
     )
     stub_bib.add_field(
         Field(
             tag="082",
-            indicators=["0", "4"],
+            indicators=Indicators("0", "4"),
             subfields=[Subfield(code="a", value="910.092")],
         )
     )
     stub_bib.add_field(
         Field(
             tag="082",
-            indicators=["0", "0"],
+            indicators=Indicators("0", "0"),
             subfields=[Subfield(code="a", value="909./09208")],
         )
     )
@@ -394,7 +394,7 @@ def test_dewey_shortened_missing_dewey(stub_bib):
     stub_bib.add_field(
         Field(
             tag="082",
-            indicators=["0", "4"],
+            indicators=Indicators("0", "4"),
             subfields=[Subfield(code="a", value="[FIC]")],
         )
     )
@@ -433,7 +433,7 @@ def test_lccn_missing_sub_a(stub_bib):
     stub_bib.add_field(
         Field(
             tag="010",
-            indicators=[" ", " "],
+            indicators=Indicators(" ", " "),
             subfields=[Subfield(code="z", value="foo")],
         )
     )
@@ -452,7 +452,7 @@ def test_lccn(arg, expectation, stub_bib):
     stub_bib.add_field(
         Field(
             tag="010",
-            indicators=[" ", " "],
+            indicators=Indicators(" ", " "),
             subfields=[Subfield(code="a", value=arg), Subfield(code="b", value="foo")],
         )
     )
@@ -524,7 +524,7 @@ def test_orders_single(stub_bib, mock_960):
     stub_bib.add_field(
         Field(
             tag="961",
-            indicators=[" ", " "],
+            indicators=Indicators(" ", " "),
             subfields=[
                 Subfield(code="h", value="e,bio"),
                 Subfield(code="l", value="1643137123"),
@@ -551,7 +551,7 @@ def test_orders_reverse_sort(stub_bib, mock_960):
     stub_bib.add_field(
         Field(
             tag="961",
-            indicators=[" ", " "],
+            indicators=Indicators(" ", " "),
             subfields=[
                 Subfield(code="h", value="e,bio"),
                 Subfield(code="l", value="1643137123"),
@@ -580,7 +580,7 @@ def test_overdrive_number_missing_sub_a(stub_bib):
     stub_bib.add_field(
         Field(
             tag="037",
-            indicators=[" ", " "],
+            indicators=Indicators(" ", " "),
             subfields=[Subfield(code="z", value="foo")],
         )
     )
@@ -604,7 +604,7 @@ def test_overdrive_number(arg, expectation, stub_bib):
     stub_bib.add_field(
         Field(
             tag="037",
-            indicators=[" ", " "],
+            indicators=Indicators(" ", " "),
             subfields=[
                 Subfield(code="a", value=arg),
                 Subfield(code="b", value="OverDrive, Inc."),
@@ -620,7 +620,7 @@ def test_overdrive_number(arg, expectation, stub_bib):
         pytest.param(
             Field(
                 tag="650",
-                indicators=[" ", "0"],
+                indicators=Indicators(" ", "0"),
                 subfields=[Subfield(code="a", value="Foo.")],
             ),
             True,
@@ -629,7 +629,7 @@ def test_overdrive_number(arg, expectation, stub_bib):
         pytest.param(
             Field(
                 tag="650",
-                indicators=[" ", "7"],
+                indicators=Indicators(" ", "7"),
                 subfields=[
                     Subfield(code="a", value="Foo."),
                     Subfield(code="2", value="lcsh"),
@@ -641,7 +641,7 @@ def test_overdrive_number(arg, expectation, stub_bib):
         pytest.param(
             Field(
                 tag="650",
-                indicators=[" ", "7"],
+                indicators=Indicators(" ", "7"),
                 subfields=[
                     Subfield(code="a", value="Foo."),
                     Subfield(code="2", value="fast"),
@@ -653,7 +653,7 @@ def test_overdrive_number(arg, expectation, stub_bib):
         pytest.param(
             Field(
                 tag="650",
-                indicators=[" ", "7"],
+                indicators=Indicators(" ", "7"),
                 subfields=[
                     Subfield(code="a", value="Foo."),
                     Subfield(code="2", value="gsafd"),
@@ -665,7 +665,7 @@ def test_overdrive_number(arg, expectation, stub_bib):
         pytest.param(
             Field(
                 tag="650",
-                indicators=[" ", "7"],
+                indicators=Indicators(" ", "7"),
                 subfields=[
                     Subfield(code="a", value="Foo."),
                     Subfield(code="2", value="lcgft"),
@@ -677,7 +677,7 @@ def test_overdrive_number(arg, expectation, stub_bib):
         pytest.param(
             Field(
                 tag="650",
-                indicators=[" ", "7"],
+                indicators=Indicators(" ", "7"),
                 subfields=[
                     Subfield(code="a", value="Foo."),
                     Subfield(code="2", value="lctgm"),
@@ -689,7 +689,7 @@ def test_overdrive_number(arg, expectation, stub_bib):
         pytest.param(
             Field(
                 tag="650",
-                indicators=[" ", "7"],
+                indicators=Indicators(" ", "7"),
                 subfields=[
                     Subfield(code="a", value="Foo."),
                     Subfield(code="2", value="bookops"),
@@ -701,7 +701,7 @@ def test_overdrive_number(arg, expectation, stub_bib):
         pytest.param(
             Field(
                 tag="650",
-                indicators=[" ", "7"],
+                indicators=Indicators(" ", "7"),
                 subfields=[
                     Subfield(code="a", value="Foo."),
                     Subfield(code="2", value="homoit"),
@@ -713,7 +713,7 @@ def test_overdrive_number(arg, expectation, stub_bib):
         pytest.param(
             Field(
                 tag="600",
-                indicators=["1", "0"],
+                indicators=Indicators("1", "0"),
                 subfields=[Subfield(code="a", value="Foo.")],
             ),
             True,
@@ -722,7 +722,7 @@ def test_overdrive_number(arg, expectation, stub_bib):
         pytest.param(
             Field(
                 tag="610",
-                indicators=[" ", "0"],
+                indicators=Indicators(" ", "0"),
                 subfields=[Subfield(code="a", value="Foo.")],
             ),
             True,
@@ -731,7 +731,7 @@ def test_overdrive_number(arg, expectation, stub_bib):
         pytest.param(
             Field(
                 tag="611",
-                indicators=[" ", "0"],
+                indicators=Indicators(" ", "0"),
                 subfields=[Subfield(code="a", value="Foo.")],
             ),
             True,
@@ -740,7 +740,7 @@ def test_overdrive_number(arg, expectation, stub_bib):
         pytest.param(
             Field(
                 tag="630",
-                indicators=[" ", "0"],
+                indicators=Indicators(" ", "0"),
                 subfields=[Subfield(code="a", value="Foo.")],
             ),
             True,
@@ -749,7 +749,7 @@ def test_overdrive_number(arg, expectation, stub_bib):
         pytest.param(
             Field(
                 tag="648",
-                indicators=[" ", "0"],
+                indicators=Indicators(" ", "0"),
                 subfields=[Subfield(code="a", value="Foo.")],
             ),
             True,
@@ -758,7 +758,7 @@ def test_overdrive_number(arg, expectation, stub_bib):
         pytest.param(
             Field(
                 tag="650",
-                indicators=[" ", "0"],
+                indicators=Indicators(" ", "0"),
                 subfields=[Subfield(code="a", value="Foo.")],
             ),
             True,
@@ -767,7 +767,7 @@ def test_overdrive_number(arg, expectation, stub_bib):
         pytest.param(
             Field(
                 tag="651",
-                indicators=[" ", "0"],
+                indicators=Indicators(" ", "0"),
                 subfields=[Subfield(code="a", value="Foo.")],
             ),
             True,
@@ -776,7 +776,7 @@ def test_overdrive_number(arg, expectation, stub_bib):
         pytest.param(
             Field(
                 tag="655",
-                indicators=[" ", "0"],
+                indicators=Indicators(" ", "0"),
                 subfields=[Subfield(code="a", value="Foo.")],
             ),
             True,
@@ -785,7 +785,7 @@ def test_overdrive_number(arg, expectation, stub_bib):
         pytest.param(
             Field(
                 tag="650",
-                indicators=[" ", "7"],
+                indicators=Indicators(" ", "7"),
                 subfields=[
                     Subfield(code="a", value="Foo."),
                     Subfield(code="2", value="aat"),
@@ -797,7 +797,7 @@ def test_overdrive_number(arg, expectation, stub_bib):
         pytest.param(
             Field(
                 tag="650",
-                indicators=[" ", "1"],
+                indicators=Indicators(" ", "1"),
                 subfields=[Subfield(code="a", value="Foo.")],
             ),
             False,
@@ -806,7 +806,7 @@ def test_overdrive_number(arg, expectation, stub_bib):
         pytest.param(
             Field(
                 tag="654",
-                indicators=[" ", "0"],
+                indicators=Indicators(" ", "0"),
                 subfields=[Subfield(code="a", value="Foo.")],
             ),
             False,
@@ -815,7 +815,7 @@ def test_overdrive_number(arg, expectation, stub_bib):
         pytest.param(
             Field(
                 tag="690",
-                indicators=[" ", "0"],
+                indicators=Indicators(" ", "0"),
                 subfields=[Subfield(code="a", value="Foo.")],
             ),
             False,
@@ -824,7 +824,7 @@ def test_overdrive_number(arg, expectation, stub_bib):
         pytest.param(
             Field(
                 tag="650",
-                indicators=[" ", "7"],
+                indicators=Indicators(" ", "7"),
                 subfields=[Subfield(code="a", value="Foo.")],
             ),
             False,
@@ -842,7 +842,7 @@ def test_subjects_lc(stub_bib):
     stub_bib.add_field(
         Field(
             tag="650",
-            indicators=[" ", "7"],
+            indicators=Indicators(" ", "7"),
             subfields=[
                 Subfield(code="a", value="Foo"),
                 Subfield(code="2", value="bar"),
@@ -852,7 +852,7 @@ def test_subjects_lc(stub_bib):
     stub_bib.add_field(
         Field(
             tag="600",
-            indicators=["1", "0"],
+            indicators=Indicators("1", "0"),
             subfields=[
                 Subfield(code="a", value="Doe, John"),
                 Subfield(code="x", value="Childhood."),
@@ -862,7 +862,7 @@ def test_subjects_lc(stub_bib):
     stub_bib.add_field(
         Field(
             tag="650",
-            indicators=[" ", "4"],
+            indicators=Indicators(" ", "4"),
             subfields=[
                 Subfield(code="a", value="Foo"),
                 Subfield(code="2", value="bar"),
@@ -872,7 +872,7 @@ def test_subjects_lc(stub_bib):
     stub_bib.add_field(
         Field(
             tag="651",
-            indicators=[" ", "0"],
+            indicators=Indicators(" ", "0"),
             subfields=[Subfield(code="a", value="Spam.")],
         )
     )
@@ -920,7 +920,7 @@ def test_upc_number_missing_sub_a(stub_bib):
     stub_bib.add_field(
         Field(
             tag="024",
-            indicators=["1", " "],
+            indicators=Indicators("1", " "),
             subfields=[Subfield(code="z", value="foo")],
         )
     )
@@ -931,7 +931,7 @@ def test_upc_number_other_number(stub_bib):
     stub_bib.add_field(
         Field(
             tag="024",
-            indicators=["2", " "],
+            indicators=Indicators("2", " "),
             subfields=[
                 Subfield(code="a", value="M011234564"),
                 Subfield(code="z", value="foo"),
@@ -958,7 +958,7 @@ def test_upc_number(arg, expectation, stub_bib):
     stub_bib.add_field(
         Field(
             tag="024",
-            indicators=["1", " "],
+            indicators=Indicators("1", " "),
             subfields=[Subfield(code="a", value=arg), Subfield(code="b", value="foo")],
         )
     )
