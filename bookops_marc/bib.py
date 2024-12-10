@@ -13,12 +13,8 @@ from pymarc.constants import LEADER_LEN
 from .errors import BookopsMarcError
 from .local_values import (
     OclcNumber,
-    get_branch_code,
-    get_shelf_audience_code,
-    get_shelf_code,
     normalize_date,
     normalize_dewey,
-    normalize_location_code,
     shorten_dewey,
 )
 from .models import Order
@@ -65,56 +61,6 @@ class Bib(Record):
             raise StopIteration
         self.pos += 1
         return self.fields[self.pos - 1]
-
-    def _get_branches(self, field: Field) -> List[str]:
-        """
-        Returns isolated from location codes branches as a list
-
-        Args:
-            field:                  pymarc.Field instance
-        """
-        branches = []
-
-        for sub in field.get_subfields("t"):
-            # remove any qty data
-            loc_code = normalize_location_code(sub)
-
-            branch = get_branch_code(loc_code)
-            branches.append(branch)
-
-        return branches
-
-    def _get_shelf_audience_codes(self, field: Field) -> List[Optional[str]]:
-        """
-        Returns list of audience codes extracted from location codes
-        """
-        audns = []
-
-        for sub in field.get_subfields("t"):
-            loc_code = normalize_location_code(sub)
-
-            audn = get_shelf_audience_code(loc_code)
-            audns.append(audn)
-
-        return audns
-
-    def _get_shelves(self, field: Field) -> List[Optional[str]]:
-        """
-        Returns list of shelf codes extracted from location codes
-
-        Args:
-            field:                  pymarc.Field instance
-        """
-        shelves = []
-
-        for sub in field.get_subfields("t"):
-            # remove any qty data
-            loc_code = normalize_location_code(sub)
-
-            shelf = get_shelf_code(loc_code)
-            shelves.append(shelf)
-
-        return shelves
 
     def audience(self) -> Optional[str]:
         """
