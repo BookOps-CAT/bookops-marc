@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """
 Data models used by bookops-marc
 """
@@ -6,26 +8,6 @@ from datetime import date
 from typing import List, Optional
 from pymarc import Field
 from .local_values import normalize_date
-
-
-# class Item:
-#     """
-#     A class to represent an Item record
-#     """
-
-#     def __init__(self, field: Field) -> None:
-#         self.field = field
-#         self.call_no = None
-#         self.volume = None
-#         self.agency = None
-#         self.barcode = None
-#         self.location = None
-#         self.opac_message = None
-#         self.price = None
-#         self.type = None
-#         self.item_message = None
-#         self.vendor_code = None
-#         self.call_tag = None
 
 
 class Order:
