@@ -1,22 +1,18 @@
 # -*- coding: utf-8 -*-
 
 """
-Module replaces pymarc's Record module. Inherits all Record class functinality and
+Module replaces pymarc's Record module. Inherits all Record class functionality and
 adds some syntactic sugar.
 """
 from datetime import date
+from itertools import chain
 from typing import Dict, List, Optional, Union
 
 from pymarc import Record, Field, Indicators
 from pymarc.constants import LEADER_LEN
 
 from .errors import BookopsMarcError
-from .local_values import (
-    OclcNumber,
-    normalize_date,
-    normalize_dewey,
-    shorten_dewey,
-)
+from .local_values import OclcNumber, normalize_date
 from .models import Order
 from .constants import SUPPORTED_THESAURI, SUPPORTED_SUBJECT_TAGS
 
@@ -46,11 +42,9 @@ class Bib(Record):
             leader,
             file_encoding,
         )
-
-        if isinstance(library, str):
-            self.library = library.lower()
-        else:
-            self.library = library
+        # Overriding the type of pymarc.Record.leader
+        self.leader: str
+        self.library = library.lower()
 
     def __iter__(self):
         self.pos = 0
@@ -66,12 +60,15 @@ class Bib(Record):
         """
         Retrieves audience code from the 008 MARC tag
         """
-        try:
-            if self.leader[6] in "acdgijkmt" and self.leader[7] in "am":
-                return self.get("008").data[22]  # type: ignore
-            else:
-                return None
-        except AttributeError:
+        field_008 = self.get("008")
+        if (
+            field_008
+            and field_008.data
+            and self.leader[6] in "acdgijkmt"
+            and self.leader[7] in "am"
+        ):
+            return field_008.data[22]
+        else:
             return None
 
     def branch_call_no(self) -> Optional[str]:
@@ -79,9 +76,9 @@ class Bib(Record):
         Retrieves branch library call number as string without any MARC coding
         """
         field = self.branch_call_no_field()
-        try:
-            return field.value()  # type:ignore
-        except AttributeError:
+        if field:
+            return field.value()
+        else:
             return None
 
     def branch_call_no_field(self) -> Optional[Field]:
@@ -99,64 +96,89 @@ class Bib(Record):
         """
         Extracts cataloging date from the bib
         """
-        try:
-            cat_date = normalize_date(self.get("907").get(code="b"))  # type: ignore
-            return cat_date
-        except AttributeError:
+        cat_date = self.get("907")
+        if cat_date and "b" in cat_date:
+            return normalize_date(cat_date.get("b"))
+        else:
             return None
 
     def control_number(self) -> Optional[str]:
         """
-        Returns a control number from the 001 tag if exists.
+        Returns a control number from the 001 tag if it exists.
         """
-        try:
-            return self.get("001").data.strip()  # type: ignore
-        except AttributeError:
+        field = self.get("001")
+        if field and field.data:
+            return field.data.strip()
+        else:
             return None
 
     def created_date(self) -> Optional[date]:
         """
         Extracts bib creation date
         """
-        try:
-            created_date = normalize_date(self.get("907").get(code="c"))  # type: ignore
-            return created_date
-        except AttributeError:
+        create_date = self.get("907")
+        if create_date and "c" in create_date:
+            return normalize_date(create_date.get("c"))
+        else:
             return None
 
     def dewey(self) -> Optional[str]:
         """
-        Returns LC suggested Dewey classification then other agency's number.
-        Does not alter the class mark string.
+        Returns Dewey classification from bib. First checks for LC assigned
+        Dewey classification and before checking for Dewey assigned by other
+        agencies. Does not alter the class mark string.
         """
         fields = self.get_fields("082")
-
+        class_mark = None
         # check if LC full ed. present first
-        for field in fields:
-            if field.indicators == Indicators("0", "0"):
-                class_mark = field.get(code="a").strip()
-                class_mark = normalize_dewey(class_mark)
-                return class_mark  # type: ignore
-
+        lc_class = [i for i in fields if i.indicators == Indicators("0", "0")]
         # then other agency full ed.
-        for field in fields:
-            if field.indicators == Indicators("0", "4"):
-                class_mark = field.get(code="a").strip()
-                class_mark = normalize_dewey(class_mark)
-                return class_mark  # type: ignore
-
-        return None
+        other_agency = [i for i in fields if i.indicators == Indicators("0", "4")]
+        if len(lc_class) > 0:
+            class_mark = lc_class[0].get("a")
+        elif len(lc_class) == 0 and len(other_agency) > 0:
+            class_mark = other_agency[0].get("a")
+        if not isinstance(class_mark, str):
+            return None
+        class_mark = (
+            class_mark.strip()
+            .replace("/", "")
+            .replace("j", "")
+            .replace("C", "")
+            .replace("[B]", "")
+            .replace("'", "")
+            .strip()
+        )
+        try:
+            float(class_mark)
+        except ValueError:
+            return None
+        else:
+            while len(class_mark) > 4 and class_mark[-1] == "0":
+                class_mark = class_mark[:-1]
+            return class_mark
 
     def dewey_shortened(self) -> Optional[str]:
         """
-        Returns LC suggested Dewey classification then other agency's number
-        if present .
+        Returns Dewey classification shortened to a maximum of 4 digits
+        after period. Length of shortened class mark is determined based
+        on the bib's library and audience.
+            BPL materials: 4 digits (eg. 505.4167)
+            NYPL adult/young adult: 4 digits (eg. 505.4167)
+            NYPL juvenile materials: 2 digits (eg. 505.41)
         """
         class_mark = self.dewey()
-        if isinstance(class_mark, str):
-            return shorten_dewey(class_mark)
-        else:
+        audns = list(chain(*[i.audn for i in self.orders()]))
+        if not isinstance(class_mark, str):
             return None
+        if self.library == "nypl" and all(i == "j" for i in audns):
+            digits = 2
+        else:
+            digits = 4
+        class_mark = class_mark[: 4 + digits]
+        while len(class_mark) > 3 and class_mark[-1] in ".0":
+            class_mark = class_mark[:-1]
+        return class_mark
 
     def form_of_item(self) -> Optional[str]:
         """
@@ -164,27 +186,22 @@ class Bib(Record):
         a given material format
         """
         rec_type = self.record_type()
-
-        if isinstance(rec_type, str) and "008" in self:
+        field_008 = self.get("008")
+        if field_008 and field_008.data and isinstance(rec_type, str):
             if rec_type in "acdijmopt":
-                return self.get("008").data[23]  # type: ignore
+                return field_008.data[23]
             elif rec_type in "efgk":
-                return self.get("008").data[29]  # type: ignore
-            else:
-                return None
-        else:
-            return None
+                return field_008.data[29]
+        return None
 
     def languages(self) -> List[str]:
         """
         Returns list of material main languages
         """
         languages = []
-
-        try:
-            languages.append(self.get("008").data[35:38])  # type: ignore
-        except AttributeError:
-            pass
+        field_008 = self.get("008")
+        if field_008 and field_008.data:
+            languages.append(field_008.data[35:38])
 
         for field in self.get_fields("041"):
             for sub in field.get_subfields("a"):
@@ -195,9 +212,13 @@ class Bib(Record):
         """
         Returns Library of Congress Control Number
         """
-        try:
-            return self.get("010").get(code="a").strip()  # type: ignore
-        except (AttributeError, TypeError):
+        field = self.get("010")
+        if not field:
+            return None
+        lccn = field.get("a")
+        if isinstance(lccn, str):
+            return lccn.strip()
+        else:
             return None
 
     def main_entry(self) -> Optional[Field]:
@@ -304,9 +325,13 @@ class Bib(Record):
         """
         Returns Overdrive Reserve ID parsed from the 037 tag.
         """
-        try:
-            return self.get("037").get(code="a").strip()  # type: ignore
-        except (AttributeError, TypeError):
+        field = self.get("037")
+        if not field:
+            return None
+        overdrive_number = field.get("a")
+        if isinstance(overdrive_number, str):
+            return overdrive_number.strip()
+        else:
             return None
 
     def remove_unsupported_subjects(self) -> None:
@@ -338,7 +363,7 @@ class Bib(Record):
         Returns value of the first 300 MARC tag in the bib
         """
         try:
-            return self.physicaldescription()[0].value()  # type: ignore
+            return self.physicaldescription[0].value()
         except (TypeError, IndexError):
             return None
 
@@ -346,28 +371,31 @@ class Bib(Record):
         """
         Retrieves record type code from MARC leader
         """
-        return self.leader[6]  # type: ignore
+        return self.leader[6]
 
     def sierra_bib_format(self) -> Optional[str]:
         """
         Returns Sierra bib format fixed field code
         """
-        try:
-            return self.get("998").get(code="d").strip()  # type: ignore
-        except (TypeError, AttributeError):
+        field = self.get("998")
+        if not field:
+            return None
+        bib_format = field.get("d")
+        if isinstance(bib_format, str):
+            return bib_format.strip()
+        else:
             return None
 
     def sierra_bib_id(self) -> Optional[str]:
         """
         Retrieves Sierra bib # from the 907 MARC tag
         """
-        try:
-            bib_id = self.get("907").get(code="a")[1:]  # type: ignore
-        except (TypeError, AttributeError):
+        field = self.get("907")
+        if not field:
             return None
-
-        if bib_id:
-            return bib_id  # type: ignore
+        bib_id = field.get("a")
+        if isinstance(bib_id, str) and len(bib_id) > 0:
+            return bib_id[1:]
         else:
             return None
 
@@ -376,9 +404,10 @@ class Bib(Record):
         Retrieves Sierra bib # from the 907 tag and returns it
         without 'b' prefix and the check digit.
         """
-        try:
-            return self.sierra_bib_id()[1:-1]  # type: ignore
-        except TypeError:
+        bib_id = self.sierra_bib_id()
+        if isinstance(bib_id, str):
+            return bib_id[1:-1]
+        else:
             return None
 
     def subjects_lc(self) -> List[Field]:
@@ -397,12 +426,11 @@ class Bib(Record):
         BPL usage: "c", "n"
         NYPL usage: "c", "e", "n", "q", "o", "v"
         """
-        try:
-            code = self.get("998").get(code="e")  # type: ignore
-        except (TypeError, AttributeError):
+        field = self.get("998")
+        if not field:
             return False
-
-        if code in ("c", "e", "n", "q", "o", "v"):
+        code = field.get("e")
+        if isinstance(code, str) and code in ("c", "e", "n", "q", "o", "v"):
             return True
         else:
             return False
@@ -413,30 +441,34 @@ class Bib(Record):
         https://www.loc.gov/marc/bibliographic/bd024.html
         """
         tag = self.get("024")
-        if tag:
-            if tag.indicator1 == "1":
-                try:
-                    return tag.get(code="a").strip()  # type: ignore
-                except AttributeError:
-                    pass
+        if tag and tag.indicator1 and tag.indicator1 == "1":
+            upc_num = tag.get(code="a")
+            if isinstance(upc_num, str):
+                return upc_num.strip()
         return None
 
+    @classmethod
+    def pymarc_record_to_local_bib(cls, record: Record, library: str) -> "Bib":
+        """
+        Converts an instance of `pymarc.Record` to `bookops_marc.Bib`
 
-def pymarc_record_to_local_bib(record: Record, library: str) -> Optional[Bib]:
-    """
-    Converts an instance of `pymarc.Record` to `bookops_marc.Bib`
+        Args:
+            record:
+                `pymarc.Record` instance
+            library:
+                'bpl' or 'nypl'
 
-    Args:
-        record:                 `pymarc.Record` instance
-        library:                'bpl' or 'nypl'
-
-    Returns:
-        `bookops_marc.bib.Bib` instance
-    """
-    if isinstance(record, Record):
-        bib = Bib(library=library)
-        bib.leader = record.leader
-        bib.fields = record.fields[:]
-        return bib
-    else:
-        return None
+        Returns:
+            `bookops_marc.bib.Bib` instance
+        """
+        if not isinstance(record, Record):
+            raise TypeError(
+                "Invalid 'record' argument was passed. "
+                "Must be a pymarc.Record object."
+            )
+        else:
+            bib = Bib()
+            bib.leader = record.leader
+            bib.fields = record.fields
+            bib.library = library
+            return bib

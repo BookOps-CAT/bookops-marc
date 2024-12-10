@@ -9,10 +9,7 @@ import pytest
 
 from pymarc import Field, Subfield, Indicators
 
-from bookops_marc.bib import (
-    Bib,
-    pymarc_record_to_local_bib,
-)
+from bookops_marc.bib import Bib
 from bookops_marc.errors import BookopsMarcError
 
 
@@ -322,6 +319,36 @@ def test_dewey_no_082(stub_bib):
     assert stub_bib.dewey() is None
 
 
+@pytest.mark.parametrize(
+    "arg,expectation",
+    [
+        ("[Fic]", None),
+        ("[E]", None),
+        ("909", "909"),
+        ("001.54", "001.54"),
+        ("362.84/924043809049", "362.84924043809049"),
+        ("362.84/9040", "362.84904"),
+        ("j574", "574"),
+        ("942.082 [B]", "942.082"),
+        ("364'.971", "364.971"),
+        ("C364/.971", "364.971"),
+        ("505 ", "505"),
+        ("900", "900"),
+        ("900.100", "900.1"),
+        (None, None),
+    ],
+)
+def test_dewey_normalization(stub_bib, arg, expectation):
+    stub_bib.add_field(
+        Field(
+            tag="082",
+            indicators=Indicators("0", "4"),
+            subfields=[Subfield(code="a", value=arg)],
+        )
+    )
+    assert stub_bib.dewey() == expectation
+
+
 def test_dewey_lc_selected(stub_bib):
     stub_bib.add_field(
         Field(
@@ -365,7 +392,15 @@ def test_dewey_other_agency_selected(stub_bib):
     assert stub_bib.dewey() == "909.092"
 
 
-def test_dewey_shortened(stub_bib):
+@pytest.mark.parametrize(
+    "arg,expectation",
+    [
+        ("aga0y", "909.092"),
+        ("agj0y", "909.09"),
+    ],
+)
+def test_dewey_shortened(stub_bib, mock_960, arg, expectation):
+    stub_bib.library = "nypl"
     stub_bib.add_field(
         Field(
             tag="082",
@@ -377,7 +412,7 @@ def test_dewey_shortened(stub_bib):
         Field(
             tag="082",
             indicators=Indicators("0", "4"),
-            subfields=[Subfield(code="a", value="910.092")],
+            subfields=[Subfield(code="a", value="910.09200")],
         )
     )
     stub_bib.add_field(
@@ -387,10 +422,14 @@ def test_dewey_shortened(stub_bib):
             subfields=[Subfield(code="a", value="909./09208")],
         )
     )
-    assert stub_bib.dewey_shortened() == "909.092"
+    new_subfields = [i for i in mock_960.subfields if i.code != "t"]
+    mock_960.subfields = new_subfields
+    mock_960.add_subfield(code="t", value=arg)
+    stub_bib.add_field(mock_960)
+    assert stub_bib.dewey_shortened() == expectation
 
 
-def test_dewey_shortened_missing_dewey(stub_bib):
+def test_dewey_shortened_missing_dewey(stub_bib, mock_960):
     stub_bib.add_field(
         Field(
             tag="082",
@@ -398,6 +437,7 @@ def test_dewey_shortened_missing_dewey(stub_bib):
             subfields=[Subfield(code="a", value="[FIC]")],
         )
     )
+    stub_bib.add_field(mock_960)
     assert stub_bib.dewey_shortened() is None
 
 
@@ -966,8 +1006,8 @@ def test_upc_number(arg, expectation, stub_bib):
 
 
 @pytest.mark.parametrize("arg", ["bpl", "nypl", None])
-def test_instating_from_pymarc_record(stub_pymarc_record, arg):
-    bib = pymarc_record_to_local_bib(stub_pymarc_record, arg)
+def test_Bib_classmethod_pymarc_record_to_local_bib(stub_pymarc_record, arg):
+    bib = Bib.pymarc_record_to_local_bib(stub_pymarc_record, arg)
     assert isinstance(bib, Bib)
 
     # bib atributes
@@ -978,5 +1018,10 @@ def test_instating_from_pymarc_record(stub_pymarc_record, arg):
 
 
 @pytest.mark.parametrize("arg", ["bpl", "nypl", None])
-def test_from_pymarc_record_invalid(mock_960, arg):
-    assert pymarc_record_to_local_bib(mock_960, arg) is None
+def test_Bib_classmethod_pymarc_record_to_local_bib_invalid(mock_960, arg):
+    with pytest.raises(TypeError) as exc:
+        Bib.pymarc_record_to_local_bib(mock_960, arg) is None
+    assert (
+        "Invalid 'record' argument was passed. Must be a pymarc.Record object."
+        in str(exc.value)
+    )
