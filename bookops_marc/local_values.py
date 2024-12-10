@@ -6,48 +6,87 @@ from datetime import datetime, date
 from typing import Union, Optional
 
 
-def _add_oclc_prefix(value: str) -> str:
-    """
-    Prefixes given OCLC identifier expressed as digits with
-    'ocm', 'ocn", and 'on' depending on the length of the identifier.
-    Given OCLC identifier must be already normalized.
+class OclcNumber:
+    def __init__(self, value: str):
+        self.value = value
 
-    Args:
-        value:          normalized OCLC identifier expressed as a `str`
+    @property
+    def value(self) -> str:
+        return self._value
 
-    Returns:
-        oclcNo_prefixed
-    """
-    value_length = len(value)
+    @value.setter
+    def value(self, value: Union[str, int, None]) -> None:
+        if isinstance(value, str) and value.startswith("(OCoLC)"):
+            self._value = value
+        else:
+            self._value = str(value).lower().strip()
+        if not self.is_valid(self.value):
+            raise ValueError("Invalid OCLC Number.")
 
-    if value_length <= 8 and value_length >= 1:
-        return f"ocm{str(int(value)).zfill(8)}"
-    elif value_length == 9:
-        return f"ocn{str(int(value))}"
-    elif value_length > 9:
-        return f"on{str(int(value))}"
-    else:
-        return str(int(value))
+    @property
+    def has_prefix(self) -> bool:
+        oclc_lower = self.value.lower()
+        if (
+            oclc_lower.startswith("ocm")
+            or oclc_lower.startswith("ocn")
+            or oclc_lower.startswith("on")
+            or oclc_lower.startswith("(ocolc)")
+        ):
+            return True
+        else:
+            return False
 
+    @property
+    def with_prefix(self) -> str:
+        if self.has_prefix is True and not self.value.startswith("(OCoLC)"):
+            return self.value
+        else:
+            num = str(int(self.value.strip("(OCoLC)")))
+            value_length = len(num)
+            if value_length <= 8 and value_length >= 1:
+                return f"ocm{str(int(num)).zfill(8)}"
+            elif value_length == 9:
+                return f"ocn{str(int(num))}"
+            else:
+                return f"on{str(int(num))}"
 
-def _delete_oclc_prefix(value: str) -> str:
-    """
-    Removes any prefixes from OCLC identifer.
+    @property
+    def without_prefix(self) -> str:
+        if not self.has_prefix:
+            return self.value
+        else:
+            return str(int(self.value.lower().strip("()oclnm")))
 
-    Args:
-        value:          normalized OCLC identifer expressed as `str`
+    @staticmethod
+    def is_valid(value: Union[str, int, None]) -> bool:
+        """
+        Determines if given value looks like a legitimate OCLC number.
 
-    Returns:
-        OCLC identifier without any prefixes as a `str`
-    """
-    if value.startswith("ocm") or value.startswith("ocn"):
-        return str(int(value[3:]))
-    elif value.startswith("on"):
-        return str(int(value[2:]))
-    elif value.startswith("(ocolc)"):
-        return str(int(value[7:]))
-    else:
-        return str(int(value))
+        Args:
+            value:
+                identifier as `str`, `int`, or None
+
+        Returns:
+            bool
+        """
+        str_value = str(value).lower()
+        num_value = str_value.strip("oclmn()")
+        if not value:
+            return False
+        elif not isinstance(value, str) and not isinstance(value, int):
+            return False
+        elif str_value.isnumeric() is True and int(value) > 0:
+            return True
+        elif (
+            num_value.isnumeric()
+            and (str_value.startswith("ocm") and len(num_value) == 8)
+            or (str_value.startswith("ocn") and len(num_value) == 9)
+            or (str_value.startswith("on") and len(num_value) >= 10)
+            or (str_value.startswith("(ocolc)") and len(num_value) >= 8)
+        ):
+            return True
+        else:
+            return False
 
 
 def get_branch_code(location_code: str) -> str:
@@ -85,106 +124,6 @@ def get_shelf_code(location_code: str) -> Optional[str]:
             return None
     except (TypeError, IndexError):
         return None
-
-
-def has_oclc_prefix(oclcNo: str) -> bool:
-    """
-    Determines if the given OCLC number has a prefix.
-
-    Args:
-        oclcNo:         OCLC number expressed as a str:
-    """
-    if isinstance(oclcNo, str):
-        if (
-            oclcNo.lower().startswith("ocm")
-            or oclcNo.lower().startswith("ocn")
-            or oclcNo.lower().startswith("on")
-        ):
-            return True
-        elif oclcNo.lower().startswith("(ocolc)"):
-            return True
-        else:
-            return False
-    else:
-        raise TypeError("OCLC number must be a string.")
-
-
-def is_oclc_number(value: Union[str, int]) -> bool:
-    """
-    Determines if given value looks like a legitimate OCLC number.
-
-    Args:
-        value:          identifier as `str` or `int`
-
-    Returns:
-        bool
-    """
-    if isinstance(value, str):
-        if has_oclc_prefix(value):
-            return True
-        else:
-            try:
-                if int(value) > 0:
-                    return True
-                else:
-                    return False
-            except ValueError:
-                return False
-    elif isinstance(value, int):
-        if int(value) > 0:
-            return True
-        else:
-            return False
-    else:
-        return False
-
-
-def oclcNo_with_prefix(oclcNo: Union[str, int]) -> str:
-    """
-    Adds OCLC prefix to given OCLC number without one
-
-    Args:
-        oclcNo:         OCLC number expressed as `str` or `int`
-
-    Returns:
-        OCLC identifier with a correct prefix as a `str`
-    """
-    if isinstance(oclcNo, str):
-        oclcNo_norm = oclcNo.lower().strip()
-        if has_oclc_prefix(oclcNo_norm):
-            return oclcNo_norm
-        else:
-            return _add_oclc_prefix(oclcNo_norm)
-
-    elif isinstance(oclcNo, int):
-        oclcNo_norm = str(oclcNo).lower().strip()
-        return _add_oclc_prefix(oclcNo_norm)
-
-    else:
-        raise TypeError("OCLC number must be a string or integer.")
-
-
-def oclcNo_without_prefix(oclcNo: Union[str, int]) -> str:
-    """
-    Removes OCLC prefix from given OCLC identifier.
-
-    Args:
-        oclcNo:         OCLC identifier expressed as `str` or `int`
-
-    Returns:
-        OCLC identifier witouth any prefixes as a `str`
-    """
-    if isinstance(oclcNo, str):
-        oclcNo_norm = oclcNo.lower().strip()
-        if has_oclc_prefix(oclcNo_norm):
-            return _delete_oclc_prefix(oclcNo_norm)
-        else:
-            return oclcNo_norm
-    elif isinstance(oclcNo, int):
-        oclcNo_norm = str(oclcNo).lower().strip()
-        return oclcNo_norm
-    else:
-        raise TypeError("OCLC number must be a string or integer.")
 
 
 def normalize_date(order_date: str) -> Optional[date]:

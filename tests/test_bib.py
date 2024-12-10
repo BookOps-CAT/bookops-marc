@@ -485,13 +485,13 @@ def test_form_of_item_in_pos_29(arg, stub_bib):
 
 
 def test_oclc_nos_001_and_035(stub_bib):
-    stub_bib.add_field(Field(tag="001", data="on123456789"))
+    stub_bib.add_field(Field(tag="001", data="on1234567890"))
     stub_bib.add_field(Field(tag="003", data="OCoLC"))
     stub_bib.add_field(Field(tag="035", subfields=[Subfield("a", "(Foo)12345")]))
     stub_bib.add_field(Field(tag="035", subfields=[Subfield("a", "(OCoLC)123456789")]))
     stub_bib.add_field(Field(tag="035", subfields=[Subfield("a", "12345")]))
 
-    assert stub_bib.oclc_nos() == {"001": "123456789", "035": "123456789"}
+    assert stub_bib.oclc_nos() == {"001": "1234567890", "035": "123456789"}
 
 
 def test_oclc_nos_991_only(stub_bib):
