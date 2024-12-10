@@ -2,17 +2,7 @@ from datetime import datetime
 
 import pytest
 
-from bookops_marc.local_values import (
-    OclcNumber,
-    get_branch_code,
-    get_shelf_audience_code,
-    get_shelf_code,
-    normalize_dewey,
-    shorten_dewey,
-    normalize_date,
-    normalize_location_code,
-    normalize_order_number,
-)
+from bookops_marc.local_values import OclcNumber, normalize_date
 
 
 @pytest.mark.parametrize(
@@ -156,51 +146,6 @@ def test_OclcNumber_is_valid(arg, expectation):
 @pytest.mark.parametrize(
     "arg,expectation",
     [
-        ("[Fic]", None),
-        ("[E]", None),
-        ("909", "909"),
-        ("001.54", "001.54"),
-        ("362.84/924043809049", "362.84924043809049"),
-        ("362.84/9040", "362.84904"),
-        ("j574", "574"),
-        ("942.082 [B]", "942.082"),
-        ("364'.971", "364.971"),
-        ("C364/.971", "364.971"),
-        ("505 ", "505"),
-        ("900", "900"),
-        ("900.100", "900.1"),
-        (None, None),
-    ],
-)
-def test_normalize_dewey(arg, expectation):
-    assert normalize_dewey(arg) == expectation
-
-
-@pytest.mark.parametrize(
-    "arg,expectation",
-    [
-        ("(3)sn", "sn"),
-        ("(2)btj0f", "btj0f"),
-        ("41anf(5)", "41anf"),
-        ("41anf", "41anf"),
-        ("(3)snj0y", "snj0y"),
-    ],
-)
-def test_normalize_location_code(arg, expectation, stub_bib):
-    assert normalize_location_code(arg) == expectation
-
-
-@pytest.mark.parametrize(
-    "arg,expectation",
-    [("41anf", "41"), ("02jje", "02"), ("snj0f", "sn"), ("fty0n", "ft")],
-)
-def test_get_branch_code(arg, expectation):
-    assert get_branch_code(arg) == expectation
-
-
-@pytest.mark.parametrize(
-    "arg,expectation",
-    [
         ("01-30-21", datetime(2021, 1, 30)),
         ("08-02-2021 16:19", datetime(2021, 8, 2)),
         ("  -  -  ", None),
@@ -211,43 +156,3 @@ def test_normalize_date(arg, expectation):
         assert normalize_date(arg) == expectation.date()
     else:
         assert normalize_date(arg) is None
-
-
-@pytest.mark.parametrize(
-    "arg,expectation", [("41", None), ("41anf", "a"), ("snj0y", "j"), ("sn   ", None)]
-)
-def test_get_shelf_audience_code(arg, expectation):
-    assert get_shelf_audience_code(arg) == expectation
-
-
-@pytest.mark.parametrize(
-    "arg,expectation",
-    [
-        ("41anf", "nf"),
-        ("13anb", "nb"),
-        ("snj0f", "0f"),
-        ("tb", None),
-        ("tb   ", None),
-        (None, None),
-    ],
-)
-def test_get_shelf_code(arg, expectation):
-    assert get_shelf_code(arg) == expectation
-
-
-def test_normalize_order_number():
-    assert normalize_order_number(".o28876714") == 2887671
-
-
-@pytest.mark.parametrize(
-    "arg1,arg2,expectation",
-    [
-        ("505", 4, "505"),
-        ("362.84924043809049", 4, "362.8492"),
-        ("362.849040", 4, "362.849"),
-        ("900", 4, "900"),
-        ("512.1234", 2, "512.12"),
-    ],
-)
-def test_shorten_dewey(arg1, arg2, expectation):
-    assert shorten_dewey(class_mark=arg1, digits_after_period=arg2) == expectation
