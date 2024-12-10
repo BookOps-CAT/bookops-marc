@@ -13,13 +13,13 @@ pymarc = "^5.2.3"
 
 [tool.poetry.dev-dependencies]
 pytest = "^8.3.3"
-pytest-cov = "^4.1.0"
+pytest-cov = "^5.0.0"
 black = "^24.8.0"
 mypy = "^1.13"
 
 [tool.black]
 line-length = 88
-target-version = ['py38']
+target-version = ['py38', 'py39', 'py310', 'py311', 'py312', 'py313']
 
 [tool.mypy]
 python_version = 3.8
