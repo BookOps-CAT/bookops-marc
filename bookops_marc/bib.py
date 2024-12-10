@@ -18,9 +18,7 @@ from .constants import SUPPORTED_THESAURI, SUPPORTED_SUBJECT_TAGS
 
 
 class Bib(Record):
-    """
-    A class for representing local MARC record.
-    """
+    """A class for representing local MARC record."""
 
     def __init__(
         self,
@@ -58,9 +56,7 @@ class Bib(Record):
 
     @property
     def audience(self) -> Optional[str]:
-        """
-        Retrieves audience code from the 008 MARC tag
-        """
+        """Retrieves audience code from the 008 MARC tag"""
         field_008 = self.get("008")
         if (
             field_008
@@ -97,9 +93,7 @@ class Bib(Record):
 
     @property
     def cataloging_date(self) -> Optional[date]:
-        """
-        Extracts cataloging date from the bib
-        """
+        """Extracts cataloging date from the bib"""
         cat_date = self.get("907")
         if cat_date and "b" in cat_date:
             return normalize_date(cat_date.get("b"))
@@ -119,9 +113,7 @@ class Bib(Record):
 
     @property
     def created_date(self) -> Optional[date]:
-        """
-        Extracts bib creation date
-        """
+        """Extracts bib creation date"""
         create_date = self.get("907")
         if create_date and "c" in create_date:
             return normalize_date(create_date.get("c"))
@@ -191,8 +183,8 @@ class Bib(Record):
     @property
     def form_of_item(self) -> Optional[str]:
         """
-        Returns form of item code from the 008 tag position 23 if applicable for
-        a given material format
+        Returns form of item code from the 008 tag position 23 if
+        applicable for a given material format
         """
         rec_type = self.record_type
         field_008 = self.get("008")
@@ -472,7 +464,7 @@ class Bib(Record):
     @classmethod
     def pymarc_record_to_local_bib(cls, record: Record, library: str) -> "Bib":
         """
-        Converts an instance of `pymarc.Record` to `bookops_marc.Bib`
+        Returns an instance of `pymarc.Record` as a `Bib` object
 
         Args:
             record:
