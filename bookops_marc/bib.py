@@ -5,20 +5,17 @@ Module replaces pymarc's Record module. Inherits all Record class functinality a
 adds some syntactic sugar.
 """
 from datetime import date
-from typing import List, Optional, Dict
+from typing import Dict, List, Optional, Union
 
 from pymarc import Record, Field, Indicators
 from pymarc.constants import LEADER_LEN
 
 from .errors import BookopsMarcError
 from .local_values import (
+    OclcNumber,
     get_branch_code,
     get_shelf_audience_code,
     get_shelf_code,
-    is_oclc_number,
-    has_oclc_prefix,
-    oclcNo_with_prefix,
-    oclcNo_without_prefix,
     normalize_date,
     normalize_dewey,
     normalize_location_code,
@@ -268,59 +265,60 @@ class Bib(Record):
         else:
             raise BookopsMarcError("Incomplete MARC record: missing the main entry.")
 
-    def normalize_oclc_control_number(self):
+    def normalize_oclc_control_number(self) -> None:
         """
         Enforces practices of recording OCLC prefix (BPL) or not (NYPL) in
-        the 001 control field.
+        the 001 control field. This method updates the 001 field if it is
+        an OCLC number applicable and does not return a value.
         """
+        if self.library not in ["nypl", "bpl"]:
+            raise BookopsMarcError(
+                "Not defined library argument to apply the correct practice."
+            )
         controlNo = self.control_number()
-        if is_oclc_number(controlNo):
-            if self.library == "bpl":
-                self["001"].data = oclcNo_with_prefix(controlNo)
-            elif self.library == "nypl":
-                self["001"].data = oclcNo_without_prefix(controlNo)
-            else:
-                raise BookopsMarcError(
-                    "Not defined library argument to apply the correct practice."
-                )
+        if not controlNo or not OclcNumber.is_valid(controlNo):
+            pass
+        elif self.library == "bpl":
+            self["001"].data = OclcNumber(controlNo).with_prefix
+        elif OclcNumber.is_valid(controlNo) and self.library == "nypl":
+            self["001"].data = OclcNumber(controlNo).without_prefix
 
     def oclc_nos(self) -> Dict[str, str]:
         """
         Returns dictionary of MARC tags and OCLC identifiers found in a bib.
+        Output contains the 001 if the record source, from the 003 field,
+        is OCoLC, the first 035$a if it exists, and, for NYPL records, the
+        first 991$y if it exists. Returns an empty dictionary if a valid OCLC
+        number is not found in any of these fields.
         """
-        unique_oclcs = dict()
+        unique_oclcs = {}
+
+        def get_subvalue(
+            fields: List[Field], subfield_code: str
+        ) -> Union[OclcNumber, None]:
+            for field in fields:
+                value = field.get(subfield_code)
+                if value and OclcNumber.is_valid(value):
+                    return OclcNumber(value)
+            return None
 
         # get OCLC #s from 001
-        id_field = self.get("001")
         source_field = self.get("003")
-        if source_field and "ocolc" in source_field.data.lower():
-            if id_field and is_oclc_number(id_field.data):
-                oclc_no = oclcNo_without_prefix(id_field.data)
-                unique_oclcs["001"] = oclc_no
+        if source_field and "ocolc" in source_field.value().lower():
+            id_field = self.get("001")
+            field_value = id_field.value() if id_field is not None else None
+            if field_value and OclcNumber.is_valid(field_value):
+                unique_oclcs["001"] = OclcNumber(field_value).without_prefix
 
         # get OCLC #s from 035
-        id_fields = self.get_fields("035")
-        if id_fields:
-            for field in id_fields:
-                try:
-                    value = field.get("a")
-                    if has_oclc_prefix(value):
-                        oclc_no = oclcNo_without_prefix(value)
-                        unique_oclcs["035"] = oclc_no
-                        break
-                except TypeError:
-                    continue
+        subfield_035 = get_subvalue(self.get_fields("035"), "a")
+        if subfield_035 and subfield_035.has_prefix:
+            unique_oclcs["035"] = subfield_035.without_prefix
 
-        # for NYPL also check 991
-        if self.library == "nypl":
-            id_fields = self.get_fields("991")
-            if id_fields:
-                for field in id_fields:
-                    value = field.get("y")
-                    if is_oclc_number(value):
-                        oclc_no = oclcNo_without_prefix(value)
-                        unique_oclcs["991"] = oclc_no
-                        break
+        # get OCLC #s from 991
+        subfield_991 = get_subvalue(self.get_fields("991"), "y")
+        if subfield_991 and self.library == "nypl":
+            unique_oclcs["991"] = subfield_991.without_prefix
 
         return unique_oclcs
 

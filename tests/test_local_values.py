@@ -3,15 +3,10 @@ from datetime import datetime
 import pytest
 
 from bookops_marc.local_values import (
-    _add_oclc_prefix,
-    _delete_oclc_prefix,
+    OclcNumber,
     get_branch_code,
     get_shelf_audience_code,
     get_shelf_code,
-    has_oclc_prefix,
-    is_oclc_number,
-    oclcNo_with_prefix,
-    oclcNo_without_prefix,
     normalize_dewey,
     shorten_dewey,
     normalize_date,
@@ -21,45 +16,24 @@ from bookops_marc.local_values import (
 
 
 @pytest.mark.parametrize(
-    "arg,expectation",
+    "value, without_pref, with_pref, has_pref",
     [
-        ("1", "ocm00000001"),
-        ("12345678", "ocm12345678"),
-        ("123456789", "ocn123456789"),
-        ("1234567890", "on1234567890"),
+        ("ocm12345678", "12345678", "ocm12345678", True),
+        ("12345678", "12345678", "ocm12345678", False),
+        ("ocn123456789", "123456789", "ocn123456789", True),
+        ("123456789", "123456789", "ocn123456789", False),
+        ("on1234567890", "1234567890", "on1234567890", True),
+        ("1234567890", "1234567890", "on1234567890", False),
+        ("(OCoLC)00123456", "123456", "ocm00123456", True),
+        ("(OCoLC)01234567", "1234567", "ocm01234567", True),
     ],
 )
-def test_add_oclc_prefix(arg, expectation):
-    assert _add_oclc_prefix(arg) == expectation
-
-
-@pytest.mark.parametrize(
-    "arg,expectation", [("", ValueError), (None, TypeError), (1, TypeError)]
-)
-def test_add_oclc_prefix_exceptions(arg, expectation):
-    with pytest.raises(expectation):
-        _add_oclc_prefix(arg)
-
-
-@pytest.mark.parametrize(
-    "arg,expectation",
-    [
-        ("ocm00000001", "1"),
-        ("ocn123456789", "123456789"),
-        ("on1234567890", "1234567890"),
-        ("(ocolc)1", "1"),
-    ],
-)
-def test_delete_oclc_prefix(arg, expectation):
-    assert _delete_oclc_prefix(arg) == expectation
-
-
-@pytest.mark.parametrize(
-    "arg,expectation", [("", ValueError), (None, AttributeError), (1, AttributeError)]
-)
-def test_delete_oclc_prefix_exceptions(arg, expectation):
-    with pytest.raises(expectation):
-        _delete_oclc_prefix(arg)
+def test_OclcNumber(value, without_pref, with_pref, has_pref):
+    num = OclcNumber(value)
+    assert num.value == value
+    assert num.has_prefix == has_pref
+    assert num.with_prefix == with_pref
+    assert num.without_prefix == without_pref
 
 
 @pytest.mark.parametrize(
@@ -72,24 +46,80 @@ def test_delete_oclc_prefix_exceptions(arg, expectation):
         ("OCN123456789", True),
         ("ON1234567890", True),
         ("(OCoLC)123456789", True),
-        ("foo", False),
-        ("", False),
         ("123456789", False),
+        ("1", False),
     ],
 )
-def test_has_oclc_prefix(arg, expectation):
-    assert has_oclc_prefix(arg) == expectation
+def test_OclcNumber_has_prefix(arg, expectation):
+    assert OclcNumber(arg).has_prefix == expectation
 
 
 @pytest.mark.parametrize(
-    "arg",
-    [None, 1, []],
+    "arg,expectation",
+    [
+        ("1", "ocm00000001"),
+        ("12345678", "ocm12345678"),
+        ("123456789", "ocn123456789"),
+        ("1234567890", "on1234567890"),
+    ],
 )
-def test_has_oclc_prefix_exceptions(arg):
-    with pytest.raises(TypeError) as exc:
-        has_oclc_prefix(arg)
+def test_OclcNumber_with_prefix(arg, expectation):
+    assert OclcNumber(arg).with_prefix == expectation
 
-    assert "OCLC number must be a string." in str(exc.value)
+
+@pytest.mark.parametrize(
+    "arg,expectation",
+    [
+        ("ocm00000001", "1"),
+        ("ocn123456789", "123456789"),
+        ("on1234567890", "1234567890"),
+    ],
+)
+def test_OclcNumber_without_prefix(arg, expectation):
+    assert OclcNumber(arg).without_prefix == expectation
+
+
+def test_OclcNumber_setter():
+    num = OclcNumber("ocm12345678")
+    assert num.has_prefix is True
+    assert num.with_prefix == "ocm12345678"
+    assert num.without_prefix == "12345678"
+    assert num.value == "ocm12345678"
+    num.value = "12345678901"
+    assert num.has_prefix is False
+    assert num.with_prefix == "on12345678901"
+    assert num.without_prefix == "12345678901"
+    assert num.value != "ocm12345678"
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "foo",
+        "foo12345678",
+        "bar123456789",
+        "0",
+        "(ocolc)1",
+        "ocm1",
+        "ocm111111111",
+        "ocn1",
+        "ocn11111111111",
+        "on1",
+        None,
+        0,
+        "",
+        [],
+        {"oclcNumber": "ocm00000001"},
+    ],
+)
+def test_OclcNumber_invalid(value):
+    with pytest.raises(ValueError) as exc:
+        num = OclcNumber(value)
+        assert num.value == value
+        assert hasattr(num, "has_prefix") is False
+        assert hasattr(num, "with_prefix") is False
+        assert hasattr(num, "without_prefix") is False
+    assert str(exc.value) == "Invalid OCLC Number."
 
 
 @pytest.mark.parametrize(
@@ -105,57 +135,22 @@ def test_has_oclc_prefix_exceptions(arg):
         (None, False),
         ("", False),
         (0, False),
+        ([], False),
+        ({"oclcNumber": "ocm00000001"}, False),
+        ("foo", False),
+        ("foo12345678", False),
+        ("bar123456789", False),
+        ("0", False),
+        ("(ocolc)1", False),
+        ("ocm1", False),
+        ("ocm111111111", False),
+        ("ocn1", False),
+        ("ocn11111111111", False),
+        ("on1", False),
     ],
 )
-def test_is_oclc_number(arg, expectation):
-    assert is_oclc_number(arg) == expectation
-
-
-@pytest.mark.parametrize(
-    "arg,expectation",
-    [
-        ("1", "ocm00000001"),
-        ("12345678", "ocm12345678"),
-        ("123456789", "ocn123456789"),
-        ("1234567890", "on1234567890"),
-        (1, "ocm00000001"),
-        (12345678, "ocm12345678"),
-        (123456789, "ocn123456789"),
-        (1234567890, "on1234567890"),
-    ],
-)
-def test_oclcNo_with_prefix(arg, expectation):
-    assert oclcNo_with_prefix(arg) == expectation
-
-
-@pytest.mark.parametrize(
-    "arg,expectation", [(None, TypeError), ("", ValueError), ([], TypeError)]
-)
-def test_oclcNo_with_prefix_exceptions(arg, expectation):
-    with pytest.raises(expectation):
-        oclcNo_with_prefix(arg)
-
-
-@pytest.mark.parametrize(
-    "arg,expectation",
-    [
-        ("ocm00000001", "1"),
-        ("ocm12345678", "12345678"),
-        ("ocn123456789", "123456789"),
-        ("on1234567890", "1234567890"),
-        (1, "1"),
-        (12345678, "12345678"),
-    ],
-)
-def test_oclcNo_without_prefix(arg, expectation):
-    assert oclcNo_without_prefix(arg) == expectation
-
-
-@pytest.mark.parametrize("arg", [None, []])
-def test_oclcNo_without_prefix_exception(arg):
-    with pytest.raises(TypeError) as exc:
-        oclcNo_without_prefix(arg)
-    assert "OCLC number must be a string or integer." in str(exc.value)
+def test_OclcNumber_is_valid(arg, expectation):
+    assert OclcNumber.is_valid(arg) == expectation
 
 
 @pytest.mark.parametrize(
