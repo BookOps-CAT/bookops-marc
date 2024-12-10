@@ -22,7 +22,6 @@ from .local_values import (
     normalize_date,
     normalize_dewey,
     normalize_location_code,
-    normalize_order_number,
     shorten_dewey,
 )
 from .models import Order
@@ -327,11 +326,16 @@ class Bib(Record):
 
     def orders(self, sort: str = "descending") -> List[Order]:
         """
-        Returns a list of order attached to bib
+        Returns a list of orders attached to bib. Order data coded in the 960 tag
+        (order fixed fields) may be followed by a related 961 tag (order variable
+        fields) so iterating over the entire bib is needed to connect the two
+        fields. It is possible that the 960 tag may not have a related 961 (BPL).
 
         Args:
-            sort:                   ascending (from oldest to most recent) or
-                                    descending (from recent to oldest)
+            sort:
+                How to sort a record's orders:
+                 - ascending (from oldest to most recent), or
+                 - descending (from most recent to oldest)
         """
 
         if not isinstance(sort, str) or sort not in "ascending,descending":
@@ -339,46 +343,13 @@ class Bib(Record):
 
         orders = []
 
-        # order data coded in the 960 tag (order fixed fields) may be followed by
-        # related 961 tag (order variable field) so iterating over entire bib
-        # is needed to connect these two;
-        # it is possible 960 tag may not have related 961 (BPL)
-
         for field in self:
             if field.tag == "960":
-                # shared NYPL & BPL mapping
-                oid = normalize_order_number(field.get(code="z"))
-
-                audns = self._get_shelf_audience_codes(field)
-                branches = self._get_branches(field)
-                copies = int(field.get(code="o"))
-                form = field.get(code="g")
-                created = normalize_date(field.get(code="q"))
-                lang = field.get(code="w")
-                shelves = self._get_shelves(field)
-                status = field.get(code="m").strip()
-
                 try:
-                    venNotes = None
                     following_field = self.fields[self.pos]
-                    if following_field.tag == "961":
-                        venNotes = following_field.get(code="h")
                 except IndexError:
-                    pass
-
-                o = Order(
-                    oid,
-                    audn=audns,
-                    branches=branches,
-                    copies=copies,
-                    created=created,
-                    form=form,
-                    lang=lang,
-                    shelves=shelves,
-                    status=status,
-                    venNotes=venNotes,
-                )
-                orders.append(o)
+                    following_field = None
+                orders.append(Order(field, following_field))
 
         if sort == "descending":
             orders.reverse()
