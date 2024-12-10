@@ -56,6 +56,7 @@ class Bib(Record):
         self.pos += 1
         return self.fields[self.pos - 1]
 
+    @property
     def audience(self) -> Optional[str]:
         """
         Retrieves audience code from the 008 MARC tag
@@ -71,16 +72,18 @@ class Bib(Record):
         else:
             return None
 
+    @property
     def branch_call_no(self) -> Optional[str]:
         """
         Retrieves branch library call number as string without any MARC coding
         """
-        field = self.branch_call_no_field()
+        field = self.branch_call_no_field
         if field:
             return field.value()
         else:
             return None
 
+    @property
     def branch_call_no_field(self) -> Optional[Field]:
         """
         Retrieves a branch library call number field as pymarc.Field instance
@@ -92,6 +95,7 @@ class Bib(Record):
         else:
             return None
 
+    @property
     def cataloging_date(self) -> Optional[date]:
         """
         Extracts cataloging date from the bib
@@ -102,6 +106,7 @@ class Bib(Record):
         else:
             return None
 
+    @property
     def control_number(self) -> Optional[str]:
         """
         Returns a control number from the 001 tag if it exists.
@@ -112,6 +117,7 @@ class Bib(Record):
         else:
             return None
 
+    @property
     def created_date(self) -> Optional[date]:
         """
         Extracts bib creation date
@@ -122,6 +128,7 @@ class Bib(Record):
         else:
             return None
 
+    @property
     def dewey(self) -> Optional[str]:
         """
         Returns Dewey classification from bib. First checks for LC assigned
@@ -158,6 +165,7 @@ class Bib(Record):
                 class_mark = class_mark[:-1]
             return class_mark
 
+    @property
     def dewey_shortened(self) -> Optional[str]:
         """
         Returns Dewey classification shortened to a maximum of 4 digits
@@ -167,7 +175,7 @@ class Bib(Record):
             NYPL adult/young adult: 4 digits (eg. 505.4167)
             NYPL juvenile materials: 2 digits (eg. 505.41)
         """
-        class_mark = self.dewey()
+        class_mark = self.dewey
         audns = list(chain(*[i.audn for i in self.orders()]))
         if not isinstance(class_mark, str):
             return None
@@ -180,12 +188,13 @@ class Bib(Record):
             class_mark = class_mark[:-1]
         return class_mark
 
+    @property
     def form_of_item(self) -> Optional[str]:
         """
         Returns form of item code from the 008 tag position 23 if applicable for
         a given material format
         """
-        rec_type = self.record_type()
+        rec_type = self.record_type
         field_008 = self.get("008")
         if field_008 and field_008.data and isinstance(rec_type, str):
             if rec_type in "acdijmopt":
@@ -194,6 +203,7 @@ class Bib(Record):
                 return field_008.data[29]
         return None
 
+    @property
     def languages(self) -> List[str]:
         """
         Returns list of material main languages
@@ -208,6 +218,7 @@ class Bib(Record):
                 languages.append(sub)
         return languages
 
+    @property
     def lccn(self) -> Optional[str]:
         """
         Returns Library of Congress Control Number
@@ -221,6 +232,7 @@ class Bib(Record):
         else:
             return None
 
+    @property
     def main_entry(self) -> Optional[Field]:
         """
         Returns main entry field instance
@@ -232,24 +244,7 @@ class Bib(Record):
         else:
             raise BookopsMarcError("Incomplete MARC record: missing the main entry.")
 
-    def normalize_oclc_control_number(self) -> None:
-        """
-        Enforces practices of recording OCLC prefix (BPL) or not (NYPL) in
-        the 001 control field. This method updates the 001 field if it is
-        an OCLC number applicable and does not return a value.
-        """
-        if self.library not in ["nypl", "bpl"]:
-            raise BookopsMarcError(
-                "Not defined library argument to apply the correct practice."
-            )
-        controlNo = self.control_number()
-        if not controlNo or not OclcNumber.is_valid(controlNo):
-            pass
-        elif self.library == "bpl":
-            self["001"].data = OclcNumber(controlNo).with_prefix
-        elif OclcNumber.is_valid(controlNo) and self.library == "nypl":
-            self["001"].data = OclcNumber(controlNo).without_prefix
-
+    @property
     def oclc_nos(self) -> Dict[str, str]:
         """
         Returns dictionary of MARC tags and OCLC identifiers found in a bib.
@@ -289,6 +284,117 @@ class Bib(Record):
 
         return unique_oclcs
 
+    @property
+    def overdrive_number(self) -> Optional[str]:
+        """
+        Returns Overdrive Reserve ID parsed from the 037 tag.
+        """
+        field = self.get("037")
+        if not field:
+            return None
+        overdrive_number = field.get("a")
+        if isinstance(overdrive_number, str):
+            return overdrive_number.strip()
+        else:
+            return None
+
+    @property
+    def physical_description(self) -> Optional[str]:
+        """
+        Returns value of the first 300 MARC tag in the bib
+        """
+        try:
+            return self.physicaldescription[0].value()
+        except (TypeError, IndexError):
+            return None
+
+    @property
+    def record_type(self) -> Optional[str]:
+        """
+        Retrieves record type code from MARC leader
+        """
+        return self.leader[6]
+
+    @property
+    def sierra_bib_format(self) -> Optional[str]:
+        """
+        Returns Sierra bib format fixed field code
+        """
+        field = self.get("998")
+        if not field:
+            return None
+        bib_format = field.get("d")
+        if isinstance(bib_format, str):
+            return bib_format.strip()
+        else:
+            return None
+
+    @property
+    def sierra_bib_id(self) -> Optional[str]:
+        """
+        Retrieves Sierra bib # from the 907 MARC tag
+        """
+        field = self.get("907")
+        if not field:
+            return None
+        bib_id = field.get("a")
+        if isinstance(bib_id, str) and len(bib_id) > 0:
+            return bib_id[1:]
+        else:
+            return None
+
+    @property
+    def sierra_bib_id_normalized(self) -> Optional[str]:
+        """
+        Retrieves Sierra bib # from the 907 tag and returns it
+        without 'b' prefix and the check digit.
+        """
+        bib_id = self.sierra_bib_id
+        if isinstance(bib_id, str):
+            return bib_id[1:-1]
+        else:
+            return None
+
+    @property
+    def subjects_lc(self) -> List[Field]:
+        """
+        Retrieves Library of Congress Subject Headings from the bib
+        """
+        lc_subjects = []
+        for field in self.subjects:
+            if field.indicator2 == "0":
+                lc_subjects.append(field)
+        return lc_subjects
+
+    @property
+    def suppressed(self) -> bool:
+        """
+        Determines based on 998 $e value if bib is suppressed from public display
+        BPL usage: "c", "n"
+        NYPL usage: "c", "e", "n", "q", "o", "v"
+        """
+        field = self.get("998")
+        if not field:
+            return False
+        code = field.get("e")
+        if isinstance(code, str) and code in ("c", "e", "n", "q", "o", "v"):
+            return True
+        else:
+            return False
+
+    @property
+    def upc_number(self) -> Optional[str]:
+        """
+        Returns a UPC number if present on the bib.
+        https://www.loc.gov/marc/bibliographic/bd024.html
+        """
+        tag = self.get("024")
+        if tag and tag.indicator1 and tag.indicator1 == "1":
+            upc_num = tag.get(code="a")
+            if isinstance(upc_num, str):
+                return upc_num.strip()
+        return None
+
     def orders(self, sort: str = "descending") -> List[Order]:
         """
         Returns a list of orders attached to bib. Order data coded in the 960 tag
@@ -321,23 +427,28 @@ class Bib(Record):
 
         return orders
 
-    def overdrive_number(self) -> Optional[str]:
+    def normalize_oclc_control_number(self) -> None:
         """
-        Returns Overdrive Reserve ID parsed from the 037 tag.
+        Enforces practices of recording OCLC prefix (BPL) or not (NYPL) in
+        the 001 control field. This method updates the 001 field if it is
+        an OCLC number applicable and does not return a value.
         """
-        field = self.get("037")
-        if not field:
-            return None
-        overdrive_number = field.get("a")
-        if isinstance(overdrive_number, str):
-            return overdrive_number.strip()
-        else:
-            return None
+        if self.library not in ["nypl", "bpl"]:
+            raise BookopsMarcError(
+                "Not defined library argument to apply the correct practice."
+            )
+        controlNo = self.control_number
+        if not controlNo or not OclcNumber.is_valid(controlNo):
+            pass
+        elif self.library == "bpl":
+            self["001"].data = OclcNumber(controlNo).with_prefix
+        elif OclcNumber.is_valid(controlNo) and self.library == "nypl":
+            self["001"].data = OclcNumber(controlNo).without_prefix
 
     def remove_unsupported_subjects(self) -> None:
         """
         Deletes subject fields from the record that contain
-        unsupported by BPL or NYPL thesauri
+        thesauri unsupported by BPL or NYPL
         """
         subjects = self.subjects
 
@@ -357,95 +468,6 @@ class Bib(Record):
                     self.remove_field(field)
             else:
                 self.remove_field(field)
-
-    def physical_description(self) -> Optional[str]:
-        """
-        Returns value of the first 300 MARC tag in the bib
-        """
-        try:
-            return self.physicaldescription[0].value()
-        except (TypeError, IndexError):
-            return None
-
-    def record_type(self) -> Optional[str]:
-        """
-        Retrieves record type code from MARC leader
-        """
-        return self.leader[6]
-
-    def sierra_bib_format(self) -> Optional[str]:
-        """
-        Returns Sierra bib format fixed field code
-        """
-        field = self.get("998")
-        if not field:
-            return None
-        bib_format = field.get("d")
-        if isinstance(bib_format, str):
-            return bib_format.strip()
-        else:
-            return None
-
-    def sierra_bib_id(self) -> Optional[str]:
-        """
-        Retrieves Sierra bib # from the 907 MARC tag
-        """
-        field = self.get("907")
-        if not field:
-            return None
-        bib_id = field.get("a")
-        if isinstance(bib_id, str) and len(bib_id) > 0:
-            return bib_id[1:]
-        else:
-            return None
-
-    def sierra_bib_id_normalized(self) -> Optional[str]:
-        """
-        Retrieves Sierra bib # from the 907 tag and returns it
-        without 'b' prefix and the check digit.
-        """
-        bib_id = self.sierra_bib_id()
-        if isinstance(bib_id, str):
-            return bib_id[1:-1]
-        else:
-            return None
-
-    def subjects_lc(self) -> List[Field]:
-        """
-        Retrieves Library of Congress Subject Headings from the bib
-        """
-        lc_subjects = []
-        for field in self.subjects:
-            if field.indicator2 == "0":
-                lc_subjects.append(field)
-        return lc_subjects
-
-    def suppressed(self) -> bool:
-        """
-        Determines based on 998 $e value if bib is suppressed from public display
-        BPL usage: "c", "n"
-        NYPL usage: "c", "e", "n", "q", "o", "v"
-        """
-        field = self.get("998")
-        if not field:
-            return False
-        code = field.get("e")
-        if isinstance(code, str) and code in ("c", "e", "n", "q", "o", "v"):
-            return True
-        else:
-            return False
-
-    def upc_number(self) -> Optional[str]:
-        """
-        Returns a UPC number if present on the bib.
-        https://www.loc.gov/marc/bibliographic/bd024.html
-        """
-        tag = self.get("024")
-        if tag and tag.indicator1 and tag.indicator1 == "1":
-            upc_num = tag.get(code="a")
-            if isinstance(upc_num, str):
-                return upc_num.strip()
-        return None
 
     @classmethod
     def pymarc_record_to_local_bib(cls, record: Record, library: str) -> "Bib":
