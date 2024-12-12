@@ -6,7 +6,7 @@ adds some syntactic sugar.
 """
 from datetime import date
 from itertools import chain
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 
 from pymarc import Record, Field, Indicators
 from pymarc.constants import LEADER_LEN
@@ -168,7 +168,7 @@ class Bib(Record):
             NYPL juvenile materials: 2 digits (eg. 505.41)
         """
         class_mark = self.dewey
-        audns = list(chain(*[i.audn for i in self.orders()]))
+        audns = list(chain(*[i.audn for i in self.orders]))
         if not isinstance(class_mark, str):
             return None
         if self.library == "nypl" and all(i == "j" for i in audns):
@@ -249,7 +249,7 @@ class Bib(Record):
 
         def get_subvalue(
             fields: List[Field], subfield_code: str
-        ) -> Union[OclcNumber, None]:
+        ) -> Optional[OclcNumber]:
             for field in fields:
                 value = field.get(subfield_code)
                 if value and OclcNumber.is_valid(value):
@@ -275,6 +275,25 @@ class Bib(Record):
             unique_oclcs["991"] = subfield_991.without_prefix
 
         return unique_oclcs
+
+    @property
+    def orders(self) -> List[Order]:
+        """
+        Returns a list of orders attached to bib. Order data coded in the 960 tag
+        (order fixed fields) may be followed by a related 961 tag (order variable
+        fields) so iterating over the entire bib is needed to connect the two
+        fields. It is possible that the 960 tag may not have a related 961 (BPL).
+        """
+        orders = []
+
+        for field in self:
+            if field.tag == "960":
+                try:
+                    following_field = self.fields[self.pos]
+                except IndexError:
+                    following_field = None
+                orders.append(Order(field, following_field))
+        return orders
 
     @property
     def overdrive_number(self) -> Optional[str]:
@@ -387,37 +406,23 @@ class Bib(Record):
                 return upc_num.strip()
         return None
 
-    def orders(self, sort: str = "descending") -> List[Order]:
+    def sort_orders(self, sort: str = "descending") -> List[Order]:
         """
-        Returns a list of orders attached to bib. Order data coded in the 960 tag
-        (order fixed fields) may be followed by a related 961 tag (order variable
-        fields) so iterating over the entire bib is needed to connect the two
-        fields. It is possible that the 960 tag may not have a related 961 (BPL).
-
+        Returns a sorted list of orders attached to a bib.
         Args:
             sort:
                 How to sort a record's orders:
                  - ascending (from oldest to most recent), or
                  - descending (from most recent to oldest)
         """
-
         if not isinstance(sort, str) or sort not in "ascending,descending":
             raise BookopsMarcError("Invalid 'sort' argument was passed.")
 
-        orders = []
-
-        for field in self:
-            if field.tag == "960":
-                try:
-                    following_field = self.fields[self.pos]
-                except IndexError:
-                    following_field = None
-                orders.append(Order(field, following_field))
+        sorted_orders = [i for i in self.orders]
 
         if sort == "descending":
-            orders.reverse()
-
-        return orders
+            sorted_orders.reverse()
+        return sorted_orders
 
     def normalize_oclc_control_number(self) -> None:
         """
