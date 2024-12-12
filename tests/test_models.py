@@ -1,46 +1,6 @@
 import datetime
 import pytest
-from bookops_marc.models import Item, Order
-
-
-def test_Item(stub_945):
-    item = Item(field=stub_945)
-    assert item.agency == "043"
-    assert item.barcode == "33433123456789"
-    assert item.call_no == "ReCAP 25-000001"
-    assert item.call_tag == "8528"
-    assert item.item_id == ".i123456789"
-    assert item.item_message == "foo"
-    assert item.location == "rc2ma"
-    assert item.opac_message == "bar"
-    assert item.price == "$5.00"
-    assert item.type == "55"
-    assert item.vendor_code == "LEILA"
-    assert item.volume == "1"
-
-
-def test_Item_missing_subfield(stub_945):
-    stub_945.delete_subfield("u")
-    item = Item(field=stub_945)
-    assert item.agency == "043"
-    assert item.barcode == "33433123456789"
-    assert item.call_no == "ReCAP 25-000001"
-    assert item.call_tag == "8528"
-    assert item.item_id == ".i123456789"
-    assert item.item_message is None
-    assert item.location == "rc2ma"
-    assert item.opac_message == "bar"
-    assert item.price == "$5.00"
-    assert item.type == "55"
-    assert item.vendor_code == "LEILA"
-    assert item.volume == "1"
-
-
-def test_Item_too_many_subfields(stub_945):
-    stub_945.add_subfield(code="i", value="33433111111111")
-    with pytest.raises(ValueError) as exc:
-        Item(stub_945)
-    assert str(exc.value) == "Subfield i is non-repeatable."
+from bookops_marc.models import Order
 
 
 def test_Order(mock_960, stub_961):

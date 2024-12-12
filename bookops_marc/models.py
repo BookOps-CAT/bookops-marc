@@ -10,34 +10,6 @@ from pymarc import Field
 from .local_values import normalize_date
 
 
-class Item:
-    """
-    A class to represent an Item record
-    """
-
-    def __init__(self, field: Field) -> None:
-        self.agency = self._get_non_repeatable_subfield(field, "h")
-        self.barcode = self._get_non_repeatable_subfield(field, "i")
-        self.call_no = self._get_non_repeatable_subfield(field, "a")
-        self.call_tag = self._get_non_repeatable_subfield(field, "z")
-        self.item_id = self._get_non_repeatable_subfield(field, "y")
-        self.item_message = self._get_non_repeatable_subfield(field, "u")
-        self.location = self._get_non_repeatable_subfield(field, "l")
-        self.opac_message = self._get_non_repeatable_subfield(field, "m")
-        self.price = self._get_non_repeatable_subfield(field, "p")
-        self.type = self._get_non_repeatable_subfield(field, "t")
-        self.vendor_code = self._get_non_repeatable_subfield(field, "v")
-        self.volume = self._get_non_repeatable_subfield(field, "c")
-
-    def _get_non_repeatable_subfield(self, field: Field, code: str) -> Optional[str]:
-        subfields = field.get_subfields(code)
-        if len(subfields) > 1:
-            raise ValueError(f"Subfield {code} is non-repeatable.")
-        for subfield in subfields:
-            return subfield
-        return None
-
-
 class Order:
     """
     A class to represent an Order record
