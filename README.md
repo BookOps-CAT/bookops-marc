@@ -19,17 +19,17 @@ from bookops_marc import SierraBibReader
 with open('marc.mrc', "rb") as marcfile:
 	reader = SierraBibReader(marcfile)
 	for bib in reader:
-		print(bib.sierra_bib_id_normalized())
-		print(bib.sierra_bib_format())
-		print(bib.branch_call_no())
-		print(bib.orders())
-		print(bib.main_entry())
-		print(bib.form_of_item())
-		print(bib.dewey())
-		print(bib.dewey_shortened())
+		print(bib.sierra_bib_id_normalized)
+		print(bib.sierra_bib_format)
+		print(bib.branch_call_no)
+		print(bib.orders)
+		print(bib.main_entry)
+		print(bib.form_of_item)
+		print(bib.dewey)
+		print(bib.dewey_shortened)
 ```
 
-In certain scenarios it may be convinient to instate `Bib` directly from an instance of `pymarc.Record`. This can be accomplished using `pymarc_record_to_local_bib()`:
+In certain scenarios it may be convenient to instantiate a `Bib` directly from an instance of `pymarc.Record`. This can be accomplished using the `Bib.pymarc_record_to_local_bib()` classmethod:
 
 ```python
 from pymarc import Record
@@ -37,14 +37,14 @@ from bookops_marc.bib import pymarc_record_to_local_bib
 
 # pymarc Record instance
 record = Record()
-bib = pymarc_record_to_local_bib(record, "bpl")
+bib = Bib.pymarc_record_to_local_bib(record, "bpl")
 bib.remove_unsupported_subjects()
 ```
 
 Python 3.8 and up.
 
 ## Version
-> 0.10.0
+> 0.11.0
 
 ## Changelog
 ### [0.10.0] - 2024-03-16

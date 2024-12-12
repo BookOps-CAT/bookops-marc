@@ -98,5 +98,5 @@ def normalize_date(order_date: str) -> Optional[date]:
             return datetime.strptime(order_date[:8], "%m-%d-%y").date()
         else:
             return datetime.strptime(order_date[:10], "%m-%d-%Y").date()
-    except ValueError:
+    except (ValueError, TypeError):
         return None

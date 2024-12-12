@@ -550,11 +550,11 @@ def test_oclc_nos_001_only(stub_bib):
 
 
 @pytest.mark.parametrize("arg", [1, "foo"])
-def test_orders_exceptions(arg, stub_bib, mock_960):
+def test_sort_orders_exceptions(arg, stub_bib, mock_960):
     msg = "Invalid 'sort' argument was passed."
     stub_bib.add_field(mock_960)
     with pytest.raises(BookopsMarcError) as exc:
-        stub_bib.orders(sort=arg)
+        stub_bib.sort_orders(sort=arg)
     assert msg in str(exc)
 
 
@@ -570,7 +570,7 @@ def test_orders_single(stub_bib, mock_960):
             ],
         )
     )
-    orders = stub_bib.orders()
+    orders = stub_bib.orders
     assert len(orders) == 1
     o = orders[0]
     assert o.oid == 1000001
@@ -602,7 +602,7 @@ def test_orders_reverse_sort(stub_bib, mock_960):
     second_960.delete_subfield("z")
     second_960.add_subfield("z", ".o10000020")
     stub_bib.add_field(second_960)
-    orders = stub_bib.orders(sort="descending")
+    orders = stub_bib.sort_orders(sort="descending")
 
     assert len(orders) == 2
     assert orders[0].oid == 1000002
