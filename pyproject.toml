@@ -26,6 +26,10 @@ python_version = 3.8
 warn_return_any = true
 warn_unused_configs = true
 
+[tool.pytest.ini_options]
+addopts = "--cov=bookops_marc/"
+testpaths = ["tests"]
+
 [tool.coverage.run]
 relative_files = true
 
