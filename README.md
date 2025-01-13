@@ -182,6 +182,8 @@ Python 3.8 and up.
 #### Added
 + a method for retrieving branch call number as `pymarc.Field`
 
+[0.12.0]:https://github.com/BookOps-CAT/bookops-marc/compare/0.11.0...0.12.0
+[0.11.0]:https://github.com/BookOps-CAT/bookops-marc/compare/0.10.0...0.11.0
 [0.10.0]:https://github.com/BookOps-CAT/bookops-marc/compare/0.9.0...0.10.0
 [0.9.0]: https://github.com/BookOps-CAT/bookops-marc/compare/0.8.1...0.9.0
 [0.8.1]: https://github.com/BookOps-CAT/bookops-marc/compare/0.8.0...0.8.1
