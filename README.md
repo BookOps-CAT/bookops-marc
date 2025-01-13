@@ -44,7 +44,57 @@ bib.remove_unsupported_subjects()
 Python 3.8 and up.
 
 ## Version
-> 0.11.0
+> 0.12.0
+
+## Changelog
+### [0.12.0] - 2024-11-13
+#### Added
++ Python 3.13 to unit tests in GitHub actions
++ `OclcNumber` class
+  + replaces helper functions previously in from `local_values.py`:
+    + `oclcNo_with_prefix`, `oclcNo_without_prefix`, `is_oclc_number`, `has_oclc_prefix`, `_add_oclc_prefix` and `_delete_oclc_prefix`
+#### Changed
++ changed most `Bib` methods to properties. This follows the pattern that pymarc uses with managed `Record` attributes:
+  + methods changed to properties:
+    + `audience`
+    + `branch_call_no`
+    + `branch_call_no_field`
+    + `cataloging_date`
+    + `control_number`
+    + `created_date`
+    + `dewey`
+    + `dewey_shortened`
+    + `form_of_item`
+    + `languages`
+    + `lccn`
+    + `main_entry`
+    + `oclc_nos`
+    + `orders`
+    + `overdrive_number`
+    + `physical_description`
+    + `record_type`
+    + `sierra_bib_format`
+    + `sierra_bib_id`
+    + `sierra_bib_id_normalized`
+    + `subjects_lc`
+    + `suppressed`
+    + `upc_number`
+  + `normalize_oclc_control_number` and `remove_unsupported_subjects` are still methods as they attributes of a `Bib` object
++ the `pymarc_record_to_local_bib` function is now a `classmethod` for the `Bib` class
++ `Order` is now a class rather than a `NamedTuple`
+  + `Order` objects are instantiated from a `Field` object with an optional `following_field` parameter 
+#### Removed
++ helper functions in `local_values.py`. the functionality has been retained in the `Bib`, `Order`, and `OclcNumber` class
+  
+### [0.11.0] - 2024-11-13
+#### Changed
++ updated pymarc to 5.2.3
++ updated dev dependencies:
+  + pytest (8.3.3)
+  + black (24.8.0)
+  + mypy (1.13)
++ refactored code to support new `Indicators` class introduced in `pymarc` 5.2.0
+
 
 ## Changelog
 ### [0.10.0] - 2024-03-16
