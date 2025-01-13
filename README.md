@@ -47,7 +47,7 @@ Python 3.8 and up.
 > 0.12.0
 
 ## Changelog
-### [0.12.0] - 2024-11-13
+### [0.12.0] - 2025-1-13
 #### Added
 + Python 3.13 to unit tests in GitHub actions
 + `OclcNumber` class
