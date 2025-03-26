@@ -6,15 +6,15 @@ adds some syntactic sugar.
 """
 from datetime import date
 from itertools import chain
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Sequence
 
-from pymarc import Record, Field, Indicators
+from pymarc import Field, Indicators, Record
 from pymarc.constants import LEADER_LEN
 
+from .constants import SUPPORTED_SUBJECT_TAGS, SUPPORTED_THESAURI
 from .errors import BookopsMarcError
 from .local_values import OclcNumber, normalize_date
 from .models import Order
-from .constants import SUPPORTED_THESAURI, SUPPORTED_SUBJECT_TAGS
 
 
 class Bib(Record):
@@ -277,7 +277,7 @@ class Bib(Record):
         return unique_oclcs
 
     @property
-    def orders(self) -> List[Order]:
+    def orders(self) -> Sequence[Order]:
         """
         Returns a list of orders attached to bib. Order data coded in the 960 tag
         (order fixed fields) may be followed by a related 961 tag (order variable
@@ -406,7 +406,7 @@ class Bib(Record):
                 return upc_num.strip()
         return None
 
-    def sort_orders(self, sort: str = "descending") -> List[Order]:
+    def sort_orders(self, sort: str = "descending") -> Sequence[Order]:
         """
         Returns a sorted list of orders attached to a bib.
         Args:
