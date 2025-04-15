@@ -16,6 +16,8 @@ from bookops_marc.models import OclcNumber, Order
         ("1234567890", "1234567890", "on1234567890", False),
         ("(OCoLC)00123456", "123456", "ocm00123456", True),
         ("(OCoLC)01234567", "1234567", "ocm01234567", True),
+        ("(OCoLC)1", "1", "ocm00000001", True),
+        ("(ocolc)1", "1", "ocm00000001", True),
     ],
 )
 def test_OclcNumber(value, without_pref, with_pref, has_pref):
@@ -63,6 +65,8 @@ def test_OclcNumber_with_prefix(arg, expectation):
         ("ocm00000001", "1"),
         ("ocn123456789", "123456789"),
         ("on1234567890", "1234567890"),
+        ("(OCoLC)00000001)", "1"),
+        ("(OCoLC)1)", "1"),
     ],
 )
 def test_OclcNumber_without_prefix(arg, expectation):
@@ -89,7 +93,6 @@ def test_OclcNumber_setter():
         "foo12345678",
         "bar123456789",
         "0",
-        "(ocolc)1",
         "ocm1",
         "ocm111111111",
         "ocn1",
@@ -131,7 +134,7 @@ def test_OclcNumber_invalid(value):
         ("foo12345678", False),
         ("bar123456789", False),
         ("0", False),
-        ("(ocolc)1", False),
+        ("(ocolc)1", True),
         ("ocm1", False),
         ("ocm111111111", False),
         ("ocn1", False),

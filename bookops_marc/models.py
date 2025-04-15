@@ -31,7 +31,7 @@ class OclcNumber:
 
     @value.setter
     def value(self, value: Union[str, int, None]) -> None:
-        if isinstance(value, str) and value.startswith("(OCoLC)"):
+        if isinstance(value, str) and value.lower().startswith("(ocolc)"):
             self._value = value
         else:
             self._value = str(value).lower().strip()
@@ -53,10 +53,10 @@ class OclcNumber:
 
     @property
     def with_prefix(self) -> str:
-        if self.has_prefix is True and not self.value.startswith("(OCoLC)"):
+        if self.has_prefix is True and not self.value.lower().startswith("(ocolc)"):
             return self.value
         else:
-            num = str(int(self.value.strip("(OCoLC)")))
+            num = str(int(self.value.lower().strip("()oclnm")))
             value_length = len(num)
             if value_length <= 8 and value_length >= 1:
                 return f"ocm{str(int(num)).zfill(8)}"
@@ -97,7 +97,7 @@ class OclcNumber:
             and (str_value.startswith("ocm") and len(num_value) == 8)
             or (str_value.startswith("ocn") and len(num_value) == 9)
             or (str_value.startswith("on") and len(num_value) >= 10)
-            or (str_value.startswith("(ocolc)") and len(num_value) >= 8)
+            or (str_value.startswith("(ocolc)"))
         ):
             return True
         else:
