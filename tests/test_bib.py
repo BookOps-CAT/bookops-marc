@@ -6,8 +6,7 @@ from copy import deepcopy
 from datetime import datetime
 
 import pytest
-
-from pymarc import Field, Subfield, Indicators
+from pymarc import Field, Indicators, Subfield
 
 from bookops_marc.bib import Bib
 from bookops_marc.errors import BookopsMarcError
@@ -627,26 +626,30 @@ def test_overdrive_number_missing_sub_a(stub_bib):
 
 
 @pytest.mark.parametrize(
-    "arg,expectation",
+    "subfield_a, subfield_b,expectation",
     [
         (
             "EA72608D-6B04-446E-9AAC-4131D2E529C6",
+            "OverDrive, Inc.",
             "EA72608D-6B04-446E-9AAC-4131D2E529C6",
         ),
         (
             " EA72608D-6B04-446E-9AAC-4131D2E529C6 ",
+            "OverDrive, Inc.",
             "EA72608D-6B04-446E-9AAC-4131D2E529C6",
         ),
+        ("EA72608D-6B04-446E-9AAC-4131D2E529C6", "Foo", None),
+        (" EA72608D-6B04-446E-9AAC-4131D2E529C6 ", "Bar", None),
     ],
 )
-def test_overdrive_number(arg, expectation, stub_bib):
+def test_overdrive_number(subfield_a, subfield_b, expectation, stub_bib):
     stub_bib.add_field(
         Field(
             tag="037",
             indicators=Indicators(" ", " "),
             subfields=[
-                Subfield(code="a", value=arg),
-                Subfield(code="b", value="OverDrive, Inc."),
+                Subfield(code="a", value=subfield_a),
+                Subfield(code="b", value=subfield_b),
             ],
         )
     )

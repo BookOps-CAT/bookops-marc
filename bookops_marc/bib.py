@@ -305,7 +305,7 @@ class Bib(Record):
         if not field:
             return None
         overdrive_number = field.get("a")
-        if isinstance(overdrive_number, str):
+        if isinstance(overdrive_number, str) and field.get("b") == "OverDrive, Inc.":
             return overdrive_number.strip()
         else:
             return None
