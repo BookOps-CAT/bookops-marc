@@ -356,14 +356,14 @@ class Bib(Record):
             return None
 
     @property
-    def sierra_bib_id_normalized(self) -> Optional[str]:
+    def sierra_bib_id_normalized(self) -> Optional[int]:
         """
         Retrieves Sierra bib # from the 907 tag and returns it
         without 'b' prefix and the check digit.
         """
         bib_id = self.sierra_bib_id
         if isinstance(bib_id, str):
-            return bib_id[1:-1]
+            return int(bib_id[1:-1])
         else:
             return None
 

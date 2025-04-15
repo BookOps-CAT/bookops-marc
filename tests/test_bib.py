@@ -100,7 +100,7 @@ def test_sierra_bib_id_normalized(stub_bib):
             ],
         )
     )
-    assert stub_bib.sierra_bib_id_normalized == "22544488"
+    assert stub_bib.sierra_bib_id_normalized == 22544488
 
 
 def test_sierra_bib_id_normalized_missing_tag(stub_bib):
