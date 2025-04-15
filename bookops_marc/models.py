@@ -6,7 +6,9 @@ Data models used by bookops-marc
 
 from datetime import date
 from typing import List, Optional
+
 from pymarc import Field
+
 from .local_values import normalize_date
 
 
@@ -72,7 +74,7 @@ class Order:
 
     @property
     def branches(self) -> List[str]:
-        branches = [i[:2] for i in self.locs if len(i) >= 3]
+        branches = [i[:2] for i in self.locs if len(i) >= 2]
         return [i for i in branches if i]
 
     @property
@@ -110,7 +112,7 @@ class Order:
             try:
                 s = sub.index("(")
                 e = sub.index(")")
-                loc = f"{sub[:s]}{sub[e + 1:]}"
+                loc = f"{sub[:s]}{sub[e + 1 :]}"
             except (ValueError, TypeError, AttributeError):
                 loc = sub
             if loc:

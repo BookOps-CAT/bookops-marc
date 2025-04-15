@@ -1,5 +1,7 @@
 import datetime
+
 import pytest
+
 from bookops_marc.models import Order
 
 
@@ -63,10 +65,10 @@ def test_Order_audn_no_location(stub_960, stub_961):
     "arg,expectation",
     [
         ("41anf", ["41"]),
+        ("41", ["41"]),
         ("02jje", ["02"]),
         ("snj0f", ["sn"]),
         ("fty0n", ["ft"]),
-        ("0n", []),
         (None, []),
         (" ", []),
         ("", []),
