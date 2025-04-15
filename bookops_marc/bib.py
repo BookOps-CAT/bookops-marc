@@ -14,8 +14,8 @@ from pymarc.constants import LEADER_LEN
 
 from .constants import SUPPORTED_SUBJECT_TAGS, SUPPORTED_THESAURI
 from .errors import BookopsMarcError
-from .local_values import OclcNumber, normalize_date
-from .models import Order
+from .local_values import normalize_date
+from .models import OclcNumber, Order
 
 
 class Bib(Record):
