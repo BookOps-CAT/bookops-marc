@@ -4,6 +4,7 @@
 Module replaces pymarc's Record module. Inherits all Record class functionality and
 adds some syntactic sugar.
 """
+
 from datetime import date
 from itertools import chain
 from typing import Dict, List, Optional, Sequence
@@ -408,7 +409,9 @@ class Bib(Record):
 
     def sort_orders(self, sort: str = "descending") -> Sequence[Order]:
         """
-        Returns a sorted list of orders attached to a bib.
+        Returns a sorted list of orders attached to a bib. MARC records exported from
+        Sierra have orders sorted from oldest to newest (ie. the first 960 tag in a
+        record is the oldest order and teh last 960 tag is the newest order).
         Args:
             sort:
                 How to sort a record's orders:
@@ -482,8 +485,7 @@ class Bib(Record):
         """
         if not isinstance(record, Record):
             raise TypeError(
-                "Invalid 'record' argument was passed. "
-                "Must be a pymarc.Record object."
+                "Invalid 'record' argument was passed. Must be a pymarc.Record object."
             )
         else:
             bib = Bib()
