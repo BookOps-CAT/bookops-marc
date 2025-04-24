@@ -1089,3 +1089,58 @@ def test_collection(stub_bib, arg1, arg2, expectation):
             )
         )
     assert stub_bib.collection == expectation
+
+
+@pytest.mark.parametrize(
+    "library,colls,call_tag,bl_call_no,rl_call_no,collection",
+    [
+        ("bpl", [], "091", None, None, None),
+        ("bpl", ["BL"], "091", None, None, None),
+        ("bpl", ["RL"], "091", None, None, None),
+        ("bpl", ["BL", "RL"], "091", None, None, None),
+        ("bpl", [], "099", "FIC FOO", None, None),
+        ("bpl", ["BL"], "099", "FIC FOO", None, None),
+        ("bpl", ["RL"], "099", "FIC FOO", None, None),
+        ("bpl", ["BL", "RL"], "099", "FIC FOO", None, None),
+        ("nypl", [], "091", "FIC FOO", "ReCAP 25-000001", None),
+        ("nypl", ["BL"], "091", "FIC FOO", "ReCAP 25-000001", "BL"),
+        ("nypl", ["RL"], "091", "FIC FOO", "ReCAP 25-000001", "RL"),
+        ("nypl", ["BL", "RL"], "091", "FIC FOO", "ReCAP 25-000001", "mixed"),
+        ("nypl", [], "099", None, "ReCAP 25-000001", None),
+        ("nypl", ["BL"], "099", None, "ReCAP 25-000001", "BL"),
+        ("nypl", ["RL"], "099", None, "ReCAP 25-000001", "RL"),
+        ("nypl", ["BL", "RL"], "099", None, "ReCAP 25-000001", "mixed"),
+    ],
+)
+def test_collection_call_no_combos(
+    stub_bib, library, colls, call_tag, bl_call_no, rl_call_no, coll
+):
+    stub_bib.library = library
+    for value in colls:
+        stub_bib.add_field(
+            Field(
+                tag="910",
+                indicators=Indicators(" ", " "),
+                subfields=[Subfield(code="a", value=value)],
+            )
+        )
+    stub_bib.add_field(
+        Field(
+            tag=call_tag,
+            indicators=Indicators(" ", " "),
+            subfields=[
+                Subfield(code="a", value="FIC"),
+                Subfield(code="a", value="FOO"),
+            ],
+        )
+    )
+    stub_bib.add_field(
+        Field(
+            tag="852",
+            indicators=Indicators(" ", " "),
+            subfields=[Subfield(code="h", value="ReCAP 25-000001")],
+        )
+    )
+    assert stub_bib.branch_call_no == bl_call_no
+    assert stub_bib.research_call_no == rl_call_no
+    assert stub_bib.collection == coll
