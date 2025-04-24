@@ -102,6 +102,27 @@ class Bib(Record):
             return None
 
     @property
+    def collection(self) -> Optional[str]:
+        """
+        Returns the collection that the record is a part of.
+
+        Options are "RL" (for research materials), "BL" (for branch materials),
+        "mixed", or None. An NYPL record will have the collection "RL" or "BL" if the
+        record contains one 910$a field with the value "RL" or "BL". If an NYPL record
+        contains two 910$a fields and both "BL" and "RL", the record's collection will
+        be "mixed". All other records will be assigned `None` as the collection type.
+        """
+        if not self.library == "nypl":
+            return None
+        subfields = [i.get("a") for i in self.get_fields("910") if i]
+        if len(subfields) == 1 and subfields[0] in ["BL", "RL"]:
+            return str(subfields[0])
+        elif sorted(subfields) == ["BL", "RL"]:
+            return "mixed"
+        else:
+            return None
+
+    @property
     def control_number(self) -> Optional[str]:
         """
         Returns a control number from the 001 tag if it exists.
@@ -326,6 +347,27 @@ class Bib(Record):
         Retrieves record type code from MARC leader
         """
         return self.leader[6]
+
+    @property
+    def research_call_no(self) -> Optional[str]:
+        """
+        Retrieves research library call number as string without any MARC coding
+        """
+        field = self.research_call_no_field
+        if field:
+            return field.value()
+        else:
+            return None
+
+    @property
+    def research_call_no_field(self) -> Optional[Field]:
+        """
+        Retrieves a research library call number field as pymarc.Field instance
+        """
+        if self.library == "nypl":
+            return self.get("852")
+        else:
+            return None
 
     @property
     def sierra_bib_format(self) -> Optional[str]:
