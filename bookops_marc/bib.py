@@ -114,7 +114,7 @@ class Bib(Record):
         """
         if not self.library == "nypl":
             return None
-        subfields = [i.get("a") for i in self.get_fields("910") if i]
+        subfields = [i.get("a").strip() for i in self.get_fields("910") if i]
         if len(subfields) == 1 and subfields[0] in ["BL", "RL"]:
             return str(subfields[0])
         elif sorted(subfields) == ["BL", "RL"]:

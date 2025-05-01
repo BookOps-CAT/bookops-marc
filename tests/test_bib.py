@@ -1067,9 +1067,12 @@ def test_research_call_no(stub_bib, arg1, arg2, expectation):
         ("bpl", ["BL"], None),
         ("bpl", ["RL"], None),
         ("bpl", [], None),
-        ("bpl", ["BL", "RL"], None),
+        ("bpl", ["   BL", "RL   "], None),
         ("nypl", ["BL"], "BL"),
+        ("nypl", ["   BL   "], "BL"),
         ("nypl", ["RL"], "RL"),
+        ("nypl", ["   RL    "], "RL"),
+        ("nypl", ["BL  ", "  RL"], "mixed"),
         ("nypl", ["BL", "RL"], "mixed"),
         ("nypl", [], None),
         ("nypl", ["foo"], None),
@@ -1092,7 +1095,7 @@ def test_collection(stub_bib, arg1, arg2, expectation):
 
 
 @pytest.mark.parametrize(
-    "library,colls,call_tag,bl_call_no,rl_call_no,collection",
+    "library,colls,call_tag,bl_call_no,rl_call_no,coll",
     [
         ("bpl", [], "091", None, None, None),
         ("bpl", ["BL"], "091", None, None, None),
