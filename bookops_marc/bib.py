@@ -349,25 +349,21 @@ class Bib(Record):
         return self.leader[6]
 
     @property
-    def research_call_no(self) -> Optional[str]:
+    def research_call_no(self) -> List[str]:
         """
         Retrieves research library call number as string without any MARC coding
         """
-        field = self.research_call_no_field
-        if field:
-            return field.value()
-        else:
-            return None
+        return [i.value() for i in self.research_call_no_field if i]
 
     @property
-    def research_call_no_field(self) -> Optional[Field]:
+    def research_call_no_field(self) -> List[Field]:
         """
         Retrieves a research library call number field as pymarc.Field instance
         """
+        fields = []
         if self.library == "nypl":
-            return self.get("852")
-        else:
-            return None
+            fields.extend(self.get_fields("852"))
+        return fields
 
     @property
     def sierra_bib_format(self) -> Optional[str]:

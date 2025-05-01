@@ -1041,16 +1041,46 @@ def test_Bib_classmethod_pymarc_record_to_local_bib_invalid(mock_960, arg):
 @pytest.mark.parametrize(
     "arg1,arg2,expectation",
     [
-        ("bpl", "099", None),
-        ("bpl", "852", None),
-        ("nypl", "852", "ReCAP 25-000001"),
-        ("nypl", "099", None),
-        ("nypl", "091", None),
-        ("", "852", None),
+        ("bpl", "099", []),
+        ("bpl", "852", []),
+        ("nypl", "852", ["ReCAP 25-000001"]),
+        ("nypl", "099", []),
+        ("nypl", "091", []),
+        ("", "852", []),
     ],
 )
 def test_research_call_no(stub_bib, arg1, arg2, expectation):
     stub_bib.library = arg1
+    stub_bib.add_field(
+        Field(
+            tag=arg2,
+            indicators=Indicators(" ", " "),
+            subfields=[Subfield(code="h", value="ReCAP 25-000001")],
+        )
+    )
+    assert stub_bib.research_call_no == expectation
+
+
+@pytest.mark.parametrize(
+    "arg1,arg2,expectation",
+    [
+        ("bpl", "099", []),
+        ("bpl", "852", []),
+        ("nypl", "852", ["Foo", "ReCAP 25-000001"]),
+        ("nypl", "099", []),
+        ("nypl", "091", []),
+        ("", "852", []),
+    ],
+)
+def test_research_call_no_multiple(stub_bib, arg1, arg2, expectation):
+    stub_bib.library = arg1
+    stub_bib.add_field(
+        Field(
+            tag=arg2,
+            indicators=Indicators(" ", " "),
+            subfields=[Subfield(code="h", value="Foo")],
+        )
+    )
     stub_bib.add_field(
         Field(
             tag=arg2,
@@ -1097,22 +1127,22 @@ def test_collection(stub_bib, arg1, arg2, expectation):
 @pytest.mark.parametrize(
     "library,colls,call_tag,bl_call_no,rl_call_no,coll",
     [
-        ("bpl", [], "091", None, None, None),
-        ("bpl", ["BL"], "091", None, None, None),
-        ("bpl", ["RL"], "091", None, None, None),
-        ("bpl", ["BL", "RL"], "091", None, None, None),
-        ("bpl", [], "099", "FIC FOO", None, None),
-        ("bpl", ["BL"], "099", "FIC FOO", None, None),
-        ("bpl", ["RL"], "099", "FIC FOO", None, None),
-        ("bpl", ["BL", "RL"], "099", "FIC FOO", None, None),
-        ("nypl", [], "091", "FIC FOO", "ReCAP 25-000001", None),
-        ("nypl", ["BL"], "091", "FIC FOO", "ReCAP 25-000001", "BL"),
-        ("nypl", ["RL"], "091", "FIC FOO", "ReCAP 25-000001", "RL"),
-        ("nypl", ["BL", "RL"], "091", "FIC FOO", "ReCAP 25-000001", "mixed"),
-        ("nypl", [], "099", None, "ReCAP 25-000001", None),
-        ("nypl", ["BL"], "099", None, "ReCAP 25-000001", "BL"),
-        ("nypl", ["RL"], "099", None, "ReCAP 25-000001", "RL"),
-        ("nypl", ["BL", "RL"], "099", None, "ReCAP 25-000001", "mixed"),
+        ("bpl", [], "091", None, [], None),
+        ("bpl", ["BL"], "091", None, [], None),
+        ("bpl", ["RL"], "091", None, [], None),
+        ("bpl", ["BL", "RL"], "091", None, [], None),
+        ("bpl", [], "099", "FIC FOO", [], None),
+        ("bpl", ["BL"], "099", "FIC FOO", [], None),
+        ("bpl", ["RL"], "099", "FIC FOO", [], None),
+        ("bpl", ["BL", "RL"], "099", "FIC FOO", [], None),
+        ("nypl", [], "091", "FIC FOO", ["ReCAP 25-000001"], None),
+        ("nypl", ["BL"], "091", "FIC FOO", ["ReCAP 25-000001"], "BL"),
+        ("nypl", ["RL"], "091", "FIC FOO", ["ReCAP 25-000001"], "RL"),
+        ("nypl", ["BL", "RL"], "091", "FIC FOO", ["ReCAP 25-000001"], "mixed"),
+        ("nypl", [], "099", None, ["ReCAP 25-000001"], None),
+        ("nypl", ["BL"], "099", None, ["ReCAP 25-000001"], "BL"),
+        ("nypl", ["RL"], "099", None, ["ReCAP 25-000001"], "RL"),
+        ("nypl", ["BL", "RL"], "099", None, ["ReCAP 25-000001"], "mixed"),
     ],
 )
 def test_collection_call_no_combos(
