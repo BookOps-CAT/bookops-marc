@@ -108,43 +108,52 @@ def test_sierra_bib_id_normalized_missing_tag(stub_bib):
 
 
 @pytest.mark.parametrize(
-    "arg1,arg2,arg3,expectation",
+    "arg1,arg2,expectation",
     [
         (
             "bpl",
             "099",
-            [Subfield(code="a", value="FIC"), Subfield(code="a", value="FOO")],
             "FIC FOO",
         ),
         (
             "bpl",
             "091",
-            [Subfield(code="a", value="FIC"), Subfield(code="a", value="FOO")],
             None,
         ),
         (
             "nypl",
             "091",
-            [Subfield(code="a", value="FIC"), Subfield(code="c", value="FOO")],
             "FIC FOO",
         ),
         (
             "nypl",
             "099",
-            [Subfield(code="a", value="FIC"), Subfield(code="c", value="FOO")],
+            None,
+        ),
+        (
+            "nypl",
+            "852",
             None,
         ),
         (
             "",
             "091",
-            [Subfield(code="a", value="FIC"), Subfield(code="c", value="FOO")],
             None,
         ),
     ],
 )
-def test_branch_call_no(stub_bib, arg1, arg2, arg3, expectation):
+def test_branch_call_no(stub_bib, arg1, arg2, expectation):
     stub_bib.library = arg1
-    stub_bib.add_field(Field(tag=arg2, indicators=Indicators(" ", " "), subfields=arg3))
+    stub_bib.add_field(
+        Field(
+            tag=arg2,
+            indicators=Indicators(" ", " "),
+            subfields=[
+                Subfield(code="a", value="FIC"),
+                Subfield(code="a", value="FOO"),
+            ],
+        )
+    )
     assert stub_bib.branch_call_no == expectation
 
 
@@ -1027,3 +1036,144 @@ def test_Bib_classmethod_pymarc_record_to_local_bib_invalid(mock_960, arg):
         "Invalid 'record' argument was passed. Must be a pymarc.Record object."
         in str(exc.value)
     )
+
+
+@pytest.mark.parametrize(
+    "arg1,arg2,expectation",
+    [
+        ("bpl", "099", []),
+        ("bpl", "852", []),
+        ("nypl", "852", ["ReCAP 25-000001"]),
+        ("nypl", "099", []),
+        ("nypl", "091", []),
+        ("", "852", []),
+    ],
+)
+def test_research_call_no(stub_bib, arg1, arg2, expectation):
+    stub_bib.library = arg1
+    stub_bib.add_field(
+        Field(
+            tag=arg2,
+            indicators=Indicators(" ", " "),
+            subfields=[Subfield(code="h", value="ReCAP 25-000001")],
+        )
+    )
+    assert stub_bib.research_call_no == expectation
+
+
+@pytest.mark.parametrize(
+    "arg1,arg2,expectation",
+    [
+        ("bpl", "099", []),
+        ("bpl", "852", []),
+        ("nypl", "852", ["Foo", "ReCAP 25-000001"]),
+        ("nypl", "099", []),
+        ("nypl", "091", []),
+        ("", "852", []),
+    ],
+)
+def test_research_call_no_multiple(stub_bib, arg1, arg2, expectation):
+    stub_bib.library = arg1
+    stub_bib.add_field(
+        Field(
+            tag=arg2,
+            indicators=Indicators(" ", " "),
+            subfields=[Subfield(code="h", value="Foo")],
+        )
+    )
+    stub_bib.add_field(
+        Field(
+            tag=arg2,
+            indicators=Indicators(" ", " "),
+            subfields=[Subfield(code="h", value="ReCAP 25-000001")],
+        )
+    )
+    assert stub_bib.research_call_no == expectation
+
+
+@pytest.mark.parametrize(
+    "arg1,arg2,expectation",
+    [
+        ("bpl", ["BL"], None),
+        ("bpl", ["RL"], None),
+        ("bpl", [], None),
+        ("bpl", ["   BL", "RL   "], None),
+        ("nypl", ["BL"], "BL"),
+        ("nypl", ["   BL   "], "BL"),
+        ("nypl", ["RL"], "RL"),
+        ("nypl", ["   RL    "], "RL"),
+        ("nypl", ["BL  ", "  RL"], "mixed"),
+        ("nypl", ["BL", "RL"], "mixed"),
+        ("nypl", [], None),
+        ("nypl", ["foo"], None),
+        ("nypl", ["BL", "RL", "Foo"], None),
+        ("", ["BL"], None),
+        ("", ["RL"], None),
+    ],
+)
+def test_collection(stub_bib, arg1, arg2, expectation):
+    stub_bib.library = arg1
+    for value in arg2:
+        stub_bib.add_field(
+            Field(
+                tag="910",
+                indicators=Indicators(" ", " "),
+                subfields=[Subfield(code="a", value=value)],
+            )
+        )
+    assert stub_bib.collection == expectation
+
+
+@pytest.mark.parametrize(
+    "library,colls,call_tag,bl_call_no,rl_call_no,coll",
+    [
+        ("bpl", [], "091", None, [], None),
+        ("bpl", ["BL"], "091", None, [], None),
+        ("bpl", ["RL"], "091", None, [], None),
+        ("bpl", ["BL", "RL"], "091", None, [], None),
+        ("bpl", [], "099", "FIC FOO", [], None),
+        ("bpl", ["BL"], "099", "FIC FOO", [], None),
+        ("bpl", ["RL"], "099", "FIC FOO", [], None),
+        ("bpl", ["BL", "RL"], "099", "FIC FOO", [], None),
+        ("nypl", [], "091", "FIC FOO", ["ReCAP 25-000001"], None),
+        ("nypl", ["BL"], "091", "FIC FOO", ["ReCAP 25-000001"], "BL"),
+        ("nypl", ["RL"], "091", "FIC FOO", ["ReCAP 25-000001"], "RL"),
+        ("nypl", ["BL", "RL"], "091", "FIC FOO", ["ReCAP 25-000001"], "mixed"),
+        ("nypl", [], "099", None, ["ReCAP 25-000001"], None),
+        ("nypl", ["BL"], "099", None, ["ReCAP 25-000001"], "BL"),
+        ("nypl", ["RL"], "099", None, ["ReCAP 25-000001"], "RL"),
+        ("nypl", ["BL", "RL"], "099", None, ["ReCAP 25-000001"], "mixed"),
+    ],
+)
+def test_collection_call_no_combos(
+    stub_bib, library, colls, call_tag, bl_call_no, rl_call_no, coll
+):
+    stub_bib.library = library
+    for value in colls:
+        stub_bib.add_field(
+            Field(
+                tag="910",
+                indicators=Indicators(" ", " "),
+                subfields=[Subfield(code="a", value=value)],
+            )
+        )
+    stub_bib.add_field(
+        Field(
+            tag=call_tag,
+            indicators=Indicators(" ", " "),
+            subfields=[
+                Subfield(code="a", value="FIC"),
+                Subfield(code="a", value="FOO"),
+            ],
+        )
+    )
+    stub_bib.add_field(
+        Field(
+            tag="852",
+            indicators=Indicators(" ", " "),
+            subfields=[Subfield(code="h", value="ReCAP 25-000001")],
+        )
+    )
+    assert stub_bib.branch_call_no == bl_call_no
+    assert stub_bib.research_call_no == rl_call_no
+    assert stub_bib.collection == coll
