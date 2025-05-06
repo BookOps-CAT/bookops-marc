@@ -2,7 +2,36 @@ import datetime
 
 import pytest
 
-from bookops_marc.models import OclcNumber, Order
+from bookops_marc.models import Item, OclcNumber, Order
+
+
+class TestItem:
+    def test_Item(self, stub_949):
+        item = Item(field=stub_949)
+        assert item.call_no == "ReCAP 25-000001"
+        assert item.item_agency == "043"
+        assert item.barcode == "33433123456789"
+        assert item.item_type == "55"
+        assert item.item_message == "foo"
+        assert item.message == "bar"
+        assert item.location == "rc2ma"
+        assert item.price == "$5.00"
+        assert item.volume == "1"
+        assert item.item_id == 12345678
+
+    def test_Item_empty(self, stub_949):
+        stub_949.subfields = []
+        item = Item(field=stub_949)
+        assert item.call_no is None
+        assert item.item_agency is None
+        assert item.barcode is None
+        assert item.item_type is None
+        assert item.item_message is None
+        assert item.message is None
+        assert item.location is None
+        assert item.price is None
+        assert item.volume is None
+        assert item.item_id is None
 
 
 @pytest.mark.parametrize(

@@ -5,6 +5,8 @@ Data models used by bookops-marc.
 
 This module contains the following classes:
 
+`Item`:
+    a class that defines a valid `Item` record created from a MARC field
 `OclcNumber`:
     a class that defines a valid OCLC number and provides additional properties to add
     or remove its prefix
@@ -19,6 +21,122 @@ from typing import List, Optional, Union
 from pymarc import Field
 
 from .local_values import normalize_date
+
+
+class Item:
+    """
+    A class to represent an `Item` record from a field.
+
+    Attributes:
+        barcode:
+            the item's barcode from subfield 'i'
+        call_no:
+            the item's call number from subfield 'a'
+        item_agency:
+            the item's agency code from subfield 'h'
+        item_message:
+            a free text message field from subfield 'u'
+        location:
+            the item's location code from subfield 'l'
+        message:
+            a free text message field from subfield 'm'
+        price:
+            the price of the item from subfield 'p'
+        volume:
+            the item's volume number from subfield 'c'
+    """
+
+    def __init__(self, field: Field) -> None:
+        """
+        An `Item` object is instantiated from a `pymarc.Field` object. This
+        field is a non-public attribute for the class and all other attributes
+        are computed from this field.
+
+        Args:
+            field:
+                an instance of `pymarc.Field`
+        """
+        self._field = field
+
+    @property
+    def barcode(self) -> Optional[str]:
+        subfield = self._field.get(code="i")
+        if subfield:
+            return str(subfield)
+        else:
+            return None
+
+    @property
+    def call_no(self) -> Optional[str]:
+        subfield = self._field.get(code="a")
+        if subfield:
+            return str(subfield)
+        else:
+            return None
+
+    @property
+    def item_agency(self) -> Optional[str]:
+        subfield = self._field.get("h")
+        if subfield:
+            return str(subfield)
+        else:
+            return None
+
+    @property
+    def item_id(self) -> Optional[int]:
+        subfield = self._field.get("y")
+        if not subfield or str(subfield).isalpha():
+            return None
+        else:
+            return int(subfield[2:-1])
+
+    @property
+    def item_message(self) -> Optional[str]:
+        subfield = self._field.get("u")
+        if subfield:
+            return str(subfield)
+        else:
+            return None
+
+    @property
+    def item_type(self) -> Optional[str]:
+        subfield = self._field.get("t")
+        if subfield:
+            return str(subfield)
+        else:
+            return None
+
+    @property
+    def location(self) -> Optional[str]:
+        subfield = self._field.get(code="l")
+        if subfield:
+            return str(subfield)
+        else:
+            return None
+
+    @property
+    def message(self) -> Optional[str]:
+        subfield = self._field.get("m")
+        if subfield:
+            return str(subfield)
+        else:
+            return None
+
+    @property
+    def price(self) -> Optional[str]:
+        subfield = self._field.get(code="p")
+        if subfield:
+            return str(subfield)
+        else:
+            return None
+
+    @property
+    def volume(self) -> Optional[str]:
+        subfield = self._field.get("c")
+        if subfield:
+            return str(subfield)
+        else:
+            return None
 
 
 class OclcNumber:
