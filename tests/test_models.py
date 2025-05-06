@@ -5,9 +5,18 @@ import pytest
 from bookops_marc.models import Item, OclcNumber, Order
 
 
+@pytest.mark.parametrize(
+    "library, tag, indicators",
+    [
+        ("nypl", "949", (" ", "1")),
+        ("nypl", "945", (" ", " ")),
+        ("bpl", "945", (" ", " ")),
+        ("bpl", "960", (" ", " ")),
+    ],
+)
 class TestItem:
-    def test_Item(self, stub_949):
-        item = Item(field=stub_949)
+    def test_Item(self, stub_item, library, tag, indicators):
+        item = Item(field=stub_item)
         assert item.call_no == "ReCAP 25-000001"
         assert item.item_agency == "043"
         assert item.barcode == "33433123456789"
@@ -19,9 +28,9 @@ class TestItem:
         assert item.volume == "1"
         assert item.item_id == 12345678
 
-    def test_Item_empty(self, stub_949):
-        stub_949.subfields = []
-        item = Item(field=stub_949)
+    def test_Item_empty(self, stub_item, library, tag, indicators):
+        stub_item.subfields = []
+        item = Item(field=stub_item)
         assert item.call_no is None
         assert item.item_agency is None
         assert item.barcode is None

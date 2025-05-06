@@ -194,28 +194,6 @@ def stub_949_command_line():
 
 
 @pytest.fixture
-def stub_949():
-    return Field(
-        tag="949",
-        indicators=Indicators(" ", "1"),
-        subfields=[
-            Subfield(code="a", value="ReCAP 25-000001"),
-            Subfield(code="h", value="043"),
-            Subfield(code="i", value="33433123456789"),
-            Subfield(code="z", value="8528"),
-            Subfield(code="t", value="55"),
-            Subfield(code="u", value="foo"),
-            Subfield(code="m", value="bar"),
-            Subfield(code="l", value="rc2ma"),
-            Subfield(code="p", value="$5.00"),
-            Subfield(code="v", value="LEILA"),
-            Subfield(code="c", value="1"),
-            Subfield(code="y", value=".i123456789"),
-        ],
-    )
-
-
-@pytest.fixture
 def stub_item(tag, indicators):
     return Field(
         tag=tag,

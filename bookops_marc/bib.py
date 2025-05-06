@@ -15,7 +15,7 @@ from pymarc.constants import LEADER_LEN
 from .constants import SUPPORTED_SUBJECT_TAGS, SUPPORTED_THESAURI
 from .errors import BookopsMarcError
 from .local_values import normalize_date
-from .models import OclcNumber, Order
+from .models import Item, OclcNumber, Order
 
 
 class Bib(Record):
@@ -68,6 +68,11 @@ class Bib(Record):
             return field_008.data[22]
         else:
             return None
+
+    @property
+    def barcodes(self) -> List[Optional[str]]:
+        """Retrieves barcodes from a record's associated `Item` records"""
+        return [i.barcode for i in self.items if self.items]
 
     @property
     def branch_call_no(self) -> Optional[str]:
@@ -216,6 +221,30 @@ class Bib(Record):
             elif rec_type in "efgk":
                 return field_008.data[29]
         return None
+
+    @property
+    def items(self) -> List[Item]:
+        """
+        Returns a list of items attached to bib
+        """
+        items = []
+
+        for field in self:
+            if (
+                self.library == "nypl"
+                and field.tag == "949"
+                and field.indicators == Indicators(" ", "1")
+            ):
+                items.append(Item(field))
+            elif (
+                self.library == "bpl"
+                and field.tag == "960"
+                and field.indicators == Indicators(" ", " ")
+            ):
+                items.append(Item(field))
+            elif field.tag == "945" and field.indicators == Indicators(" ", " "):
+                items.append(Item(field))
+        return items
 
     @property
     def languages(self) -> List[str]:

@@ -1177,3 +1177,45 @@ def test_collection_call_no_combos(
     assert stub_bib.branch_call_no == bl_call_no
     assert stub_bib.research_call_no == rl_call_no
     assert stub_bib.collection == coll
+
+
+@pytest.mark.parametrize(
+    "library, tag, indicators",
+    [
+        ("nypl", "949", (" ", "1")),
+        ("nypl", "945", (" ", " ")),
+        ("bpl", "945", (" ", " ")),
+        ("bpl", "960", (" ", " ")),
+    ],
+)
+def test_items(stub_bib, stub_item, library, tag, indicators):
+    stub_bib.library = library
+    stub_bib.add_field(stub_item)
+    items = stub_bib.items
+    i = items[0]
+    assert len(items) == 1
+    assert i.barcode == "33433123456789"
+    assert i.call_no == "ReCAP 25-000001"
+    assert i.item_agency == "043"
+    assert i.item_message == "foo"
+    assert i.location == "rc2ma"
+    assert i.message == "bar"
+    assert i.price == "$5.00"
+    assert i.volume == "1"
+
+
+@pytest.mark.parametrize(
+    "library, tag, indicators",
+    [
+        ("nypl", "949", (" ", "1")),
+        ("nypl", "945", (" ", " ")),
+        ("bpl", "945", (" ", " ")),
+        ("bpl", "960", (" ", " ")),
+    ],
+)
+def test_barcodes(stub_bib, stub_item, library, tag, indicators):
+    stub_bib.library = library
+    stub_bib.add_field(stub_item)
+    barcodes = stub_bib.barcodes
+    assert len(barcodes) == 1
+    assert barcodes == ["33433123456789"]
