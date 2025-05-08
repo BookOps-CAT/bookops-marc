@@ -223,28 +223,31 @@ class Bib(Record):
         return None
 
     @property
+    def item_fields(self) -> List[Field]:
+        """
+        Returns a list of fields from which to create `Item` records
+        """
+        fields = []
+
+        for field in self:
+            if field.tag == "949" and field.indicators == Indicators(" ", "1"):
+                fields.append(field)
+            elif field.tag == "945":
+                fields.append(field)
+            elif (
+                field.tag == "960"
+                and self.library == "bpl"
+                and self.overdrive_number is None
+            ):
+                fields.append(field)
+        return fields
+
+    @property
     def items(self) -> List[Item]:
         """
         Returns a list of items attached to bib
         """
-        items = []
-
-        for field in self:
-            if (
-                self.library == "nypl"
-                and field.tag == "949"
-                and field.indicators == Indicators(" ", "1")
-            ):
-                items.append(Item(field))
-            elif (
-                self.library == "bpl"
-                and field.tag == "960"
-                and field.indicators == Indicators(" ", " ")
-            ):
-                items.append(Item(field))
-            elif field.tag == "945" and field.indicators == Indicators(" ", " "):
-                items.append(Item(field))
-        return items
+        return [Item(i) for i in self.item_fields]
 
     @property
     def languages(self) -> List[str]:
@@ -339,6 +342,8 @@ class Bib(Record):
 
         for field in self:
             if field.tag == "960":
+                if self.library == "bpl" and field in self.item_fields:
+                    continue
                 try:
                     following_field = self.fields[self.pos]
                 except IndexError:

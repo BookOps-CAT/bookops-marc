@@ -32,14 +32,33 @@ class Item:
             the item's barcode from subfield 'i'
         call_no:
             the item's call number from subfield 'a'
+        copies:
+            the number of copies from subfield 'g'
+        initials:
+            the initials or vendor code for the item's creator
+            from subfield 'v'
+        internal_note:
+            a free text field from subfield 'n'
         item_agency:
             the item's agency code from subfield 'h'
+        item_code_1:
+            a fixed field from item code 1 and subfield 'q'
+        item_code_2:
+            a fixed field from item code 2 and subfield 'r'
+        item_id:
+            the id for the item record from subfield 'y'
         item_message:
-            a free text message field from subfield 'u'
+            a fixed field message from subfield 'u'
+        item_status:
+            the item's status from subfield 's'
+        item_type:
+            the item type from subfield 't'
         location:
             the item's location code from subfield 'l'
         message:
             a free text message field from subfield 'm'
+        opac_message:
+            the record's opac message from subfield 'o'
         price:
             the price of the item from subfield 'p'
         volume:
@@ -75,8 +94,48 @@ class Item:
             return None
 
     @property
+    def copies(self) -> Optional[str]:
+        subfield = self._field.get(code="g")
+        if subfield:
+            return str(subfield)
+        else:
+            return None
+
+    @property
+    def initials(self) -> Optional[str]:
+        subfield = self._field.get(code="v")
+        if subfield:
+            return str(subfield)
+        else:
+            return None
+
+    @property
+    def internal_note(self) -> Optional[str]:
+        subfield = self._field.get(code="n")
+        if subfield:
+            return str(subfield)
+        else:
+            return None
+
+    @property
     def item_agency(self) -> Optional[str]:
         subfield = self._field.get("h")
+        if subfield:
+            return str(subfield)
+        else:
+            return None
+
+    @property
+    def item_code_1(self) -> Optional[str]:
+        subfield = self._field.get("q")
+        if subfield:
+            return str(subfield)
+        else:
+            return None
+
+    @property
+    def item_code_2(self) -> Optional[str]:
+        subfield = self._field.get("r")
         if subfield:
             return str(subfield)
         else:
@@ -93,6 +152,14 @@ class Item:
     @property
     def item_message(self) -> Optional[str]:
         subfield = self._field.get("u")
+        if subfield:
+            return str(subfield)
+        else:
+            return None
+
+    @property
+    def item_status(self) -> Optional[str]:
+        subfield = self._field.get("s")
         if subfield:
             return str(subfield)
         else:
@@ -117,6 +184,14 @@ class Item:
     @property
     def message(self) -> Optional[str]:
         subfield = self._field.get("m")
+        if subfield:
+            return str(subfield)
+        else:
+            return None
+
+    @property
+    def opac_message(self) -> Optional[str]:
+        subfield = self._field.get("o")
         if subfield:
             return str(subfield)
         else:
