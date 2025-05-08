@@ -1183,8 +1183,6 @@ def test_collection_call_no_combos(
     "library, tag, indicators",
     [
         ("nypl", "949", (" ", "1")),
-        ("nypl", "945", (" ", " ")),
-        ("bpl", "945", (" ", " ")),
         ("bpl", "949", (" ", "1")),
         ("bpl", "960", (" ", " ")),
     ],
@@ -1219,8 +1217,7 @@ def test_items(stub_bib, stub_item, library, tag, indicators):
     "library, tag, indicators",
     [
         ("nypl", "949", (" ", "1")),
-        ("nypl", "945", (" ", " ")),
-        ("bpl", "945", (" ", " ")),
+        ("bpl", "949", (" ", "1")),
         ("bpl", "960", (" ", " ")),
     ],
 )

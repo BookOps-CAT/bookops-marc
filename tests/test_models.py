@@ -9,8 +9,7 @@ from bookops_marc.models import Item, OclcNumber, Order
     "library, tag, indicators",
     [
         ("nypl", "949", (" ", "1")),
-        ("nypl", "945", (" ", " ")),
-        ("bpl", "945", (" ", " ")),
+        ("bpl", "949", (" ", "1")),
         ("bpl", "960", (" ", " ")),
     ],
 )

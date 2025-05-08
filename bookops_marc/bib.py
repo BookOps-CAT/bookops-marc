@@ -232,8 +232,6 @@ class Bib(Record):
         for field in self:
             if field.tag == "949" and field.indicators == Indicators(" ", "1"):
                 fields.append(field)
-            elif field.tag == "945":
-                fields.append(field)
             elif (
                 field.tag == "960"
                 and self.library == "bpl"
