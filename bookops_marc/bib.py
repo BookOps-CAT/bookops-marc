@@ -71,9 +71,9 @@ class Bib(Record):
             return None
 
     @property
-    def barcodes(self) -> List[Optional[str]]:
+    def barcodes(self) -> List[str]:
         """Retrieves barcodes from a record's associated `Item` records"""
-        return [i.barcode for i in self.items if self.items]
+        return [i.barcode for i in self.items if self.items and i.barcode]
 
     @property
     def branch_call_no(self) -> Optional[str]:
