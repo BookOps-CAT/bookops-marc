@@ -341,13 +341,14 @@ class Bib(Record):
 
         for field in self:
             if field.tag == "960":
-                if self.library == "bpl" and field in self.item_fields:
-                    continue
                 try:
                     following_field = self.fields[self.pos]
                 except IndexError:
                     following_field = None
-                orders.append(Order(field, following_field))
+                if self.library == "bpl" and field in self.item_fields:
+                    continue
+                else:
+                    orders.append(Order(field, following_field))
         return orders
 
     @property
