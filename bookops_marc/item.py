@@ -133,12 +133,20 @@ class Item:
             return None
 
     @property
-    def item_id(self) -> Optional[int]:
+    def item_id(self) -> Optional[str]:
         subfield = self._field.get("y")
-        if not subfield or str(subfield).isalpha():
-            return None
+        if isinstance(subfield, str) and len(subfield) > 1:
+            return subfield[1:]
         else:
-            return int(subfield[2:-1])
+            return None
+
+    @property
+    def item_id_normalized(self) -> Optional[int]:
+        item_id = self.item_id
+        if isinstance(item_id, str) and item_id[1:].isnumeric():
+            return int(item_id[1:-1])
+        else:
+            return None
 
     @property
     def item_message(self) -> Optional[str]:

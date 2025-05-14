@@ -1203,7 +1203,8 @@ def test_items(stub_bib, stub_item, library, tag, indicators):
     assert i.price == "$5.00"
     assert i.volume == "1"
     assert i.item_type == "55"
-    assert i.item_id == 12345678
+    assert i.item_id == "i123456789"
+    assert i.item_id_normalized == 12345678
     assert i.copies == "1"
     assert i.initials == "LEILA"
     assert i.internal_note == "baz"

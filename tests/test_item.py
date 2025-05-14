@@ -23,7 +23,8 @@ class TestItem:
         assert item.location == "rc2ma"
         assert item.price == "$5.00"
         assert item.volume == "1"
-        assert item.item_id == 12345678
+        assert item.item_id == "i123456789"
+        assert item.item_id_normalized == 12345678
         assert item.copies == "1"
         assert item.initials == "LEILA"
         assert item.internal_note == "baz"
@@ -45,6 +46,7 @@ class TestItem:
         assert item.price is None
         assert item.volume is None
         assert item.item_id is None
+        assert item.item_id_normalized is None
         assert item.copies is None
         assert item.initials is None
         assert item.internal_note is None
