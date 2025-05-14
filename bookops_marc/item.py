@@ -37,7 +37,11 @@ class Item:
         item_code_2:
             a fixed field from item code 2 and subfield 'r'
         item_id:
-            the id for the item record from subfield 'y'
+            the id for the item record as a string from subfield 'y'.
+            removes the "." prefix.
+        item_id_normalized:
+            the id for the item record as an integer. removes the ".i"
+            prefix and check digit before converting the id to an integer.
         item_message:
             a fixed field message from subfield 'u'
         item_status:
