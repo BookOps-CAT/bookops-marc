@@ -581,7 +581,7 @@ def test_orders_single(stub_bib, mock_960):
     orders = stub_bib.orders
     assert len(orders) == 1
     o = orders[0]
-    assert o.oid == 1000001
+    assert o.order_id_normalized == 1000001
     assert o.audn == ["j", "j", "j", "j"]
     assert o.status == "o"
     assert o.branches == ["sn", "ag", "mu", "in"]
@@ -613,9 +613,9 @@ def test_orders_reverse_sort(stub_bib, mock_960):
     orders = stub_bib.sort_orders(sort="descending")
 
     assert len(orders) == 2
-    assert orders[0].oid == 1000002
+    assert orders[0].order_id_normalized == 1000002
     assert orders[0].venNotes is None
-    assert orders[1].oid == 1000001
+    assert orders[1].order_id_normalized == 1000001
     assert orders[1].venNotes == "e,bio"
 
 

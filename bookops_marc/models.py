@@ -129,8 +129,9 @@ class Order:
             the language of the materials being ordered from subfield 'w'.
         locs:
             a list of location codes from subfield 't'
-        oid:
-            the normalized order id as an integer from subfield 'z'
+        order_id_normalized:
+            the normalized order id as an integer from subfield 'z'.
+            removes ".o" prefix and check digit.
         shelves:
             a list of shelf locations from the fourth and fifth characters
             of the location code
@@ -212,7 +213,7 @@ class Order:
         return locs
 
     @property
-    def oid(self) -> Optional[int]:
+    def order_id_normalized(self) -> Optional[int]:
         order_num = self._field.get(code="z")
         if not order_num or str(order_num).isalpha():
             return None

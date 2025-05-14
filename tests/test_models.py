@@ -155,7 +155,7 @@ def test_Order(mock_960, stub_961):
     assert order.form == "b"
     assert order.lang == "eng"
     assert order.locs == ["snj0y", "agj0y", "muj0y", "inj0y"]
-    assert order.oid == 1000001
+    assert order.order_id_normalized == 1000001
     assert order.shelves == ["0y", "0y", "0y", "0y"]
     assert order.status == "o"
     assert order.venNotes == "foo"
@@ -171,7 +171,7 @@ def test_Order_other_following_field(mock_960, stub_field):
     assert order.form == "b"
     assert order.lang == "eng"
     assert order.locs == ["snj0y", "agj0y", "muj0y", "inj0y"]
-    assert order.oid == 1000001
+    assert order.order_id_normalized == 1000001
     assert order.shelves == ["0y", "0y", "0y", "0y"]
     assert order.status == "o"
     assert order.venNotes is None
@@ -380,17 +380,17 @@ def test_Order_locs_no_location(stub_960, stub_961):
         (None, None),
     ],
 )
-def test_Order_oid(arg, expectation, stub_960, stub_961):
+def test_Order_order_id_normalized(arg, expectation, stub_960, stub_961):
     stub_960.delete_subfield("z")
     stub_960.add_subfield(code="z", value=arg)
     order = Order(field=stub_960, following_field=stub_961)
-    assert order.oid == expectation
+    assert order.order_id_normalized == expectation
 
 
-def test_Order_oid_no_subfield(stub_960, stub_961):
+def test_Order_order_id_normalized_no_subfield(stub_960, stub_961):
     stub_960.delete_subfield("z")
     order = Order(field=stub_960, following_field=stub_961)
-    assert order.oid is None
+    assert order.order_id_normalized is None
 
 
 @pytest.mark.parametrize(
