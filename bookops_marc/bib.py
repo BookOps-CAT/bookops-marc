@@ -513,7 +513,7 @@ class Bib(Record):
             pass
         elif self.library == "bpl":
             self["001"].data = OclcNumber(controlNo).with_prefix
-        elif OclcNumber.is_valid(controlNo) and self.library == "nypl":
+        else:
             self["001"].data = OclcNumber(controlNo).without_prefix
 
     def remove_unsupported_subjects(self) -> None:
