@@ -557,6 +557,12 @@ def test_oclc_nos_001_only(stub_bib):
     assert stub_bib.oclc_nos == {"001": "12345678"}
 
 
+def test_oclc_nos_invalid(stub_bib):
+    stub_bib.add_field(Field(tag="001", data="foo"))
+    stub_bib.add_field(Field(tag="003", data="OCoLC"))
+    assert stub_bib.oclc_nos == {}
+
+
 @pytest.mark.parametrize("arg", [1, "foo"])
 def test_sort_orders_exceptions(arg, stub_bib, mock_960):
     msg = "Invalid 'sort' argument was passed."
@@ -592,6 +598,20 @@ def test_orders_single(stub_bib, mock_960):
     assert o.form == "b"
     assert o.lang == "eng"
     assert o.venNotes == "e,bio"
+
+
+def test_orders_sort(stub_bib, mock_960):
+    stub_bib.add_field(mock_960)
+
+    second_960 = deepcopy(mock_960)
+    second_960.delete_subfield("z")
+    second_960.add_subfield("z", ".o10000020")
+    stub_bib.add_field(second_960)
+    orders = stub_bib.sort_orders(sort="ascending")
+
+    assert len(orders) == 2
+    assert orders[0].order_id == "o10000010"
+    assert orders[1].order_id == "o10000020"
 
 
 def test_orders_reverse_sort(stub_bib, mock_960):
