@@ -1,6 +1,5 @@
 import pytest
-
-from pymarc import Field, Record, Subfield, Indicators
+from pymarc import Field, Indicators, Record, Subfield
 
 from bookops_marc import Bib
 
@@ -78,6 +77,13 @@ def stub_bib():
                 Subfield(code="b", value="New York,"),
                 Subfield(code="c", value="2021"),
             ],
+        )
+    )
+    bib.add_field(
+        Field(
+            tag="949",
+            indicators=Indicators(" ", " "),
+            subfields=[Subfield(code="a", value="*b2=a;")],
         )
     )
     return bib
@@ -166,9 +172,9 @@ def stub_961():
 
 
 @pytest.fixture
-def stub_945():
+def stub_949_command_line():
     return Field(
-        tag="945",
+        tag="949",
         indicators=Indicators(" ", " "),
         subfields=[
             Subfield(code="a", value="ReCAP 25-000001"),
@@ -180,6 +186,34 @@ def stub_945():
             Subfield(code="m", value="bar"),
             Subfield(code="l", value="rc2ma"),
             Subfield(code="p", value="$5.00"),
+            Subfield(code="v", value="LEILA"),
+            Subfield(code="c", value="1"),
+            Subfield(code="y", value=".i123456789"),
+        ],
+    )
+
+
+@pytest.fixture
+def stub_item(tag, indicators):
+    return Field(
+        tag=tag,
+        indicators=indicators,
+        subfields=[
+            Subfield(code="a", value="ReCAP 25-000001"),
+            Subfield(code="g", value="1"),
+            Subfield(code="h", value="043"),
+            Subfield(code="i", value="33433123456789"),
+            Subfield(code="z", value="8528"),
+            Subfield(code="t", value="55"),
+            Subfield(code="u", value="-"),
+            Subfield(code="m", value="bar"),
+            Subfield(code="n", value="baz"),
+            Subfield(code="l", value="rc2ma"),
+            Subfield(code="o", value="-"),
+            Subfield(code="p", value="$5.00"),
+            Subfield(code="q", value="-"),
+            Subfield(code="r", value="-"),
+            Subfield(code="s", value="b"),
             Subfield(code="v", value="LEILA"),
             Subfield(code="c", value="1"),
             Subfield(code="y", value=".i123456789"),

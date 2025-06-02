@@ -14,6 +14,7 @@ from pymarc.constants import LEADER_LEN
 
 from .constants import SUPPORTED_SUBJECT_TAGS, SUPPORTED_THESAURI
 from .errors import BookopsMarcError
+from .item import Item
 from .local_values import normalize_date
 from .models import OclcNumber, Order
 
@@ -68,6 +69,11 @@ class Bib(Record):
             return field_008.data[22]
         else:
             return None
+
+    @property
+    def barcodes(self) -> List[str]:
+        """Retrieves barcodes from a record's associated `Item` records"""
+        return [i.barcode for i in self.items if self.items and i.barcode]
 
     @property
     def branch_call_no(self) -> Optional[str]:
@@ -218,6 +224,31 @@ class Bib(Record):
         return None
 
     @property
+    def item_fields(self) -> List[Field]:
+        """
+        Returns a list of fields from which to create `Item` records
+        """
+        fields = []
+
+        for field in self:
+            if field.tag == "949" and field.indicators == Indicators(" ", "1"):
+                fields.append(field)
+            elif (
+                field.tag == "960"
+                and self.library == "bpl"
+                and self.overdrive_number is None
+            ):
+                fields.append(field)
+        return fields
+
+    @property
+    def items(self) -> List[Item]:
+        """
+        Returns a list of items attached to bib
+        """
+        return [Item(i) for i in self.item_fields]
+
+    @property
     def languages(self) -> List[str]:
         """
         Returns list of material main languages
@@ -314,7 +345,10 @@ class Bib(Record):
                     following_field = self.fields[self.pos]
                 except IndexError:
                     following_field = None
-                orders.append(Order(field, following_field))
+                if self.library == "bpl" and field in self.item_fields:
+                    continue
+                else:
+                    orders.append(Order(field, following_field))
         return orders
 
     @property

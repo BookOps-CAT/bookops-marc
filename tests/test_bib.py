@@ -1180,3 +1180,99 @@ def test_collection_call_no_combos(
     assert stub_bib.branch_call_no == bl_call_no
     assert stub_bib.research_call_no == rl_call_no
     assert stub_bib.collection == coll
+
+
+@pytest.mark.parametrize(
+    "library, tag, indicators",
+    [
+        ("nypl", "949", (" ", "1")),
+        ("bpl", "949", (" ", "1")),
+        ("bpl", "960", (" ", " ")),
+    ],
+)
+def test_items(stub_bib, stub_item, library, tag, indicators):
+    stub_bib.library = library
+    stub_bib.add_ordered_field(stub_item)
+    items = stub_bib.items
+    i = items[0]
+    assert len(items) == 1
+    assert len(stub_bib.orders) == 0
+    assert i.barcode == "33433123456789"
+    assert i.call_no == "ReCAP 25-000001"
+    assert i.item_agency == "043"
+    assert i.item_message == "-"
+    assert i.location == "rc2ma"
+    assert i.message == "bar"
+    assert i.price == "$5.00"
+    assert i.volume == "1"
+    assert i.item_type == "55"
+    assert i.item_id == "i123456789"
+    assert i.item_id_normalized == 12345678
+    assert i.copies == "1"
+    assert i.initials == "LEILA"
+    assert i.internal_note == "baz"
+    assert i.item_code_1 == "-"
+    assert i.item_code_2 == "-"
+    assert i.item_status == "b"
+    assert i.opac_message == "-"
+
+
+@pytest.mark.parametrize(
+    "library, tag, indicators",
+    [
+        ("nypl", "949", (" ", "1")),
+        ("bpl", "949", (" ", "1")),
+        ("bpl", "960", (" ", " ")),
+    ],
+)
+def test_barcodes(stub_bib, stub_item, library, tag, indicators):
+    stub_bib.library = library
+    stub_bib.add_field(stub_item)
+    barcodes = stub_bib.barcodes
+    assert len(barcodes) == 1
+    assert barcodes == ["33433123456789"]
+
+
+def test_bpl_items(stub_bib, stub_960, stub_961):
+    stub_bib.library = "bpl"
+
+    bpl_bib = deepcopy(stub_bib)
+    bpl_bib.add_ordered_field(
+        Field(
+            tag="960",
+            indicators=Indicators(" ", " "),
+            subfields=[Subfield(code="i", value="34444123456789")],
+        )
+    )
+
+    overdrive_bpl_bib = deepcopy(stub_bib)
+    overdrive_bpl_bib.add_ordered_field(
+        Field(
+            tag="037",
+            indicators=Indicators(" ", " "),
+            subfields=[
+                Subfield(code="a", value="foo"),
+                Subfield(code="b", value="OverDrive, Inc."),
+            ],
+        )
+    )
+    overdrive_bpl_bib.add_ordered_field(
+        Field(
+            tag="949",
+            indicators=Indicators(" ", "1"),
+            subfields=[Subfield(code="i", value="34444123456789")],
+        )
+    )
+    overdrive_bpl_bib.add_ordered_field(stub_960)
+    overdrive_bpl_bib.add_ordered_field(stub_961)
+    assert len(overdrive_bpl_bib.orders) == 1
+    assert len(overdrive_bpl_bib.items) == 1
+    assert [i.tag for i in overdrive_bpl_bib.item_fields] == ["949"]
+    assert overdrive_bpl_bib.items[0].barcode == "34444123456789"
+    assert overdrive_bpl_bib.orders[0].venNotes == "foo"
+    assert len(overdrive_bpl_bib.get_fields("949")) == 2
+    assert len(bpl_bib.orders) == 0
+    assert len(bpl_bib.items) == 1
+    assert [i.tag for i in bpl_bib.item_fields] == ["960"]
+    assert bpl_bib.items[0].barcode == "34444123456789"
+    assert len(bpl_bib.get_fields("949")) == 1

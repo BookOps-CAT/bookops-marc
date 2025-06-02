@@ -53,6 +53,10 @@ Python 3.8 and up.
 + `OclcNumber` class
   + replaces helper functions previously in from `local_values.py`:
     + `oclcNo_with_prefix`, `oclcNo_without_prefix`, `is_oclc_number`, `has_oclc_prefix`, `_add_oclc_prefix` and `_delete_oclc_prefix`
++ `Item` class to create item records associated with a bib record.
+  + `Bib.item_fields`, `Bib.items` and `Bib.barcodes` properties all rely on `Item` class
++ `Bib.collection` property to identify records as belonging to the branch collection, research library collection, or being a mixed bib record.
++ `Bib.research_call_no_field` and `Bib.research_call_no` identify call numbers in the 852 field in a nypl record
 #### Changed
 + changed most `Bib` methods to properties. This follows the pattern that pymarc uses with managed `Record` attributes:
   + methods changed to properties:
