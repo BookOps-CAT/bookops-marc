@@ -433,7 +433,7 @@ def test_dewey_shortened(stub_bib, mock_960, arg, expectation):
     mock_960.subfields = new_subfields
     mock_960.add_subfield(code="t", value=arg)
     stub_bib.add_field(mock_960)
-    assert stub_bib.dewey_shortened == expectation
+    assert stub_bib.dewey_shortened() == expectation
 
 
 def test_dewey_shortened_missing_dewey(stub_bib, mock_960):
@@ -445,7 +445,7 @@ def test_dewey_shortened_missing_dewey(stub_bib, mock_960):
         )
     )
     stub_bib.add_field(mock_960)
-    assert stub_bib.dewey_shortened is None
+    assert stub_bib.dewey_shortened() is None
 
 
 def test_languages_none_008(stub_bib):

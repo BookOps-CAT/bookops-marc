@@ -186,29 +186,6 @@ class Bib(Record):
             return class_mark
 
     @property
-    def dewey_shortened(self) -> Optional[str]:
-        """
-        Returns Dewey classification shortened to a maximum of 4 digits
-        after period. Length of shortened class mark is determined based
-        on the bib's library and audience.
-            BPL materials: 4 digits (eg. 505.4167)
-            NYPL adult/young adult: 4 digits (eg. 505.4167)
-            NYPL juvenile materials: 2 digits (eg. 505.41)
-        """
-        class_mark = self.dewey
-        audns = list(chain(*[i.audn for i in self.orders]))
-        if not isinstance(class_mark, str):
-            return None
-        if self.library == "nypl" and all(i == "j" for i in audns):
-            digits = 2
-        else:
-            digits = 4
-        class_mark = class_mark[: 4 + digits]
-        while len(class_mark) > 3 and class_mark[-1] in ".0":
-            class_mark = class_mark[:-1]
-        return class_mark
-
-    @property
     def form_of_item(self) -> Optional[str]:
         """
         Returns form of item code from the 008 tag position 23 if
@@ -478,6 +455,28 @@ class Bib(Record):
             if isinstance(upc_num, str):
                 return upc_num.strip()
         return None
+
+    def dewey_shortened(self) -> Optional[str]:
+        """
+        Returns Dewey classification shortened to a maximum of 4 digits
+        after period. Length of shortened class mark is determined based
+        on the bib's library and audience.
+            BPL materials: 4 digits (eg. 505.4167)
+            NYPL adult/young adult: 4 digits (eg. 505.4167)
+            NYPL juvenile materials: 2 digits (eg. 505.41)
+        """
+        class_mark = self.dewey
+        audns = list(chain(*[i.audn for i in self.orders]))
+        if not isinstance(class_mark, str):
+            return None
+        if self.library == "nypl" and all(i == "j" for i in audns):
+            digits = 2
+        else:
+            digits = 4
+        class_mark = class_mark[: 4 + digits]
+        while len(class_mark) > 3 and class_mark[-1] in ".0":
+            class_mark = class_mark[:-1]
+        return class_mark
 
     def sort_orders(self, sort: str = "descending") -> Sequence[Order]:
         """
