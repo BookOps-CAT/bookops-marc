@@ -19,17 +19,17 @@ from bookops_marc import SierraBibReader
 with open('marc.mrc', "rb") as marcfile:
 	reader = SierraBibReader(marcfile)
 	for bib in reader:
-		print(bib.sierra_bib_id_normalized())
-		print(bib.sierra_bib_format())
-		print(bib.branch_call_no())
-		print(bib.orders())
-		print(bib.main_entry())
-		print(bib.form_of_item())
-		print(bib.dewey())
-		print(bib.dewey_shortened())
+		print(bib.sierra_bib_id_normalized)
+		print(bib.sierra_bib_format)
+		print(bib.branch_call_no)
+		print(bib.orders)
+		print(bib.main_entry)
+		print(bib.form_of_item)
+		print(bib.dewey)
+		print(bib.dewey_shortened)
 ```
 
-In certain scenarios it may be convinient to instate `Bib` directly from an instance of `pymarc.Record`. This can be accomplished using `pymarc_record_to_local_bib()`:
+In certain scenarios it may be convenient to instantiate a `Bib` directly from an instance of `pymarc.Record`. This can be accomplished using the `Bib.pymarc_record_to_local_bib()` classmethod:
 
 ```python
 from pymarc import Record
@@ -37,14 +37,68 @@ from bookops_marc.bib import pymarc_record_to_local_bib
 
 # pymarc Record instance
 record = Record()
-bib = pymarc_record_to_local_bib(record, "bpl")
+bib = Bib.pymarc_record_to_local_bib(record, "bpl")
 bib.remove_unsupported_subjects()
 ```
 
 Python 3.8 and up.
 
 ## Version
-> 0.10.0
+> 0.12.0
+
+## Changelog
+### [0.12.0] - 2025-1-13
+#### Added
++ Python 3.13 to unit tests in GitHub actions
++ `OclcNumber` class
+  + replaces helper functions previously in from `local_values.py`:
+    + `oclcNo_with_prefix`, `oclcNo_without_prefix`, `is_oclc_number`, `has_oclc_prefix`, `_add_oclc_prefix` and `_delete_oclc_prefix`
++ `Item` class to create item records associated with a bib record.
+  + `Bib.item_fields`, `Bib.items` and `Bib.barcodes` properties all rely on `Item` class
++ `Bib.collection` property to identify records as belonging to the branch collection, research library collection, or being a mixed bib record.
++ `Bib.research_call_no_field` and `Bib.research_call_no` identify call numbers in the 852 field in a nypl record
+#### Changed
++ changed most `Bib` methods to properties. This follows the pattern that pymarc uses with managed `Record` attributes:
+  + methods changed to properties:
+    + `audience`
+    + `branch_call_no`
+    + `branch_call_no_field`
+    + `cataloging_date`
+    + `control_number`
+    + `created_date`
+    + `dewey`
+    + `dewey_shortened`
+    + `form_of_item`
+    + `languages`
+    + `lccn`
+    + `main_entry`
+    + `oclc_nos`
+    + `orders`
+    + `overdrive_number`
+    + `physical_description`
+    + `record_type`
+    + `sierra_bib_format`
+    + `sierra_bib_id`
+    + `sierra_bib_id_normalized`
+    + `subjects_lc`
+    + `suppressed`
+    + `upc_number`
+  + `normalize_oclc_control_number` and `remove_unsupported_subjects` are still methods as they attributes of a `Bib` object
++ the `pymarc_record_to_local_bib` function is now a `classmethod` for the `Bib` class
++ `Order` is now a class rather than a `NamedTuple`
+  + `Order` objects are instantiated from a `Field` object with an optional `following_field` parameter 
+#### Removed
++ helper functions in `local_values.py`. the functionality has been retained in the `Bib`, `Order`, and `OclcNumber` class
+  
+### [0.11.0] - 2024-11-13
+#### Changed
++ updated pymarc to 5.2.3
++ updated dev dependencies:
+  + pytest (8.3.3)
+  + black (24.8.0)
+  + mypy (1.13)
++ refactored code to support new `Indicators` class introduced in `pymarc` 5.2.0
+
 
 ## Changelog
 ### [0.10.0] - 2024-03-16
@@ -132,6 +186,8 @@ Python 3.8 and up.
 #### Added
 + a method for retrieving branch call number as `pymarc.Field`
 
+[0.12.0]:https://github.com/BookOps-CAT/bookops-marc/compare/0.11.0...0.12.0
+[0.11.0]:https://github.com/BookOps-CAT/bookops-marc/compare/0.10.0...0.11.0
 [0.10.0]:https://github.com/BookOps-CAT/bookops-marc/compare/0.9.0...0.10.0
 [0.9.0]: https://github.com/BookOps-CAT/bookops-marc/compare/0.8.1...0.9.0
 [0.8.1]: https://github.com/BookOps-CAT/bookops-marc/compare/0.8.0...0.8.1
