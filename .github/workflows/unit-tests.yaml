@@ -1,4 +1,3 @@
-
 name: tests
 on: 
   push:
@@ -18,43 +17,32 @@ jobs:
     name: Python ${{ matrix.python-version}}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Bootstrap Poetry
-        run: pipx install poetry==1.8.2
-
-      - name: Set up Python
+      - name: Set up Python ${{ matrix.python-version}}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version}}
-          cache: poetry
-        
-      - name: Configure Poetry
-        run: |
-          poetry config virtualenvs.in-project true
-          poetry config virtualenvs.options.no-pip true
-          poetry config virtualenvs.options.no-setuptools true
+          
+      - name: Install Poetry with pipx
+        run: pipx install poetry
 
-      - name: Check lock file
-        run: poetry check --lock
-
-      - name: Install dependencies
-        run: poetry install
+      - name: Install dependencies with poetry
+        run: poetry install --no-root    
     
       - name: Run tests
-        run: poetry run pytest -v --cov=bookops_marc/
+        run: poetry run pytest --cov=bookops_marc/ --cov-report=xml
 
       - name: Send report to Coveralls
-        uses: AndreMiras/coveralls-python-action@develop
+        uses: coverallsapp/github-action@v2
         with:
           parallel: true
-          flag-name: Unit Test
           github-token: ${{ secrets.GITHUB_TOKEN}}
+          flag-name: ${{ matrix.python-version}}
 
-  coveralls_finish:
+  finish:
     needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Coveralls finished
-        uses: AndreMiras/coveralls-python-action@develop
+        uses: coverallsapp/github-action@v2
         with:
           parallel-finished: true
