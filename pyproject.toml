@@ -6,7 +6,7 @@ description = "A sweetened `pymarc.Record` module for extraction of data from lo
 authors = [{name = "Tomek", email = "klingaroo@gmail.com"}, {name = "Charlotte Kostelic", email = "charlottekostelic@bookops.org"}]
 readme = "README.md"
 keywords = ["cataloging", "bibliographic records", "MARC"]
-requires-python = ">=3.8, <4.0"
+requires-python = ">=3.8"
 dependencies = ["pymarc (>=5.2.3, <5.3.0)"]
 
 
