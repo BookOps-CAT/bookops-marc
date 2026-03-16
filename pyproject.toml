@@ -9,12 +9,13 @@ keywords = ["cataloging", "bibliographic records", "MARC"]
 requires-python = ">=3.8"
 dependencies = ["pymarc (>=5.2.3, <5.3.0)"]
 
-
-[tool.poetry.dev-dependencies]
-pytest = "^8.3.3"
-pytest-cov = "^5.0.0"
-black = "^24.8.0"
-mypy = "^1.13"
+[dependency-groups]
+dev = [
+    "pytest>=8.3.3,<9",
+    "pytest-cov>=5.0.0,<6",
+    "black>=24.8.0,<25",
+    "mypy>=1.13.0,<2",
+]
 
 [tool.black]
 line-length = 88
