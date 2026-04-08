@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Module replaces pymarc's Record module. Inherits all Record class functionality and
 adds some syntactic sugar.
