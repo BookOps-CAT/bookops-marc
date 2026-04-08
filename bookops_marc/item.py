@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Data models used by bookops-marc.
 

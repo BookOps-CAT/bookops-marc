@@ -1,10 +1,7 @@
-# -*- coding: utf-8 -*-
-
 from typing import BinaryIO, Union
 
-from pymarc import MARCReader
+from pymarc import MARCReader, exceptions
 from pymarc.constants import END_OF_RECORD
-from pymarc import exceptions
 
 from bookops_marc import Bib
 

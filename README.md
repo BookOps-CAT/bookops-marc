@@ -41,12 +41,18 @@ bib = Bib.pymarc_record_to_local_bib(record, "bpl")
 bib.remove_unsupported_subjects()
 ```
 
-Python 3.8 and up.
+Python 3.10 and up.
 
 ## Version
-> 0.12.0
+> 0.12.1
 
 ## Changelog
+### [0.12.1] - 2026-04-08
+#### Added
++ Python 3.14 to unit tests in GitHub actions
+
+#### Removed
++ 
 ### [0.12.0] - 2025-1-13
 #### Added
 + Python 3.13 to unit tests in GitHub actions
@@ -186,6 +192,7 @@ Python 3.8 and up.
 #### Added
 + a method for retrieving branch call number as `pymarc.Field`
 
+[0.12.1]:https://github.com/BookOps-CAT/bookops-marc/compare/0.12.0...0.12.1
 [0.12.0]:https://github.com/BookOps-CAT/bookops-marc/compare/0.11.0...0.12.0
 [0.11.0]:https://github.com/BookOps-CAT/bookops-marc/compare/0.10.0...0.11.0
 [0.10.0]:https://github.com/BookOps-CAT/bookops-marc/compare/0.9.0...0.10.0

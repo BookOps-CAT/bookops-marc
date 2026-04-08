@@ -1,28 +1,21 @@
 [project]
 name = "bookops-marc"
-version = "0.12.0"
+version = "0.12.1"
 license = "MIT"
 description = "A sweetened `pymarc.Record` module for extraction of data from local Sierra records."
 authors = [{name = "Tomek", email = "klingaroo@gmail.com"}, {name = "Charlotte Kostelic", email = "charlottekostelic@bookops.org"}]
 readme = "README.md"
 keywords = ["cataloging", "bibliographic records", "MARC"]
-requires-python = ">=3.8"
-dependencies = ["pymarc (>=5.2.3, <5.3.0)"]
+requires-python = ">=3.10"
+dependencies = ["pymarc (>=5.2.3)"]
 
 [dependency-groups]
 dev = [
-    "pytest>=8.3.3,<9",
-    "pytest-cov>=5.0.0,<6",
-    "black>=24.8.0,<25",
-    "mypy>=1.13.0,<2",
+    "pytest>=8.3.3",
+    "pytest-cov>=5.0.0",
 ]
 
-[tool.black]
-line-length = 88
-target-version = ['py38', 'py39', 'py310', 'py311', 'py312', 'py313']
-
 [tool.mypy]
-python_version = 3.8
 warn_return_any = true
 warn_unused_configs = true
 
@@ -34,7 +27,22 @@ testpaths = ["tests"]
 relative_files = true
 source = ["."]
 omit = ["tests/*"]
+branch = true
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.ruff.lint]
+select = ["F", "E", "ANN"]
+ignore = ["ANN401"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E501", "ANN"]
+
+[tool.ruff.format]
+skip-magic-trailing-comma = true
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disallow_untyped_defs = false
