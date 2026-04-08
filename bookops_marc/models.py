@@ -12,7 +12,7 @@ This module contains the following classes:
 """
 
 from datetime import date
-from typing import List, Optional, Union
+from typing import Optional
 
 from pymarc import Field
 
@@ -28,7 +28,7 @@ class OclcNumber:
         return self._value
 
     @value.setter
-    def value(self, value: Union[str, int, None]) -> None:
+    def value(self, value: str | int | None) -> None:
         if isinstance(value, str) and value.lower().startswith("(ocolc)"):
             self._value = value
         else:
@@ -71,7 +71,7 @@ class OclcNumber:
             return str(int(self.value.lower().strip("()oclnm")))
 
     @staticmethod
-    def is_valid(value: Union[str, int, None]) -> bool:
+    def is_valid(value: str | int | None) -> bool:
         """
         Determines if given value looks like a legitimate OCLC number.
 
@@ -161,12 +161,12 @@ class Order:
         self._following_field = following_field
 
     @property
-    def audn(self) -> List[str]:
+    def audn(self) -> list[str]:
         audns = [i[2].strip() for i in self.locs if len(i) >= 3]
         return [i for i in audns if i]
 
     @property
-    def branches(self) -> List[str]:
+    def branches(self) -> list[str]:
         branches = [i[:2] for i in self.locs if len(i) >= 2]
         return [i for i in branches if i]
 
@@ -199,7 +199,7 @@ class Order:
             return None
 
     @property
-    def locs(self) -> List[str]:
+    def locs(self) -> list[str]:
         locs = []
         for sub in self._field.get_subfields("t"):
             try:
@@ -229,7 +229,7 @@ class Order:
             return None
 
     @property
-    def shelves(self) -> List[str]:
+    def shelves(self) -> list[str]:
         shelves = [i[3:5].strip() for i in self.locs if len(i) >= 5]
         return [i for i in shelves if i]
 

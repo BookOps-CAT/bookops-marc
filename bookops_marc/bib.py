@@ -5,7 +5,7 @@ adds some syntactic sugar.
 
 from datetime import date
 from itertools import chain
-from typing import Dict, List, Optional, Sequence
+from typing import Optional, Sequence
 
 from pymarc import Field, Indicators, Record
 from pymarc.constants import LEADER_LEN
@@ -69,7 +69,7 @@ class Bib(Record):
             return None
 
     @property
-    def barcodes(self) -> List[str]:
+    def barcodes(self) -> list[str]:
         """Retrieves barcodes from a record's associated `Item` records"""
         return [i.barcode for i in self.items if self.items and i.barcode]
 
@@ -199,7 +199,7 @@ class Bib(Record):
         return None
 
     @property
-    def item_fields(self) -> List[Field]:
+    def item_fields(self) -> list[Field]:
         """
         Returns a list of fields from which to create `Item` records
         """
@@ -217,14 +217,14 @@ class Bib(Record):
         return fields
 
     @property
-    def items(self) -> List[Item]:
+    def items(self) -> list[Item]:
         """
         Returns a list of items attached to bib
         """
         return [Item(i) for i in self.item_fields]
 
     @property
-    def languages(self) -> List[str]:
+    def languages(self) -> list[str]:
         """
         Returns list of material main languages
         """
@@ -265,7 +265,7 @@ class Bib(Record):
             raise BookopsMarcError("Incomplete MARC record: missing the main entry.")
 
     @property
-    def oclc_nos(self) -> Dict[str, str]:
+    def oclc_nos(self) -> dict[str, str]:
         """
         Returns dictionary of MARC tags and OCLC identifiers found in a bib.
         Output contains the 001 if the record source, from the 003 field,
@@ -276,7 +276,7 @@ class Bib(Record):
         unique_oclcs = {}
 
         def get_subvalue(
-            fields: List[Field], subfield_code: str
+            fields: list[Field], subfield_code: str
         ) -> Optional[OclcNumber]:
             for field in fields:
                 value = field.get(subfield_code)
@@ -358,14 +358,14 @@ class Bib(Record):
         return self.leader[6]
 
     @property
-    def research_call_no(self) -> List[str]:
+    def research_call_no(self) -> list[str]:
         """
         Retrieves research library call number as string without any MARC coding
         """
         return [i.value() for i in self.research_call_no_field if i]
 
     @property
-    def research_call_no_field(self) -> List[Field]:
+    def research_call_no_field(self) -> list[Field]:
         """
         Retrieves a research library call number field as pymarc.Field instance
         """
@@ -415,7 +415,7 @@ class Bib(Record):
             return None
 
     @property
-    def subjects_lc(self) -> List[Field]:
+    def subjects_lc(self) -> list[Field]:
         """
         Retrieves Library of Congress Subject Headings from the bib
         """
