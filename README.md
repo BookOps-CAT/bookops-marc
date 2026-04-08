@@ -41,7 +41,7 @@ bib = Bib.pymarc_record_to_local_bib(record, "bpl")
 bib.remove_unsupported_subjects()
 ```
 
-Python 3.8 and up.
+Python 3.10 and up.
 
 ## Version
 > 0.12.0

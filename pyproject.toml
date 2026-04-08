@@ -6,23 +6,16 @@ description = "A sweetened `pymarc.Record` module for extraction of data from lo
 authors = [{name = "Tomek", email = "klingaroo@gmail.com"}, {name = "Charlotte Kostelic", email = "charlottekostelic@bookops.org"}]
 readme = "README.md"
 keywords = ["cataloging", "bibliographic records", "MARC"]
-requires-python = ">=3.8"
-dependencies = ["pymarc (>=5.2.3, <5.3.0)"]
+requires-python = ">=3.10"
+dependencies = ["pymarc (>=5.2.3)"]
 
 [dependency-groups]
 dev = [
-    "pytest>=8.3.3,<9",
-    "pytest-cov>=5.0.0,<6",
-    "black>=24.8.0,<25",
-    "mypy>=1.13.0,<2",
+    "pytest>=8.3.3",
+    "pytest-cov>=5.0.0",
 ]
 
-[tool.black]
-line-length = 88
-target-version = ['py38', 'py39', 'py310', 'py311', 'py312', 'py313']
-
 [tool.mypy]
-python_version = 3.8
 warn_return_any = true
 warn_unused_configs = true
 
