@@ -1,6 +1,6 @@
 """
 Module replaces pymarc's Record module. Inherits all Record class functionality and
-adds some syntactic sugar.
+adds additional properties.
 """
 
 from datetime import date
@@ -32,13 +32,13 @@ class Bib(Record):
         file_encoding: str = "iso8859-1",
     ) -> None:
         super().__init__(
-            data,
-            to_unicode,
-            force_utf8,
-            hide_utf8_warnings,
-            utf8_handling,
-            leader,
-            file_encoding,
+            data=data,
+            to_unicode=to_unicode,
+            force_utf8=force_utf8,
+            hide_utf8_warnings=hide_utf8_warnings,
+            utf8_handling=utf8_handling,
+            leader=leader,
+            file_encoding=file_encoding,
         )
         # Overriding the type of pymarc.Record.leader
         self.leader: str
