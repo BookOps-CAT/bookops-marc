@@ -41,18 +41,29 @@ bib = Bib.pymarc_record_to_local_bib(record, "bpl")
 bib.remove_unsupported_subjects()
 ```
 
-Python 3.10 and up.
+Python 3.11 and up.
 
 ## Version
-> 0.12.1
+> 0.12.2
 
 ## Changelog
+### [0.12.2] - 2026-10-26
+#### Added
++ Python 3.15 to unit tests in GitHub actions
+
+#### Changed
++ GitHub actions now uses uv to run unit tests
++ Updated `pymarc` from 5.2.3 to 5.4.0
++ Updated `pytest` from 8.3.3 to 9.1.1
++ Updated `pytest-cov` from 5.0.0 to 7.1.0
+
+#### Removed
++ Support for python 3.10 as it is end of life
+
 ### [0.12.1] - 2026-04-08
 #### Added
 + Python 3.14 to unit tests in GitHub actions
 
-#### Removed
-+ 
 ### [0.12.0] - 2025-1-13
 #### Added
 + Python 3.13 to unit tests in GitHub actions
@@ -192,6 +203,7 @@ Python 3.10 and up.
 #### Added
 + a method for retrieving branch call number as `pymarc.Field`
 
+[0.12.2]:https://github.com/BookOps-CAT/bookops-marc/compare/0.12.1...0.12.2
 [0.12.1]:https://github.com/BookOps-CAT/bookops-marc/compare/0.12.0...0.12.1
 [0.12.0]:https://github.com/BookOps-CAT/bookops-marc/compare/0.11.0...0.12.0
 [0.11.0]:https://github.com/BookOps-CAT/bookops-marc/compare/0.10.0...0.11.0

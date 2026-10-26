@@ -1,13 +1,13 @@
 [project]
 name = "bookops-marc"
-version = "0.12.1"
+version = "0.12.2"
 license = "MIT"
 description = "A sweetened `pymarc.Record` module for extraction of data from local Sierra records."
 authors = [{name = "Tomek", email = "klingaroo@gmail.com"}, {name = "Charlotte Kostelic", email = "charlottekostelic@bookops.org"}]
 readme = "README.md"
 keywords = ["cataloging", "bibliographic records", "MARC"]
-requires-python = ">=3.10"
-dependencies = ["pymarc (>=5.2.3)"]
+requires-python = ">=3.11"
+dependencies = ["pymarc>=5.2.3"]
 
 [dependency-groups]
 dev = [
