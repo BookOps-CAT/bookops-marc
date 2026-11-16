@@ -90,9 +90,8 @@ class OclcNumber:
             return False
         elif str_value.isnumeric() is True and int(value) > 0:
             return True
-        elif (
-            num_value.isnumeric()
-            and (str_value.startswith("ocm") and len(num_value) == 8)
+        elif num_value.isnumeric() and (
+            (str_value.startswith("ocm") and len(num_value) == 8)
             or (str_value.startswith("ocn") and len(num_value) == 9)
             or (str_value.startswith("on") and len(num_value) >= 10)
             or (str_value.startswith("(ocolc)"))

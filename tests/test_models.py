@@ -103,6 +103,10 @@ def test_OclcNumber_setter():
         "",
         [],
         {"oclcNumber": "ocm00000001"},
+        "(OCoLC)",
+        "(OCoLC) ",
+        "(OCoLC)-",
+        "(OCoLC)abcdefg",
     ],
 )
 def test_OclcNumber_invalid(value):
@@ -293,13 +297,7 @@ def test_Order_created_no_subfield(stub_960, stub_961):
         ("book", None),
         ([], None),
         (None, None),
-        (
-            (
-                "a",
-                "b",
-            ),
-            None,
-        ),
+        (("a", "b"), None),
     ],
 )
 def test_Order_form(arg, expectation, stub_960, stub_961):
@@ -327,13 +325,7 @@ def test_Order_form_no_subfield(stub_960, stub_961):
         ("", None),
         ([], None),
         (None, None),
-        (
-            (
-                "spa",
-                "fre",
-            ),
-            None,
-        ),
+        (("spa", "fre"), None),
     ],
 )
 def test_Order_lang(arg, expectation, stub_960, stub_961):
@@ -454,13 +446,7 @@ def test_Order_shelves_no_location(stub_960, stub_961):
         ("", None),
         ([], None),
         (None, None),
-        (
-            (
-                "a",
-                "b",
-            ),
-            None,
-        ),
+        (("a", "b"), None),
     ],
 )
 def test_Order_status(arg, expectation, stub_960, stub_961):
@@ -478,13 +464,7 @@ def test_Order_status_no_subfield(stub_960, stub_961):
 
 @pytest.mark.parametrize(
     "arg,expectation",
-    [
-        ("foo", "foo"),
-        ("bar", "bar"),
-        ("baz", "baz"),
-        ("", ""),
-        (None, None),
-    ],
+    [("foo", "foo"), ("bar", "bar"), ("baz", "baz"), ("", ""), (None, None)],
 )
 def test_Order_venNotes(arg, expectation, stub_960, stub_961):
     stub_961.delete_subfield("h")

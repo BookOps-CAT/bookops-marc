@@ -44,9 +44,13 @@ bib.remove_unsupported_subjects()
 Python 3.11 and up.
 
 ## Version
-> 0.12.2
+> 0.12.3
 
 ## Changelog
+### [0.12.3] - 2026-11-16
+#### Fixed
++ Fixed error in OCLC number parsing
+
 ### [0.12.2] - 2026-10-26
 #### Added
 + Python 3.15 to unit tests in GitHub actions
@@ -203,6 +207,7 @@ Python 3.11 and up.
 #### Added
 + a method for retrieving branch call number as `pymarc.Field`
 
+[0.12.3]:https://github.com/BookOps-CAT/bookops-marc/compare/0.12.2...0.12.3
 [0.12.2]:https://github.com/BookOps-CAT/bookops-marc/compare/0.12.1...0.12.2
 [0.12.1]:https://github.com/BookOps-CAT/bookops-marc/compare/0.12.0...0.12.1
 [0.12.0]:https://github.com/BookOps-CAT/bookops-marc/compare/0.11.0...0.12.0
